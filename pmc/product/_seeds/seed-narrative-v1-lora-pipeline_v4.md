@@ -4,7 +4,9 @@
 **Date:** 2025-12-14  
 **Category:** LoRA Fine-Tuning Pipeline  
 
-**One-Sentence Summary:**  
+**Two-Sentence Summary:**
+The Bright Run Training Data Generation Module transforms the manual, console-based process of creating LoRA training conversations into an intuitive, UI-driven workflow that enables non-technical users to generate, review, and manage high-quality conversation datasets through intelligent prompt templates, dimensional filtering, and real-time progress tracking.
+
 The LoRA Training Infrastructure Module extends the Bright Run platform with end-to-end capability to train custom Llama 3 70B LoRA models using our existing 242-conversation emotional intelligence dataset, orchestrated via Vercel APIs and executed on RunPod H100 GPUs.
 
 ---
@@ -132,7 +134,7 @@ Total:                    ~81GB  (fits in H100 80GB with margin)
 
 ### Training Framework: Hugging Face Ecosystem
 
-For detailed technical specifications on the recommended stack, LoRA hyperparameters, and dataset preprocessing logic, see `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_seeds\deep-spec-v1-lora-pipeline-reference_v1.md` (Section: Training Framework).
+For detailed technical specifications on the recommended stack, LoRA hyperparameters, and dataset preprocessing logic, see `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\context-ai\pmct\iteration-5-LoRA-training-initial.md` (Section: Training Framework).
 
 **Core Dependencies:**
 - transformers, peft, accelerate, bitsandbytes, datasets, trl
@@ -151,7 +153,7 @@ Jennifer, first—take a breath. What you're experiencing right now is one of th
 <|eot_id|><|end_of_text|>
 ```
 
-For complete conversion logic and implementation details, refer to `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_seeds\deep-spec-v1-lora-pipeline-reference_v1.md` (Section: Dataset Preprocessing).
+For complete conversion logic and implementation details, refer to `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\context-ai\pmct\iteration-5-LoRA-training-initial.md` (Section: Dataset Preprocessing).
 
 ---
 
@@ -230,7 +232,7 @@ For complete conversion logic and implementation details, refer to `C:\Users\jam
 
 ### API Specifications
 
-For complete API endpoint specifications, request/response schemas, and webhook authentication details, see `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_seeds\deep-spec-v1-lora-pipeline-reference_v1.md` (Section: API Specifications).
+For complete API endpoint specifications, request/response schemas, and webhook authentication details, see `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\context-ai\pmct\iteration-5-LoRA-training-initial.md` (Section: API Specifications).
 
 **Key Endpoints:**
 - `POST /api/training/start-job` - Initiate training job
@@ -244,7 +246,7 @@ For complete API endpoint specifications, request/response schemas, and webhook 
 
 ### Phase 1: Database & Storage Setup (Week 1 - Days 1-2)
 
-For complete database schema with all table definitions, indexes, and storage bucket configuration, refer to `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_seeds\deep-spec-v1-lora-pipeline-reference_v1.md` (Section: Database Schema Extensions).
+For complete database schema with all table definitions, indexes, and storage bucket configuration, refer to `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\context-ai\pmct\iteration-5-LoRA-training-initial.md` (Section: Database Schema Extensions).
 
 **New Tables:**
 - `training_jobs` - Tracks training runs with status, metrics, costs
@@ -274,7 +276,7 @@ For complete database schema with all table definitions, indexes, and storage bu
 | `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\src\app\api\training\jobs\[id]\route.ts` | Get/cancel specific job |
 | `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\src\app\api\training\webhook\route.ts` | Receive RunPod updates |
 
-For complete TypeScript interfaces and service implementation details, see `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_seeds\deep-spec-v1-lora-pipeline-reference_v1.md` (Section: Vercel API Development).
+For complete TypeScript interfaces and service implementation details, see `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\context-ai\pmct\iteration-5-LoRA-training-initial.md` (Section: Vercel API Development).
 
 **Deliverables:**
 - [ ] `training-service.ts` created
@@ -295,7 +297,7 @@ For complete TypeScript interfaces and service implementation details, see `C:\U
 | `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\runpod\api_server.py` | FastAPI server for job management |
 | `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\runpod\config.py` | Environment configuration |
 
-For complete Dockerfile specification and Python implementation details, refer to `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_seeds\deep-spec-v1-lora-pipeline-reference_v1.md` (Section: RunPod Docker Container).
+For complete Dockerfile specification and Python implementation details, refer to `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\context-ai\pmct\iteration-5-LoRA-training-initial.md` (Section: RunPod Docker Container).
 
 **Deliverables:**
 - [ ] Dockerfile created and tested
@@ -396,7 +398,7 @@ For complete Dockerfile specification and Python implementation details, refer t
 
 ## Part 6: Hyperparameter Tuning Guide
 
-For complete hyperparameter configurations (conservative, balanced, aggressive) and troubleshooting guidance, see `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_seeds\deep-spec-v1-lora-pipeline-reference_v1.md` (Section: Hyperparameter Tuning Guide).
+For complete hyperparameter configurations (conservative, balanced, aggressive) and troubleshooting guidance, see `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\context-ai\pmct\iteration-5-LoRA-training-initial.md` (Section: Hyperparameter Tuning Guide).
 
 **Recommended Starting Point:** Balanced configuration
 - lora_r: 16, lora_alpha: 32, learning_rate: 2e-4
@@ -1013,7 +1015,7 @@ Functional requirements should specify:
 - Foreign key relationships to existing tables (`training_files`, `auth.users`)
 - RLS policies for row-level security
 - Migration script with rollback instructions
-- **Reference:** See `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_seeds\deep-spec-v1-lora-pipeline-reference_v1.md` (Database Schema section)
+- **Reference:** See `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\context-ai\pmct\iteration-5-LoRA-training-initial.md` (Database Schema section)
 
 **API Endpoint Definitions:**
 - `POST /api/training/start-job` - Request/response schemas, validation rules, error codes
@@ -1021,7 +1023,7 @@ Functional requirements should specify:
 - `GET /api/training/jobs/:id` - Get single job with full metrics history
 - `DELETE /api/training/jobs/:id` - Cancel active job or delete completed job
 - `POST /api/training/webhook` - Receive RunPod status updates, signature verification
-- **Reference:** See `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_seeds\deep-spec-v1-lora-pipeline-reference_v1.md` (API Specifications section)
+- **Reference:** See `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\context-ai\pmct\iteration-5-LoRA-training-initial.md` (API Specifications section)
 
 **Service Layer Specifications:**
 - `TrainingService` class methods, interfaces, error handling
@@ -1037,7 +1039,7 @@ Functional requirements should specify:
 - Dataset preprocessor (brightrun-v4 → Llama 3 format converter)
 - FastAPI server for job management
 - Webhook callback implementation
-- **Reference:** See `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_seeds\deep-spec-v1-lora-pipeline-reference_v1.md` (RunPod Docker Container section)
+- **Reference:** See `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\context-ai\pmct\iteration-5-LoRA-training-initial.md` (RunPod Docker Container section)
 
 **UI Component Specifications:**
 - Training jobs table component (columns, sorting, filtering, actions)
@@ -1141,7 +1143,7 @@ The following documents provide essential context and technical details for impl
 ### Primary Technical Specification
 
 **Deep Specification Document:**
-- **File:** `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_seeds\deep-spec-v1-lora-pipeline-reference_v1.md`
+- **File:** `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\context-ai\pmct\iteration-5-LoRA-training-initial.md`
 - **Purpose:** Complete technical specification with code examples, Docker configurations, API schemas
 - **Sections:** Executive summary, dataset assessment, technical architecture, RunPod setup, decision framework
 - **Lines:** 2,758 lines of detailed implementation guidance
@@ -1258,4 +1260,4 @@ This module delivers the critical missing capability: the ability to train and v
 **Status:** Product Seed Narrative (Detailed - Adapted Sections Integrated)  
 **Dependencies:** Existing TrainingFileService, Supabase infrastructure  
 **Adaptations:** User Interface Requirements, Integration with Existing Modules, Quality Assurance & Success Criteria, Principles & Constraints, Next Steps for Specification Development, and Key Reference Documents adapted from `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_seeds\seed-narrative-v1.md`  
-**Note on Reference Files:** The file `detailed-v1-lora-pipeline-reference_v1.md` referenced in the original request does not exist. All technical detail references point to `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_seeds\deep-spec-v1-lora-pipeline-reference_v1.md` instead.
+**Note on Reference Files:** The file `detailed-v1-lora-pipeline-reference_v1.md` referenced in the original request does not exist. All technical detail references point to `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\context-ai\pmct\iteration-5-LoRA-training-initial.md` instead.
