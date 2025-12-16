@@ -159,7 +159,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const USER_JOURNEY_PATH = '../product/03.5-bmo-user-journey.md';
+const USER_JOURNEY_PATH = '../product/02b-bmo-user-journey.md';
 const OUTPUT_PATH = '../product/_mapping/extracted-journey-data.json';
 
 // Extract all UJ elements and their acceptance criteria
@@ -383,7 +383,7 @@ node 03-generate-functional-requirements.js --stage=1 --journey-enhanced=true
 1. **LOCATE** the line "Inputs (local to generator)"
 2. **ADD** new input:
 ```markdown
-- User Journey: `pmc/product/03.5-bmo-user-journey.md`
+- User Journey: `pmc/product/02b-bmo-user-journey.md`
 ```
 
 3. **LOCATE** the "Parameters" section
@@ -426,7 +426,7 @@ Journey Integration
 
 1. **UPDATE** the "Inputs" section to include:
 ```markdown
-- User Journey: `pmc/product/03.5-bmo-user-journey.md`
+- User Journey: `pmc/product/02b-bmo-user-journey.md`
 ```
 
 2. **UPDATE** the "Parameters" section:
@@ -603,7 +603,7 @@ node 04-generate-FR-wireframe-segments_v4.js --stage=E01 --fr=FR1.1.0 --journey-
 ### Common Issues and Solutions
 
 **Issue 1:** Scripts fail to find user journey file
-**Solution:** Verify file path: `C:\Users\james\Master\BrightHub\brun\brun8\pmc\product\03.5-bmo-user-journey.md`
+**Solution:** Verify file path: `C:\Users\james\Master\BrightHub\brun\brun8\pmc\product\02b-bmo-user-journey.md`
 
 **Issue 2:** Consolidation creates too few requirements
 **Solution:** Adjust consolidation threshold in `consolidate-persona-criteria.js` from 80% to 60%

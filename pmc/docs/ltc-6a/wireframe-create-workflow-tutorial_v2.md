@@ -16,7 +16,7 @@ This tutorial guides you through operating the complete Product Memory Core (PMC
 
 **Prerequisites:**
 - Project user stories completed (02-[abbrev]-user-stories.md)
-- User journey document exists (03.5-bmo-user-journey.md)
+- User journey document exists (02b-bmo-user-journey.md)
 - Journey data extracted (consolidated-journey-criteria.json)
 
 ---
@@ -393,7 +393,7 @@ For each stage (E01-E06), verify:
 
 Ensure these files exist before starting:
 - `02-bmo-user-stories.md` (input)
-- `03.5-bmo-user-journey.md` (input)
+- `02b-bmo-user-journey.md` (input)
 - `consolidated-journey-criteria.json` (generated)
 - `journey-to-wireframe-mapping.json` (generated)
 

@@ -2,7 +2,7 @@
 
 ## Context and Purpose
 You are tasked with transforming a seed narrative into a comprehensive seed story 
-for Interactive LoRA Conversation Generation Module. 
+for LoRA Training Infrastructure Module. 
 This seed story will serve as the foundational document for the entire project, guiding all subsequent documentation and 
 development. Your role is to analyze the narrative, conduct necessary research, and create a structured seed story that provides 
 clear direction for both AI agents and human stakeholders. You must record and create every single user story that is 
@@ -15,10 +15,10 @@ user story from the narrative document. You can also create new user stories tha
   - Defines the required format for the resulting document.
 - **Seed Narrative:** ``pmc/product/00-train-seed-narrative.md``
   - The initial narrative document serving as input for the seed story.
-- **Example:** ``pmc/product/_examples/00-aplio-mod-1-seed-story.md``
+- **Example:** ``pmc/product/_examples/00-train-seed-narrative.md``
   - Provides a reference for structure, depth, and quality expectations.
 
-- **Current Status:** ``C:/Users/james/Master/BrightHub/BRun/lora-pipeline/src``
+- **Current Status:** ``C:/Users/james/Master/BrightHub/BRun/lora-pipeline/src/``
   - The entire current codebase is here and has been worked on toward this project's goal. 
   - Read all the files in all the folders & subfolders to determine the current state.
 

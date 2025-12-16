@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Configuration
-const USER_JOURNEY_PATH = '../03.5-bmo-user-journey.md';
+const USER_JOURNEY_PATH = '../02b-bmo-user-journey.md';
 const OUTPUT_PATH = '../_mapping/extracted-journey-data.json';
 
 // Extract all UJ elements and their acceptance criteria

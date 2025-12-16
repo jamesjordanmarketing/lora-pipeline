@@ -1,7 +1,7 @@
 # Seed Narrative Generation Prompt
 
 ## Context and Purpose
-You are tasked with transforming unstructured project data into a comprehensive seed narrative for Interactive LoRA Conversation Generation Module. 
+You are tasked with transforming unstructured project data into a comprehensive seed narrative for LoRA Training Infrastructure Module. 
 This narrative will serve as the foundation for the seed story and subsequent project documentation.
 Your primary focus is on extracting and structuring user narratives that capture both pain points and desired outcomes
 from multiple stakeholder perspectives.
@@ -145,7 +145,7 @@ Generated narrative must:
 ## Output Location
 Save the completed Seed Narrative in:
 ```
-`pmc/product/00-train-seed-narrative.md`
+`pmc/product/00-pipeline-seed-narrative.md`
 ```
 
 Remember: The seed narrative must provide a rich, human-centered foundation that captures both the practical and emotional aspects of user needs. Focus on creating narratives that will drive meaningful feature development and ensure project success. 

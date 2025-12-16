@@ -159,26 +159,28 @@ Creates a comprehensive user journey document that maps the complete user experi
 - **User Stories Document**: `pmc/product/02-bmo-user-stories.md`
 - **Overview Document**: `pmc/product/01-bmo-overview.md`
 - **User Journey Template**: `pmc/product/_templates/03-functional-requirements-template.md`
-- **User Journey Prompt**: `pmc/product/_prompt_engineering/02.5-user-journey-prompt_v8.md`
+- **User Journey Prompt**: `pmc/product/_prompt_engineering/02b-user-journey-prompt_v8.md`
 
 ### Output File
-- `pmc/product/02.5-bmo-user-journey.md`
+- `pmc/product/02b-bmo-user-journey.md`
 
 ### Command Syntax
 ```bash
-# No automated script - manual prompt processing
-# Copy prompt from: pmc/product/_prompt_engineering/02.5-user-journey-prompt_v8.md
+# Automated script for generating customized prompt
+cd pmc/product/_tools/
+node 02b-generate-user-journey_v1.js "Bright Run LoRA Fine-Tuning Training Data Platform" bmo
 ```
 
 ### Process Flow
-1. Open the user journey prompt file: `pmc/product/_prompt_engineering/02.5-user-journey-prompt_v8.md`
-2. Copy the complete prompt content
-3. Paste into AI assistant along with the required input files:
+1. Run the script: `node 02b-generate-user-journey_v1.js "Project Name" project-abbrev`
+2. Script generates customized prompt in `pmc/product/_run-prompts/02b-product-bmo-user-journey-prompt-v1.md`
+3. Copy the generated prompt content
+4. Paste into AI assistant along with the required input files:
    - User Stories document (`02-bmo-user-stories.md`)
    - Overview document (`01-bmo-overview.md`)
    - Template file for structure reference
-4. AI generates comprehensive user journey document
-5. Save output as `pmc/product/02.5-bmo-user-journey.md`
+5. AI generates comprehensive user journey document
+6. Save output as `pmc/product/02b-bmo-user-journey.md`
 
 ### Key Journey Components
 The user journey document includes:
@@ -242,7 +244,7 @@ Transforms user stories and user journey into detailed technical requirements th
 
 #### Input Files Required
 - **User Stories**: `pmc/product/02-bmo-user-stories.md`  
-- **User Journey**: `pmc/product/02.5-bmo-user-journey.md`
+- **User Journey**: `pmc/product/02b-bmo-user-journey.md`
 - **Overview**: `pmc/product/01-bmo-overview.md`
 - **Preprocessing Template**: `pmc/product/_prompt_engineering/3a-preprocess-functional-requirements-prompt_v1.md`
 
@@ -576,7 +578,7 @@ pmc/
 ├── product/
 │   ├── 01-bmo-overview.md                              # Step 1 output
 │   ├── 02-bmo-user-stories.md                          # Step 2 output  
-│   ├── 02.5-bmo-user-journey.md                        # Step 2.5 output
+│   ├── 02b-bmo-user-journey.md                         # Step 2b output
 │   ├── 03-bmo-functional-requirements.md               # Step 3A output
 │   ├── 03-bmo-functional-requirements-enhanced.md      # Step 3B output
 │   ├── 03-bmo-functional-requirements-integrate-wireframe_v1.md  # Step 3C output
@@ -606,7 +608,7 @@ pmc/
 │   │       ├── prompts/
 │   │       └── 06-bmo-task-test-mapping-index.md
 │   ├── _prompt_engineering/                            # Prompt templates
-│   │   ├── 02.5-user-journey-prompt_v8.md
+│   │   ├── 02b-user-journey-prompt_v8.md
 │   │   ├── 3c-functional-requirements-with-wireframe-prompt_v1.md
 │   │   └── 03d-train-turn-multiple-wf-prompts-to-one-prompt_v1.md
 │   ├── _run-prompts/                                   # Generated AI prompts

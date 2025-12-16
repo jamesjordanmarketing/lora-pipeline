@@ -1,6 +1,6 @@
 # Project Memory Core (PMC) - System Overview and Document Generation
-**Version:** 3.0.0  
-**Date:** January 21, 2025  
+**Version:** 4.0.0  
+**Date:** December 15, 2025  
 **Category:** Project Management System
 
 ## 1. What is Project Memory Core?
@@ -74,23 +74,19 @@ cd pmc/product/_tools
 node 00-generate-seed-story.js
 ```
 
-### 2.2 Steps 1-2: Product Specification Generation
+### 2.2 Step 1: Overview Generation
 
-The product specification generation uses `01-02-generate-product-specs.js` and generates the first two core documents:
+The overview generation uses `01-generate-overview.js` to create the product overview document:
 
 **Input Files:**
 - `00-{project-abbreviation}-seed-story.md` (from step 0)
 - `config/prompts-config.json` (configuration file)
 - Template files specified in configuration:
   - Overview template (typically `_templates/01-overview-template.md`)
-  - User stories template (typically `_templates/02-user-stories-template.md`)
 - Example files (specified in configuration):
   - Overview example (typically `_examples/01-{project-abbreviation}-overview.md`)
-  - User stories example (typically `_examples/02-{project-abbreviation}-user-stories.md`)
 
 **Process:**
-#### Step 1: Overview Generation
-
 1. **Overview** (`01-[project-abbreviation]-overview.md`)
    - High-level product description
    - Core value proposition
@@ -100,17 +96,38 @@ The product specification generation uses `01-02-generate-product-specs.js` and 
    - Product architecture overview
    - Technology stack and dependencies
 
-#### Step 2: User Stories Generation
-
-2. **User Stories** (`02-[project-abbreviation]-user-stories.md`)
-   - Categorized user stories by impact area
-   - Stakeholder narratives and personas
-   - Use cases and user journeys
-   - Experience goals and acceptance criteria
-   - Priority levels and FR mapping placeholders
-
 **Outputs:**
 - `01-{project-abbreviation}-overview.md`
+- Prompt file in `_run-prompts/01-product-{abbrev}-overview-prompt-v1.md`
+
+**Usage:**
+```bash
+cd pmc/product/_tools
+node 01-generate-overview.js "Project Name" project-abbreviation
+```
+
+### 2.3 Step 2: User Stories Generation
+
+The user stories generation uses `01-02-generate-product-specs.js` (or can be done manually):
+
+**Input Files:**
+- `00-{project-abbreviation}-seed-story.md` (from step 0)
+- `01-{project-abbreviation}-overview.md` (from step 1)
+- `config/prompts-config.json` (configuration file)
+- Template files specified in configuration:
+  - User stories template (typically `_templates/02-user-stories-template.md`)
+- Example files (specified in configuration):
+  - User stories example (typically `_examples/02-{project-abbreviation}-user-stories.md`)
+
+**Process:**
+- **User Stories** (`02-[project-abbreviation]-user-stories.md`)
+  - Categorized user stories by impact area
+  - Stakeholder narratives and personas
+  - Use cases and user journeys
+  - Experience goals and acceptance criteria
+  - Priority levels and FR mapping placeholders
+
+**Outputs:**
 - `02-{project-abbreviation}-user-stories.md`
 - Prompt files in `_run-prompts/` directory
 
@@ -120,19 +137,65 @@ cd pmc/product/_tools
 node 01-02-generate-product-specs.js "Project Name" project-abbreviation
 ```
 
-### 2.3 Step 3: Enhanced Functional Requirements Generation
+### 2.4 Step 02b: User Journey Generation
+
+The user journey generation uses `02b-generate-user-journey_v1.js` to create a comprehensive user journey document:
+
+**Input Files:**
+- `00-{project-abbreviation}-seed-story.md` (from step 0)
+- `01-{project-abbreviation}-overview.md` (from step 1)
+- `02-{project-abbreviation}-user-stories.md` (from step 2)
+- `_prompt_engineering/02b-user-journey-prompt_v8.md` (prompt template)
+- `_templates/03-functional-requirements-template.md` (format reference)
+- `_examples/03-bmo-functional-requirements.md` (quality reference)
+
+**Process:**
+1. **Script generates customized prompt**
+   - Prompts for input file paths with sensible defaults
+   - Validates all files exist
+   - Replaces placeholders in template with project-specific values
+   
+2. **AI-assisted generation**
+   - Copy generated prompt from `_run-prompts/`
+   - Paste into AI assistant with input files
+   - AI generates comprehensive user journey document
+
+3. **User Journey Document** (`02b-[project-abbreviation]-user-journey.md`)
+   - Progressive stages from initial contact to final outcome
+   - Multiple user personas at different stages
+   - Happy path and edge case mapping
+   - Granular acceptance criteria (UJ#.#.# format)
+   - Entry/exit criteria for each stage
+
+**Outputs:**
+- Prompt file: `_run-prompts/02b-product-{abbrev}-user-journey-prompt-v1.md`
+- Document (created via AI): `02b-{project-abbreviation}-user-journey.md`
+
+**Usage:**
+```bash
+cd pmc/product/_tools
+node 02b-generate-user-journey_v1.js "Project Name" project-abbreviation
+```
+
+**Next Steps After Script:**
+1. Open the generated prompt: `pmc/product/_run-prompts/02b-product-{abbrev}-user-journey-prompt-v1.md`
+2. Copy the complete prompt content
+3. Paste into AI assistant along with the input files
+4. Save AI output as `pmc/product/02b-{abbrev}-user-journey.md`
+
+### 2.5 Step 3: Enhanced Functional Requirements Generation
 
 The functional requirements generation uses `03-generate-functional-requirements.js` with a sophisticated two-step process:
 
 **Input Files:**
 - `01-{project-abbreviation}-overview.md` (from step 1)
 - `02-{project-abbreviation}-user-stories.md` (from step 2)
-- `03-{project-abbreviation}-functional-requirements.md` (initial or existing)
+- `02b-{project-abbreviation}-user-journey.md` (from step 02b)
 - Template files:
   - `_prompt_engineering/3a-preprocess-functional-requirements-prompt_v1.md` (preprocessing)
   - `_prompt_engineering/3b-functional-requirements-prompt_v1.md` (enhancement)
   - `_prompt_engineering/3b-#1-functional-requirements-prompt_v1.md` (first enhancement step)
-  - `_prompt_engineering/3b-#2-functional-requirements-prompt_v1.md` (second enhancement step)
+  - `_prompt_engineering/3b-#2-functional-requirements-legacy-code-prompt_v1.md` (legacy code step)
 - Example file:
   - `_examples/03-{project-abbreviation}-functional-requirements.md`
 - Optional: Codebase for legacy integration
@@ -141,7 +204,7 @@ The functional requirements generation uses `03-generate-functional-requirements
 #### Step 3a: Preprocessing
 
 1. **Initial Requirements Generation**
-   - Converts user stories to functional requirements
+   - Converts user stories and user journey to functional requirements
    - Creates basic FR structure with placeholders
    - Maintains traceability to user stories
    - Generates initial acceptance criteria
@@ -154,7 +217,7 @@ The functional requirements generation uses `03-generate-functional-requirements
    - Enhances acceptance criteria
    - Improves clarity and completeness
 
-2. **Legacy Code Integration** (3b-#2 prompt)
+2. **Legacy Code Integration** (3b-#2 prompt) - Optional
    - Adds references to existing codebase
    - Maps requirements to current implementation
    - Identifies integration points
@@ -165,21 +228,24 @@ The functional requirements generation uses `03-generate-functional-requirements
 - **Quality control**: Example-based generation with validation
 - **Progress tracking**: Saves state between steps
 - **Path caching**: Remembers file locations for efficiency
-- **Output management**: Saves prompts to `_prompt_engineering/output-prompts/`
+- **Output management**: Saves prompts to `_run-prompts/`
 
 **Outputs:**
 - Enhanced `03-{project-abbreviation}-functional-requirements.md`
-- Prompt files in `_prompt_engineering/output-prompts/`
+- Prompt files in `_run-prompts/`
 
 **Usage:**
 ```bash
 cd pmc/product/_tools
+
+# Optional: Generate initial FR structure first
 node 03-generate-FR-initial.js "Project Name" project-abbreviation
-then:
+
+# Then run the main FR generator
 node 03-generate-functional-requirements.js "Project Name" project-abbreviation
 ```
 
-### 2.4 Step 4: Wireframe Generation System (v4)
+### 2.6 Step 4: Wireframe Generation System (v4)
 
 Uses `04-generate-FR-wireframe-segments_v4.js` for advanced wireframe prompt generation:
 
@@ -263,13 +329,19 @@ node 04-generate-FR-wireframe-segments_v4.js "Project Name" project-abbreviation
    - Success scenarios and acceptance criteria
    - Priority levels and FR mapping preparation
 
-5. **Functional Requirements** (`03-[project-abbreviation]-functional-requirements.md`)
-   - Technical specifications derived from user stories
+5. **User Journey** (`02b-[project-abbreviation]-user-journey.md`)
+   - Complete user experience mapping through progressive stages
+   - Granular acceptance criteria (UJ#.#.# format)
+   - Entry/exit criteria for each stage
+   - Cross-stage dependencies and value progression
+
+6. **Functional Requirements** (`03-[project-abbreviation]-functional-requirements.md`)
+   - Technical specifications derived from user stories and journey
    - System requirements and feature definitions
    - Integration requirements and dependencies
    - Enhanced through two-step generation process
 
-6. **Wireframe Specifications** (`04-*-FR-wireframes-E[XX].md`)
+7. **Wireframe Specifications** (`04-*-FR-wireframes-E[XX].md`)
    - FR-level wireframe requirements organized by section
    - Section-based requirement organization
    - Figma-ready prompt generation with precise targeting
@@ -283,13 +355,15 @@ graph TD
     B --> C[Seed Story]
     C --> D[Overview]
     D --> E[User Stories]
-    E --> F[FR Initial - 3a Preprocess]
+    E --> UJ[User Journey]
+    UJ --> F[FR Initial - 3a Preprocess]
     F --> G[FR Enhanced - 3b Step 1]
     G --> H[FR with Legacy - 3b Step 2]
     H --> I[Wireframe FR Segments]
     I --> J[FR Wireframe Prompts]
     J --> K[Figma Outputs]
     
+    style UJ fill:#e3f2fd
     style F fill:#e1f5fe
     style G fill:#e8f5e8
     style H fill:#fff3e0
@@ -305,8 +379,10 @@ graph TD
 | Script | Purpose | Input Files | Outputs |
 |--------|---------|-------------|---------|
 | `00-generate-seed-story.js` | Creates seed narrative and story | `_seeds/seed-narrative-v1.md`, templates, examples | Narrative + Story docs |
+| `01-generate-overview.js` | Overview generation | Seed story, config, templates, examples | Overview doc + prompt |
 | `01-02-generate-product-specs.js` | Combined overview + user stories | Seed story, config, templates, examples | Overview + User Stories |
-| `03-generate-functional-requirements.js` | Enhanced FR generation | Overview, User Stories, FR templates, examples | Enhanced FR + prompts |
+| `02b-generate-user-journey_v1.js` | User journey prompt generation | Overview, User Stories, templates | User Journey prompt |
+| `03-generate-functional-requirements.js` | Enhanced FR generation | Overview, User Stories, User Journey, templates | Enhanced FR + prompts |
 | `04-generate-FR-wireframe-segments_v4.js` | Wireframe generation | Functional Requirements, v4 template | FR wireframe prompts + sections |
 
 ### 4.2 Configuration and Templates
@@ -318,13 +394,13 @@ graph TD
 #### Template Directories
 - `_templates/`: Base document templates
 - `_examples/`: Reference examples for quality control
-- `_prompt_engineering/`: AI prompt templates and outputs
+- `_prompt_engineering/`: AI prompt templates
 - `_seeds/`: Initial project data
 
 #### Cache and Progress
 - `cache/`: Path caching for efficiency
 - `progress/`: Generation progress tracking
-- `_run-prompts/`: Generated prompt outputs
+- `_run-prompts/`: Generated prompt outputs (all scripts output here)
 - `_mapping/fr-maps/`: Wireframe generation outputs
 
 ### 4.3 Advanced Features
@@ -355,11 +431,20 @@ graph TD
 
 2. **Generation Sequence**
    ```bash
+   cd pmc/product/_tools
+   
    # Step 0: Foundation
    node 00-generate-seed-story.js
    
-   # Steps 1-2: Core specifications
+   # Step 1: Overview
+   node 01-generate-overview.js "Project Name" abbrev
+   
+   # Step 2: User Stories
    node 01-02-generate-product-specs.js "Project Name" abbrev
+   
+   # Step 02b: User Journey
+   node 02b-generate-user-journey_v1.js "Project Name" abbrev
+   # Then: Run generated prompt in AI, save output as 02b-{abbrev}-user-journey.md
    
    # Step 3: Enhanced requirements
    node 03-generate-functional-requirements.js "Project Name" abbrev
@@ -414,14 +499,25 @@ graph TD
 **Step 0:**
 - `pmc/product/_seeds/seed-narrative-v1.md` (must contain project name and abbreviation)
 
-**Steps 1-2:**
+**Step 1:**
 - `00-{project-abbreviation}-seed-story.md` (output from step 0)
 - Configuration and template files as specified in `config/prompts-config.json`
+
+**Step 2:**
+- `00-{project-abbreviation}-seed-story.md` (output from step 0)
+- `01-{project-abbreviation}-overview.md` (output from step 1)
+- Configuration and template files
+
+**Step 02b:**
+- `00-{project-abbreviation}-seed-story.md` (output from step 0)
+- `01-{project-abbreviation}-overview.md` (output from step 1)
+- `02-{project-abbreviation}-user-stories.md` (output from step 2)
+- `_prompt_engineering/02b-user-journey-prompt_v8.md`
 
 **Step 3:**
 - `01-{project-abbreviation}-overview.md` (output from step 1)
 - `02-{project-abbreviation}-user-stories.md` (output from step 2)
-- `03-{project-abbreviation}-functional-requirements.md` (initial or existing)
+- `02b-{project-abbreviation}-user-journey.md` (output from step 02b)
 - Preprocessing and enhancement template files
 
 **Step 4:**
@@ -455,6 +551,11 @@ All input markdown files should follow these standards:
    - Clear problematic cache entries
    - Restart individual steps as needed
 
+4. **User Journey File Not Found (Step 3)**
+   - Ensure you ran step 02b and saved the AI output
+   - Verify file is named `02b-{abbrev}-user-journey.md` (not `03.5-` or `02.5-`)
+   - Check the file exists in `pmc/product/`
+
 ### Error Recovery
 
 1. **Cache Management**
@@ -469,8 +570,7 @@ All input markdown files should follow these standards:
 2. **Progress Reset**
    ```bash
    # Reset progress for specific project
-   rm pmc/.{project-abbrev}-progress.json
-   rm pmc/.{project-abbrev}-paths-cache.json
+   rm pmc/product/_tools/progress/*{project-abbrev}*
    ```
 
 ### Performance Optimization
@@ -480,7 +580,28 @@ All input markdown files should follow these standards:
 3. **Monitor output file sizes for reasonable limits**
 4. **Regular cleanup of temporary files**
 
-## 8. Future Enhancements
+## 8. Output Directory Structure
+
+All generated prompts are now saved to a unified location:
+
+```
+pmc/product/
+├── _run-prompts/                               # All generated prompts
+│   ├── 01-product-{abbrev}-overview-prompt-v1.md
+│   ├── 02b-product-{abbrev}-user-journey-prompt-v1.md
+│   ├── 3a-preprocess-functional-requirements-prompt_v1-output.md
+│   └── 3b-functional-requirements-prompt_v1-output.md
+├── 00-{abbrev}-seed-story.md                   # Step 0 output
+├── 01-{abbrev}-overview.md                     # Step 1 output
+├── 02-{abbrev}-user-stories.md                 # Step 2 output
+├── 02b-{abbrev}-user-journey.md                # Step 02b output
+├── 03-{abbrev}-functional-requirements.md      # Step 3 output
+└── _mapping/fr-maps/                           # Step 4 outputs
+    ├── 04-{abbrev}-FR-wireframes-E01.md
+    └── prompts/
+```
+
+## 9. Future Enhancements
 
 ### Planned Features
 - **Automated testing integration**: Link with testing frameworks

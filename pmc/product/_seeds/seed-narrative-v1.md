@@ -1,5 +1,5 @@
 # LoRA Training Infrastructure Module
-**Product Abbreviation:** train  
+**Product Abbreviation:** pipeline 
 **Version:** 4  
 **Date:** 2025-12-14  
 **Category:** LoRA Fine-Tuning Pipeline  

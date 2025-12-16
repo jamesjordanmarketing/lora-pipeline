@@ -326,7 +326,11 @@ function readProjectDetails() {
     
     // Extract project name and abbreviation from first two lines
     const projectName = lines[0].replace(/^#\s+/, '').trim();
-    const projectAbbrev = lines[1].replace(/^.*Product Abbreviation:\s*/, '').trim();
+    // Handle markdown bold formatting: **Product Abbreviation:** value or **Product Abbreviation:** value**
+    const projectAbbrev = lines[1]
+      .replace(/^\*{0,2}Product Abbreviation:\*{0,2}\s*/, '')  // Remove label with optional ** on both sides
+      .replace(/\*{1,2}/g, '')  // Remove any remaining asterisks
+      .trim();
     
     console.log(`Found project details:`);
     console.log(`Name: ${projectName}`);

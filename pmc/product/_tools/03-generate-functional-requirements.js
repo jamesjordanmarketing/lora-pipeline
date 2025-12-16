@@ -265,7 +265,7 @@ async function getReferencePaths(projectAbbrev, step) {
   );
   paths.userJourney = await getValidFilePath(
     'User Journey',
-    `03.5-${projectAbbrev}-user-journey.md`,
+    `02b-${projectAbbrev}-user-journey.md`,
     projectAbbrev
   );
 
@@ -306,7 +306,7 @@ async function getReferencePaths(projectAbbrev, step) {
 function writePromptToFile(prompt, templatePath, projectAbbrev) {
   try {
     // Create output directory if it doesn't exist
-    const outputDir = path.resolve(__dirname, '..', '_prompt_engineering', 'output-prompts');
+    const outputDir = path.resolve(__dirname, '..', '_run-prompts');
     ensureDirectoryExists(outputDir);
     
     // Get the filename from the template path
@@ -478,7 +478,7 @@ async function main() {
     }
 
     // Create output directory at startup
-    const outputDir = path.resolve(__dirname, '..', '_prompt_engineering', 'output-prompts');
+    const outputDir = path.resolve(__dirname, '..', '_run-prompts');
     ensureDirectoryExists(outputDir);
     console.log(`Prompt outputs will be saved to: ${outputDir}`);
 

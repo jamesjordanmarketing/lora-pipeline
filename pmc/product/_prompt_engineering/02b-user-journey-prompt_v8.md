@@ -4,9 +4,9 @@
 Generate a comprehensive user journey document that maps the complete user experience through progressive stages, providing granular acceptance criteria that enable a future prompt to create precise functional requirements for the Bright Run platform.
 
 ## Required Inputs
-- **Template:** `pmc\product\_templates\03-functional-requirements-template.md`
+- **Template:** `{TEMPLATE_PATH}`
   - Defines the required format, structure, and numbering conventions for organizing the user journey document.
-- **Example:** `pmc\product\_examples\03-bmo-functional-requirements.md`  
+- **Example:** `{EXAMPLE_PATH}`  
   - Provides a reference for structure, depth, quality expectations, and organizational formatting.
 
 ## Bright Run Context Requirements
@@ -227,9 +227,9 @@ Ensure the organized journey answers:
 ## Source Document Integration
 
 Read and incorporate insights from these project artifacts:
-1. **pmc\product\00-train-seed-story.md** - Core vision and value proposition
-2. **pmc\product\01-train-overview.md** - Technical architecture and requirements
-3. **pmc\product\02-train-user-stories.md** - Detailed user stories and acceptance criteria
+1. **{SEED_STORY_PATH}** - Core vision and value proposition
+2. **{OVERVIEW_PATH}** - Technical architecture and requirements
+3. **{USER_STORIES_PATH}** - Detailed user stories and acceptance criteria
 
 ## Input Processing Instructions
 
@@ -264,22 +264,22 @@ Read and incorporate insights from these project artifacts:
 ## Output Requirements
 
 ### Output Location
-Save the completed **User Journey Document** in: `pmc\product\02.5-train-user-journey.md`
+Save the completed **User Journey Document** in: `{OUTPUT_PATH}`
 
 ### Document Format
 Follow the functional requirements template structure while maintaining user journey content:
 
 ```markdown
-# Bright Run LoRA Training Data Platform - User Journey Document
+# {PROJECT_NAME} - User Journey Document
 **Version:** [Version number]  
 **Date:** [MM-DD-YYYY]  
-**Category:** LoRA Fine-Tuning Training Data Platform User Journey
-**Product Abbreviation:** train
+**Category:** {PROJECT_NAME} User Journey
+**Product Abbreviation:** {PROJECT_ABBREVIATION}
 
 **Source References:**
-- Seed Story: `pmc/product/00-train-seed-story.md`
-- Overview Document: `pmc/product/01-train-overview.md`
-- User Stories: `pmc/product/02-train-user-stories.md`
+- Seed Story: `{SEED_STORY_PATH}`
+- Overview Document: `{OVERVIEW_PATH}`
+- User Stories: `{USER_STORIES_PATH}`
 
 ## Executive Summary
 
