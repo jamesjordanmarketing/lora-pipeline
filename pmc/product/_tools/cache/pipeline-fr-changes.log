@@ -1,11 +1,11 @@
 # Functional Requirements Organization - Change Log
-**Date:** 2025-12-15
+**Date:** 2025-12-16
 **Document:** pmc/product/03-pipeline-functional-requirements.md
-**Version:** 2.0 (Reorganized)
-**Task:** iteration-6-temporary-functional_v1.md
+**Version:** 2.0.0 (Reorganized)
+**Reorganization Task:** Senior Technical Product Manager Review
 
 ================================================================================
-## SUMMARY
+## EXECUTIVE SUMMARY
 ================================================================================
 
 ### Quantitative Summary
@@ -14,58 +14,123 @@
 - **FRs Merged (duplicates):** 1 (FR8.2.2 merged into FR7.2.2)
 - **Persona Consolidations:** 0
 - **Final FRs:** 50
-- **Sections:** 8 (unchanged)
+- **Sections:** 8 (maintained)
 
 ### Key Changes
-1. Fixed section header formatting (removed duplicate numbers)
+1. Fixed section header formatting (removed duplicate numbering in all 8 sections)
 2. Merged duplicate FR8.2.2 (Budget Alert Notifications) into FR7.2.2 (Budget Alerts & Notifications)
-3. Maintained existing logical build order which already follows dependencies
-4. Renumbered Section 8 FRs to close gap left by merge
+3. Consolidated acceptance criteria from US8.2.2 into FR7.2.2
+4. Renumbered Section 8 FRs to close gap left by merge:
+   - FR8.3.1 → FR8.2.2 (Job Notes and Experiment Documentation)
+   - FR8.3.2 → FR8.3.1 (Team Knowledge Base Integration)
+5. Maintained existing logical build order which already follows dependencies
+
+### Organizational Philosophy Applied
+- Current structure already reflects natural build dependencies
+- Feature-based organization (vs strict technical layers) better serves this specific project
+- Maintained 8 sections to preserve existing cross-references and team familiarity
+- Focused on eliminating redundancy while preserving completeness
 
 ================================================================================
 ## PHASE 1: Non-Product Requirements Analysis
 ================================================================================
 
+### Analysis Method
+Reviewed all 51 FRs against criteria:
+- Does it specify buildable software functionality?
+- Are acceptance criteria testable and implementable?
+- Does it affect the product build directly?
+
 ### Analysis Results
-After reviewing all 51 FRs, the following observations were made:
-- All FRs directly affect product functionality
+After systematic review:
+- **All FRs directly affect product functionality**
 - No purely business/marketing requirements found
 - Impact weightings contain business language but acceptance criteria are product-specific
-- All acceptance criteria are testable and buildable
+- All acceptance criteria are testable, measurable, and buildable
+- Even analytics/reporting FRs (FR5.1.2, FR7.3.1, FR7.3.2) require building dashboards, reports, and data aggregation features
 
 **NON-PRODUCT REQUIREMENTS REMOVED: 0**
 
-REASON: All requirements specify buildable functionality with testable acceptance criteria.
+**RATIONALE:** All requirements specify buildable functionality with testable acceptance criteria. No business-only metrics that don't require product development.
 
 ================================================================================
 ## PHASE 2: Duplicate Requirements Analysis
 ================================================================================
 
-### Analysis Results
-After cross-referencing all FRs:
-- No exact duplicates found except one notification system overlap
-- Budget alert notifications appear in two contexts (FR7.2.2 and FR8.2.2)
+### Analysis Method
+Cross-referenced all 51 FRs looking for:
+- Exact duplicates (same functionality, same acceptance criteria)
+- Near-duplicates (significant overlap requiring consolidation)
+- Complementary features (different timing/context, keep separate)
 
-### MERGE DECISION:
+### Potential Duplicates Examined
+
+#### FR1.2.1 vs FR7.1.1 (Cost Tracking)
+- **FR1.2.1:** Real-Time Cost Estimation
+  - Timing: BEFORE training starts (during configuration)
+  - Purpose: Help user make informed decision about starting job
+  - Context: Configuration form, pre-job
+- **FR7.1.1:** Live Cost Accumulation Display
+  - Timing: DURING training execution
+  - Purpose: Monitor actual spending while job runs
+  - Context: Job dashboard, active training
+- **DECISION: KEEP BOTH - COMPLEMENTARY**
+- **RATIONALE:** Different timing, different context, different user needs. FR1.2.1 is estimation for planning, FR7.1.1 is real-time tracking for monitoring.
+
+#### FR1.2.2 vs FR7.2.1 (Budget Management)
+- **FR1.2.2:** Pre-Job Budget Validation
+  - Timing: BEFORE job starts
+  - Purpose: Block job creation if budget exceeded
+  - Context: Configuration, gate-keeping
+- **FR7.2.1:** Monthly Budget Dashboard
+  - Timing: ANY time
+  - Purpose: View budget status, history, forecasts
+  - Context: Budget management page, reporting
+- **DECISION: KEEP BOTH - COMPLEMENTARY**
+- **RATIONALE:** Different purposes. FR1.2.2 is validation/gate, FR7.2.1 is dashboard/reporting.
+
+#### FR8.2.1 vs FR8.2.2 (Notifications)
+- **FR8.2.1:** Training Completion Notifications
+  - Triggers: Training complete, failed, cancelled, interrupted
+  - Content: Job status, metrics, results
+  - Purpose: Notify about training events
+- **FR8.2.2:** Budget Alert Notifications
+  - Triggers: Budget thresholds (80%, 95%, 100%)
+  - Content: Budget status, spending, forecasts
+  - Purpose: Notify about budget events
+  - **CROSS-REFERENCE:** US8.2.2 says "See US7.2.2 for detailed budget alert specifications"
+- **DUPLICATE DETECTED:** FR8.2.2 duplicates FR7.2.2
+- **FR7.2.2:** Budget Alerts & Notifications
+  - Already specifies: Alert triggers, channels, content, escalation
+  - Missing: Recipient configuration, escalation levels, daily digest
+- **DECISION: MERGE FR8.2.2 into FR7.2.2**
+- **RATIONALE:** Same notification system, same triggers. FR8.2.2 acceptance criteria should be part of FR7.2.2.
+
+### MERGE DECISION: FR8.2.2 → FR7.2.2
+
 [GROUP-001] Budget Alert Notifications
-- **FR7.2.2** (Budget Alerts & Notifications) | KEEP as primary
-- **FR8.2.2** (Budget Alert Notifications) | MERGE into FR7.2.2
+- **FR7.2.2** (Budget Alerts & Notifications) | PRIMARY | KEEP
+- **FR8.2.2** (Budget Alert Notifications) | DUPLICATE | MERGE INTO FR7.2.2
 
 **ACTION:** Merge FR8.2.2 acceptance criteria into FR7.2.2
-**REASON:** Both specify the same notification system with same triggers; FR8.2.2 adds notification recipient configuration and escalation levels which should be part of FR7.2.2
 
-### Merged Acceptance Criteria for FR7.2.2:
-From FR7.2.2 (Primary):
-- Alert triggers (80%, 95%, 100% thresholds)
-- Alert channels (Email, Slack, In-app)
-- Alert content and actions
-- Budget limit increase workflow
-- Budget override log/audit trail
+**ACCEPTANCE CRITERIA CONSOLIDATED:**
+
+From FR7.2.2 (Original):
+- Alert Triggers (80%, 95%, 100% thresholds)
+- Alert Channels (Email, Slack, In-app)
+- Alert Content (spending, remaining, forecast, actions)
+- Increase Budget Limit workflow
+- Budget Override Log/audit trail
 
 From FR8.2.2 (Merged):
-- Notification recipients configurable (budget manager, finance team, operations)
-- Escalation levels: 80% → email, 95% → email + Slack, 100% → email + Slack + in-app banner
-- Daily digest option for training budget summary
+- Notification Recipients configurable (budget manager, finance team, operations)
+- Escalation Levels: 80% → email, 95% → email + Slack, 100% → email + Slack + in-app banner
+- Daily digest option: "Your daily training budget summary"
+
+**USER STORY REFERENCES:**
+- FR7.2.2 now maps to: US7.2.2, US8.2.2
+- Tasks: [T-7.2.2], [T-8.2.2]
 
 **DUPLICATES MERGED: 1** (FR8.2.2 merged into FR7.2.2)
 
@@ -73,169 +138,257 @@ From FR8.2.2 (Merged):
 ## PHASE 3: Persona Consolidation Analysis
 ================================================================================
 
+### Personas Identified
+From User Journey Document:
+1. **Alex Chen - AI Engineer / Technical Lead** (Primary)
+   - Daily user, configuration and monitoring
+   - Intermediate technical expertise
+   
+2. **Maria Rodriguez - Business Owner / Founder** (Secondary)
+   - Strategic user, validation and ROI
+   - Business-focused, non-technical
+
+3. **Dr. Sarah Kim - Quality Analyst / QA Team** (Supporting)
+   - Validation user, quality assurance
+   - Intermediate expertise
+
+### Consolidation Rules Applied
+From requirements:
+- When personas have similar needs → Create single comprehensive FR
+- When personas conflict → Create base FR with progressive disclosure
+- When persona is unique → Note as advanced configuration
+
 ### Analysis Results
-Reviewing all FRs for persona-specific variations:
-- Most FRs already consolidate personas through progressive disclosure
+Reviewed all 51 FRs for persona-specific variations:
+- **All FRs already consolidate personas through progressive disclosure**
 - No persona-specific FR variations requiring consolidation
 - Multiple personas served through single comprehensive FRs
+- Example: FR6.2.1 (Emotional Intelligence Benchmarks) serves:
+  - AI Engineer: Run validation, view technical metrics
+  - Business Owner: View executive summary, share with clients
+  - Quality Analyst: Detailed scoring, approve/reject delivery
 
-### Personas Already Properly Served:
-- AI Engineer / Technical Lead (Power User) - Primary configuration/monitoring
-- Business Owner / Founder (Decision Maker) - Quality reports/cost visibility
-- Quality Analyst / QA Team (Validation User) - Validation benchmarks/reports
-- Budget Manager / Operations (Financial Oversight) - Budget dashboards/alerts
+### Personas Already Properly Served
+- **AI Engineer / Technical Lead (Power User)** - Primary configuration/monitoring FRs
+- **Business Owner / Founder (Decision Maker)** - Quality reports/cost visibility FRs
+- **Quality Analyst / QA Team (Validation User)** - Validation benchmarks/reports FRs
+- **Budget Manager / Operations (Financial Oversight)** - Budget dashboards/alerts FRs
 
 **PERSONA-SPECIFIC FRs CONSOLIDATED: 0**
 
-REASON: Document already follows consolidation pattern; all FRs serve multiple personas appropriately.
+**RATIONALE:** Document already follows consolidation pattern. All FRs serve multiple personas appropriately through progressive disclosure and role-based views.
 
 ================================================================================
-## PHASE 4: Build Order Analysis
+## PHASE 4: Build Order & Dependencies Analysis
 ================================================================================
+
+### Logical Build Layers Defined
+From requirements guidance:
+- A. Foundation Layer - Core config/setup, base architecture
+- B. Infrastructure Layer - Data management, service architecture, error handling
+- C. Base Components Layer - Shared components, core layouts, UI elements
+- D. Primary Features Layer - Main user workflows, essential functions
+- E. Advanced Features Layer - Complex workflows, advanced capabilities
+- F. Cross-Cutting Layer - Performance, security, budget, notifications
 
 ### Current Structure Validation
-The existing 8-section structure already follows logical build order:
 
-**Section 1: Training Job Configuration & Setup** (Foundation Layer)
-- FR1.1.1: Create Training Job - ENTRY POINT
-- FR1.1.2: Hyperparameter Presets - CONFIG
-- FR1.1.3: GPU Selection - CONFIG
-- FR1.2.1: Cost Estimation - CONFIG
-- FR1.2.2: Budget Validation - CONFIG
-- FR1.3.1: Job Metadata - CONFIG
-- FR1.3.2: Configuration Review - CONFIG
-**Dependencies:** None (starting point)
+**Section 1: Training Job Configuration & Setup** (PRIMARY FEATURES - Entry Point)
+- FR1.1.1 → FR1.1.3: Job creation and configuration
+- FR1.2.1 → FR1.2.2: Cost estimation and budget validation
+- FR1.3.1 → FR1.3.2: Metadata and final review
+- **Dependencies:** None (starting point for all other features)
+- **Build Layer:** PRIMARY FEATURES (must build first)
 
-**Section 2: Training Job Execution & Monitoring** (Infrastructure Layer)
-- FR2.1.1: Progress Dashboard - MONITORING
-- FR2.1.2: Stage Indicators - MONITORING
-- FR2.1.3: Event Log - MONITORING
-- FR2.2.1: Cancel Job - CONTROL
-- FR2.2.2: Pause/Resume - CONTROL
-- FR2.3.1: View All Jobs - MANAGEMENT
-- FR2.3.2: Queue Management - MANAGEMENT
-**Dependencies:** Section 1 (job creation)
+**Section 2: Training Job Execution & Monitoring** (PRIMARY FEATURES - Core Workflow)
+- FR2.1.1 → FR2.1.3: Progress dashboard, stages, event log
+- FR2.2.1 → FR2.2.2: Job control (cancel, pause/resume)
+- FR2.3.1 → FR2.3.2: Job listing and queue management
+- **Dependencies:** Section 1 (job must be created before execution)
+- **Build Layer:** PRIMARY FEATURES (core execution)
 
-**Section 3: Error Handling & Recovery** (Infrastructure Layer)
-- FR3.1.1: OOM Handling - ERROR DETECTION
-- FR3.1.2: Format Errors - ERROR DETECTION
-- FR3.1.3: GPU Errors - ERROR DETECTION
-- FR3.2.1: Checkpoint Recovery - AUTO RECOVERY
-- FR3.2.2: Manual Resume - MANUAL RECOVERY
-- FR3.3.1: Retry Same Config - RETRY
-- FR3.3.2: Retry with Suggestions - RETRY
-**Dependencies:** Section 2 (training execution)
+**Section 3: Error Handling & Recovery** (ADVANCED FEATURES)
+- FR3.1.1 → FR3.1.3: Error detection (OOM, format, GPU provisioning)
+- FR3.2.1 → FR3.2.2: Checkpoint recovery (automatic and manual)
+- FR3.3.1 → FR3.3.2: Retry mechanisms
+- **Dependencies:** Section 2 (errors occur during execution)
+- **Build Layer:** ADVANCED FEATURES (reliability enhancements)
 
-**Section 4: Model Artifacts & Downloads** (Features Layer)
-- FR4.1.1: Download Adapters - PRIMARY OUTPUT
-- FR4.1.2: Storage & Versioning - STORAGE
-- FR4.2.1: Metrics Export - EXPORT
-- FR4.2.2: Report PDF - EXPORT
-- FR4.3.1: Deployment Package - EXPORT
-- FR4.3.2: API Template - ADVANCED EXPORT
-**Dependencies:** Section 2-3 (training completion)
+**Section 4: Model Artifacts & Downloads** (PRIMARY + ADVANCED)
+- FR4.1.1 → FR4.1.2: Adapter download and storage (PRIMARY)
+- FR4.2.1 → FR4.2.2: Metrics export and reports (ADVANCED)
+- FR4.3.1 → FR4.3.2: Deployment packages and API templates (ADVANCED)
+- **Dependencies:** Section 2 (artifacts created after training completion)
+- **Build Layer:** Mixed (basic downloads are primary, packages are advanced)
 
-**Section 5: Training Comparison & Optimization** (Advanced Features Layer)
-- FR5.1.1: Compare Runs - ANALYSIS
-- FR5.1.2: Performance Analytics - ANALYSIS
-- FR5.2.1: Training History - TRACKING
-- FR5.2.2: Templates Library - OPTIMIZATION
-**Dependencies:** Multiple completed training runs
+**Section 5: Training Comparison & Optimization** (ADVANCED FEATURES)
+- FR5.1.1 → FR5.1.2: Job comparison and performance analytics
+- FR5.2.1 → FR5.2.2: Training history and templates
+- **Dependencies:** Multiple completed training runs
+- **Build Layer:** ADVANCED FEATURES (optimization and learning)
 
-**Section 6: Model Quality Validation** (Features Layer)
-- FR6.1.1: Perplexity - QUALITY METRIC
-- FR6.1.2: Perplexity by Category - QUALITY METRIC
-- FR6.2.1: EI Benchmarks - QUALITY METRIC
-- FR6.2.2: EI Regression - QUALITY METRIC
-- FR6.3.1: Knowledge Retention - QUALITY METRIC
-- FR6.3.2: Domain Probes - QUALITY METRIC
-- FR6.4.1: Brand Voice - QUALITY METRIC
-- FR6.4.2: Custom Brand - QUALITY METRIC
-**Dependencies:** Section 4 (artifacts available)
+**Section 6: Model Quality Validation** (ADVANCED FEATURES)
+- FR6.1.1 → FR6.1.2: Perplexity benchmarks
+- FR6.2.1 → FR6.2.2: Emotional intelligence validation
+- FR6.3.1 → FR6.3.2: Knowledge retention tests
+- FR6.4.1 → FR6.4.2: Brand voice consistency
+- **Dependencies:** Section 4 (requires model artifacts)
+- **Build Layer:** ADVANCED FEATURES (quality assurance)
 
-**Section 7: Cost Management & Budget Control** (Cross-Cutting Layer)
-- FR7.1.1: Live Cost Display - DURING EXECUTION
-- FR7.1.2: Cost Projection - DURING EXECUTION
-- FR7.2.1: Budget Dashboard - OVERVIEW
-- FR7.2.2: Budget Alerts - NOTIFICATIONS (now includes FR8.2.2)
-- FR7.3.1: Spot vs On-Demand Analysis - ANALYTICS
-- FR7.3.2: Cost Attribution - ANALYTICS
-**Dependencies:** Section 1 for estimation, Section 2 for live tracking
+**Section 7: Cost Management & Budget Control** (CROSS-CUTTING)
+- FR7.1.1 → FR7.1.2: Live cost tracking (relates to Section 2 execution)
+- FR7.2.1 → FR7.2.2: Budget dashboard and alerts (includes merged FR8.2.2)
+- FR7.3.1 → FR7.3.2: Cost analysis and attribution
+- **Dependencies:** Section 1 for estimation, Section 2 for live tracking
+- **Build Layer:** CROSS-CUTTING (applies across all features)
 
-**Section 8: Team Collaboration & Notifications** (Cross-Cutting Layer)
-- FR8.1.1: Job Attribution - TRACKING
-- FR8.1.2: Job Sharing - COLLABORATION
-- FR8.2.1: Completion Notifications - NOTIFICATIONS
-- (FR8.2.2 MERGED INTO FR7.2.2)
-- FR8.3.1: Job Notes - DOCUMENTATION
-- FR8.3.2: Knowledge Base - ADVANCED
-**Dependencies:** Section 2 (job management)
+**Section 8: Team Collaboration & Notifications** (CROSS-CUTTING)
+- FR8.1.1 → FR8.1.2: Job attribution and sharing
+- FR8.2.1: Training completion notifications
+- FR8.2.2 → FR8.3.1: Job notes and knowledge base (renumbered)
+- **Dependencies:** Section 2 (job management and events)
+- **Build Layer:** CROSS-CUTTING (team features)
 
-**DECISION:** Keep existing 8-section structure - it already follows logical build order.
+### Build Order Decision
+
+**DECISION:** Keep existing 8-section structure
+
+**RATIONALE:**
+1. Current structure already follows logical build dependencies:
+   - Configuration (Section 1) MUST come before Execution (Section 2)
+   - Execution MUST come before Error Handling (Section 3)
+   - Artifacts (Section 4) require completed training
+   - Comparison (Section 5) requires multiple jobs
+   - Validation (Section 6) requires artifacts
+   - Budget/Collaboration (Sections 7-8) are cross-cutting
+   
+2. Feature-based organization better serves this project type:
+   - Training pipeline has natural workflow progression
+   - Developers think in terms of user journeys, not technical layers
+   - Existing structure matches how team discusses features
+   
+3. Maintaining 8 sections preserves:
+   - Existing cross-references in documentation
+   - Team familiarity with structure
+   - Traceability to User Stories
+   
+4. No significant dependency violations detected:
+   - No features in later sections required by earlier sections
+   - Cross-cutting concerns (budget, notifications) appropriately placed
+
+**BUILD ORDER VALIDATION: PASSED** - No reorganization required beyond formatting and duplicate removal.
 
 ================================================================================
-## PHASE 5: Formatting Fixes
+## PHASE 5: Section Header Formatting Fixes
 ================================================================================
 
-### Section Header Changes
+### Issue Identified
+All 8 section headers have duplicate numbering:
+- "## 1. 1. Training Job Configuration & Setup"
+- "## 2. 2. Training Job Execution & Monitoring"
+- etc.
+
+### Changes Applied
+
 [SECTION-1] -> [FORMAT_FIX] -> [Section 1]
 BEFORE: "## 1. 1. Training Job Configuration & Setup"
 AFTER: "## 1. Training Job Configuration & Setup"
-REASON: Fixed duplicate numbering
+REASON: Removed duplicate numbering for consistent formatting
 
 [SECTION-2] -> [FORMAT_FIX] -> [Section 2]
 BEFORE: "## 2. 2. Training Job Execution & Monitoring"
 AFTER: "## 2. Training Job Execution & Monitoring"
-REASON: Fixed duplicate numbering
+REASON: Removed duplicate numbering for consistent formatting
 
 [SECTION-3] -> [FORMAT_FIX] -> [Section 3]
 BEFORE: "## 3. 3. Error Handling & Recovery"
 AFTER: "## 3. Error Handling & Recovery"
-REASON: Fixed duplicate numbering
+REASON: Removed duplicate numbering for consistent formatting
 
 [SECTION-4] -> [FORMAT_FIX] -> [Section 4]
 BEFORE: "## 4. 4. Model Artifacts & Downloads"
 AFTER: "## 4. Model Artifacts & Downloads"
-REASON: Fixed duplicate numbering
+REASON: Removed duplicate numbering for consistent formatting
 
 [SECTION-5] -> [FORMAT_FIX] -> [Section 5]
 BEFORE: "## 5. 5. Training Comparison & Optimization"
 AFTER: "## 5. Training Comparison & Optimization"
-REASON: Fixed duplicate numbering
+REASON: Removed duplicate numbering for consistent formatting
 
 [SECTION-6] -> [FORMAT_FIX] -> [Section 6]
 BEFORE: "## 6. 6. Model Quality Validation"
 AFTER: "## 6. Model Quality Validation"
-REASON: Fixed duplicate numbering
+REASON: Removed duplicate numbering for consistent formatting
 
 [SECTION-7] -> [FORMAT_FIX] -> [Section 7]
 BEFORE: "## 7. 7. Cost Management & Budget Control"
 AFTER: "## 7. Cost Management & Budget Control"
-REASON: Fixed duplicate numbering
+REASON: Removed duplicate numbering for consistent formatting
 
 [SECTION-8] -> [FORMAT_FIX] -> [Section 8]
 BEFORE: "## 8. 8. Team Collaboration & Notifications"
 AFTER: "## 8. Team Collaboration & Notifications"
-REASON: Fixed duplicate numbering
+REASON: Removed duplicate numbering for consistent formatting
 
 ================================================================================
 ## PHASE 6: FR Renumbering
 ================================================================================
 
-### Sections 1-7: No Changes
-All FR numbers in Sections 1-7 remain unchanged as they follow consistent numbering scheme.
+### Sections 1-7: No FR Renumbering Required
+All FR numbers in Sections 1-7 remain unchanged:
+- Consistent numbering scheme (Section.Group.Item)
+- No gaps or duplicates
+- Traceability to User Stories preserved
 
-### Section 8: Renumbered Due to Merge
+### Section 8: Renumbered Due to FR8.2.2 Merge
+
 [FR8.1.1] -> [UNCHANGED] -> [FR8.1.1] | Job Creator Attribution
-[FR8.1.2] -> [UNCHANGED] -> [FR8.1.2] | Job Sharing & Collaboration
-[FR8.2.1] -> [UNCHANGED] -> [FR8.2.1] | Training Completion Notifications
-[FR8.2.2] -> [MERGED INTO FR7.2.2] -> REMOVED | Budget Alert Notifications
-[FR8.3.1] -> [RENUMBERED] -> [FR8.2.2] | Job Notes and Experiment Documentation
-[FR8.3.2] -> [RENUMBERED] -> [FR8.3.1] | Team Knowledge Base Integration (Future)
+- **User Stories:** US8.1.1
+- **Tasks:** [T-8.1.1]
+- **REASON:** No change needed
 
-### Renumbering Rationale
-- FR8.3.1 → FR8.2.2: Moved up to fill gap left by merged FR8.2.2
-- FR8.3.2 → FR8.3.1: Moved up to maintain sequential numbering
+[FR8.1.2] -> [UNCHANGED] -> [FR8.1.2] | Job Sharing & Collaboration
+- **User Stories:** US8.1.2
+- **Tasks:** [T-8.1.2]
+- **REASON:** No change needed
+
+[FR8.2.1] -> [UNCHANGED] -> [FR8.2.1] | Training Completion Notifications
+- **User Stories:** US8.2.1
+- **Tasks:** [T-8.2.1]
+- **REASON:** No change needed
+
+[FR8.2.2] -> [MERGED INTO FR7.2.2] -> REMOVED | Budget Alert Notifications
+- **User Stories:** US8.2.2 (now referenced by FR7.2.2)
+- **Tasks:** [T-8.2.2] (now referenced by FR7.2.2)
+- **REASON:** Duplicate of FR7.2.2, acceptance criteria merged
+
+[FR8.3.1] -> [RENUMBERED] -> [FR8.2.2] | Job Notes and Experiment Documentation
+- **User Stories:** US8.3.1 (unchanged)
+- **Tasks:** [T-8.3.1] (unchanged)
+- **REASON:** Moved up to fill gap left by merged FR8.2.2
+
+[FR8.3.2] -> [RENUMBERED] -> [FR8.3.1] | Team Knowledge Base Integration (Future)
+- **User Stories:** US8.3.2 (unchanged)
+- **Tasks:** [T-8.3.2] (unchanged)
+- **REASON:** Moved up to maintain sequential numbering
+
+### FR7.2.2 Enhanced
+
+[FR7.2.2] -> [ENHANCED] -> [FR7.2.2] | Budget Alerts & Notifications
+- **User Stories:** US7.2.2, US8.2.2 (added)
+- **Tasks:** [T-7.2.2], [T-8.2.2] (added)
+- **Acceptance Criteria:** Enhanced with content from FR8.2.2:
+  - Added: Notification recipients configurable
+  - Added: Escalation levels (80% → email, 95% → email+Slack, 100% → email+Slack+in-app)
+  - Added: Daily digest option for training budget summary
+- **REASON:** Consolidated duplicate notification functionality
+
+### Renumbering Impact
+- **Original Section 8 FRs:** 6
+- **Final Section 8 FRs:** 5
+- **FR Number Changes:** 2 (FR8.3.1 → FR8.2.2, FR8.3.2 → FR8.3.1)
+- **User Story References:** Preserved (US numbers unchanged)
+- **Task References:** Preserved (T- numbers unchanged)
 
 ================================================================================
 ## FINAL INVENTORY
@@ -296,7 +449,7 @@ All FR numbers in Sections 1-7 remain unchanged as they follow consistent number
 - FR7.1.1: Live Cost Accumulation Display [US7.1.1] [T-7.1.1] | UNCHANGED
 - FR7.1.2: Cost vs Time Remaining Projection [US7.1.2] [T-7.1.2] | UNCHANGED
 - FR7.2.1: Monthly Budget Dashboard [US7.2.1] [T-7.2.1] | UNCHANGED
-- FR7.2.2: Budget Alerts & Notifications [US7.2.2] [T-7.2.2] | MERGED (includes FR8.2.2 content)
+- FR7.2.2: Budget Alerts & Notifications [US7.2.2, US8.2.2] [T-7.2.2, T-8.2.2] | ENHANCED (merged FR8.2.2 content)
 - FR7.3.1: Spot vs On-Demand Cost Analysis [US7.3.1] [T-7.3.1] | UNCHANGED
 - FR7.3.2: Cost Attribution by Client/Project [US7.3.2] [T-7.3.2] | UNCHANGED
 
@@ -310,35 +463,120 @@ All FR numbers in Sections 1-7 remain unchanged as they follow consistent number
 **TOTAL: 50 FRs** (51 - 1 merged = 50)
 
 ================================================================================
-## VERIFICATION
+## VERIFICATION & VALIDATION
 ================================================================================
 
-Original FR Count: 51
-- Section 1: 7
-- Section 2: 7
-- Section 3: 7
-- Section 4: 6
-- Section 5: 4
-- Section 6: 8
-- Section 7: 6
-- Section 8: 6
+### Original FR Count: 51
+- Section 1: 7 FRs
+- Section 2: 7 FRs
+- Section 3: 7 FRs
+- Section 4: 6 FRs
+- Section 5: 4 FRs
+- Section 6: 8 FRs
+- Section 7: 6 FRs
+- Section 8: 6 FRs
+- **Total: 51 FRs**
 
-Final FR Count: 50
-- Section 1: 7 (unchanged)
-- Section 2: 7 (unchanged)
-- Section 3: 7 (unchanged)
-- Section 4: 6 (unchanged)
-- Section 5: 4 (unchanged)
-- Section 6: 8 (unchanged)
-- Section 7: 6 (includes merged content from FR8.2.2)
-- Section 8: 5 (reduced by 1 due to merge)
+### Final FR Count: 50
+- Section 1: 7 FRs (unchanged)
+- Section 2: 7 FRs (unchanged)
+- Section 3: 7 FRs (unchanged)
+- Section 4: 6 FRs (unchanged)
+- Section 5: 4 FRs (unchanged)
+- Section 6: 8 FRs (unchanged)
+- Section 7: 6 FRs (1 enhanced with merged content)
+- Section 8: 5 FRs (reduced by 1 due to merge)
+- **Total: 50 FRs**
 
-FRs Removed: 0
-FRs Added: 0
-FRs Merged: 1 (FR8.2.2 → FR7.2.2)
+### Change Summary
+- FRs Removed: 0
+- FRs Added: 0
+- FRs Merged: 1 (FR8.2.2 → FR7.2.2)
+- FRs Renumbered: 2 (FR8.3.1 → FR8.2.2, FR8.3.2 → FR8.3.1)
+- FRs Enhanced: 1 (FR7.2.2 includes FR8.2.2 content)
+- Section Headers Fixed: 8
 
-**Verification: PASSED** - All FRs accounted for, merge properly documented.
+### Traceability Verification
+✓ All User Story references preserved (USX.Y.Z numbers unchanged)
+✓ All Task references preserved (T-X.Y.Z numbers unchanged)
+✓ All acceptance criteria preserved or consolidated
+✓ No functionality lost in reorganization
+✓ All FRs accounted for (51 → 50, with 1 merge documented)
+
+### Build Dependency Validation
+✓ Section 1 (Configuration) → Entry point, no dependencies
+✓ Section 2 (Execution) → Depends on Section 1
+✓ Section 3 (Error Handling) → Depends on Section 2
+✓ Section 4 (Artifacts) → Depends on Section 2
+✓ Section 5 (Comparison) → Depends on multiple jobs
+✓ Section 6 (Validation) → Depends on Section 4
+✓ Section 7 (Budget) → Cross-cutting, integrates with Sections 1-2
+✓ Section 8 (Collaboration) → Cross-cutting, integrates with Section 2
+
+**Verification: PASSED** - All FRs accounted for, dependencies respected, traceability maintained.
+
+================================================================================
+## RECOMMENDATIONS FOR NEXT PHASE
+================================================================================
+
+### Implementation Priorities
+Based on build dependencies, recommended implementation order:
+
+**Phase 1: Foundation (Weeks 1-2)**
+- Database schema for training jobs, metadata, webhooks
+- Authentication and authorization
+- Supabase Storage setup for artifacts and checkpoints
+- RunPod API integration setup
+- Section 1 (Job Configuration) FRs
+
+**Phase 2: Core Execution (Weeks 3-5)**
+- Section 2 (Job Execution & Monitoring) FRs
+- Basic job creation and monitoring
+- Live progress tracking
+- Job control (cancel)
+- Section 7 cost tracking (FR7.1.1, FR7.1.2)
+
+**Phase 3: Reliability (Weeks 6-7)**
+- Section 3 (Error Handling & Recovery) FRs
+- Checkpoint system
+- Error detection and recovery
+- Retry mechanisms
+
+**Phase 4: Artifacts & Delivery (Week 8)**
+- Section 4 basic FRs (FR4.1.1, FR4.1.2, FR4.2.1)
+- Adapter downloads
+- Metrics export
+
+**Phase 5: Quality Validation (Weeks 9-10)**
+- Section 6 (Model Quality Validation) FRs
+- Perplexity benchmarks
+- Emotional intelligence tests
+- Knowledge retention checks
+
+**Phase 6: Advanced Features (Weeks 11-12)**
+- Section 4 advanced FRs (FR4.2.2, FR4.3.1, FR4.3.2)
+- Section 5 (Training Comparison & Optimization) FRs
+- Reports, packages, comparison tools
+
+**Phase 7: Cross-Cutting (Weeks 13-14)**
+- Section 7 budget management (FR7.2.1, FR7.2.2, FR7.3.1, FR7.3.2)
+- Section 8 (Team Collaboration & Notifications) FRs
+- Complete notification system
+- Team features
+
+### Future Enhancements
+Marked as "Future" in document:
+- FR2.2.2: Pause and Resume Training
+- FR4.3.2: API Inference Endpoint Template
+- FR6.3.2: Domain-Specific Knowledge Probes
+- FR6.4.2: Client Brand Customization
+- FR8.3.1: Team Knowledge Base Integration
 
 ================================================================================
 ## END OF CHANGE LOG
 ================================================================================
+
+**Reorganization Completed:** 2025-12-16
+**Completed By:** Senior Technical Product Manager (AI Assistant)
+**Review Status:** Ready for stakeholder review
+**Next Steps:** Begin Phase 1 implementation planning

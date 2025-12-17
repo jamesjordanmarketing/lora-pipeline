@@ -108,11 +108,11 @@ node 01-generate-overview.js "Project Name" project-abbreviation
 
 ### 2.3 Step 2: User Stories Generation
 
-The user stories generation uses `01-02-generate-product-specs.js` (or can be done manually):
+The user stories generation uses `02a-generate-user-story-spec.js` (or can be done manually):
 
 **Input Files:**
 - `00-{project-abbreviation}-seed-story.md` (from step 0)
-- `01-{project-abbreviation}-overview.md` (from step 1)
+- `01-{project-abbreviation}-overview.md` (from step 1) **← REQUIRED: Must exist before running**
 - `config/prompts-config.json` (configuration file)
 - Template files specified in configuration:
   - User stories template (typically `_templates/02-user-stories-template.md`)
@@ -134,8 +134,10 @@ The user stories generation uses `01-02-generate-product-specs.js` (or can be do
 **Usage:**
 ```bash
 cd pmc/product/_tools
-node 01-02-generate-product-specs.js "Project Name" project-abbreviation
+node 02a-generate-user-story-spec.js "Project Name" project-abbreviation
 ```
+
+**Note:** This script ONLY generates user stories (step 02). Run `01-generate-overview.js` first to create the overview document.
 
 ### 2.4 Step 02b: User Journey Generation
 
@@ -379,14 +381,14 @@ graph TD
 | Script | Purpose | Input Files | Outputs |
 |--------|---------|-------------|---------|
 | `00-generate-seed-story.js` | Creates seed narrative and story | `_seeds/seed-narrative-v1.md`, templates, examples | Narrative + Story docs |
-| `01-generate-overview.js` | Overview generation | Seed story, config, templates, examples | Overview doc + prompt |
-| `01-02-generate-product-specs.js` | Combined overview + user stories | Seed story, config, templates, examples | Overview + User Stories |
-| `02b-generate-user-journey_v1.js` | User journey prompt generation | Overview, User Stories, templates | User Journey prompt |
-| `03-generate-functional-requirements.js` | Enhanced FR generation | Overview, User Stories, User Journey, templates | Enhanced FR + prompts |
-| `04-generate-FR-wireframe-segments_v4.js` | Wireframe generation | Functional Requirements, v4 template | FR wireframe prompts + sections |
+| `01-generate-overview.js` | Overview generation (step 01) | Seed story, config, templates, examples | Overview doc + prompt |
+| `02a-generate-user-story-spec.js` | User stories generation (step 02) | Overview (required), config, templates, examples | User Stories doc + prompt |
+| `02b-generate-user-journey_v1.js` | User journey prompt generation (step 02b) | Overview, User Stories, templates | User Journey prompt |
+| `03-generate-functional-requirements.js` | Enhanced FR generation (step 03) | Overview, User Stories, User Journey, templates | Enhanced FR + prompts |
+| `04-generate-FR-wireframe-segments_v4.js` | Wireframe generation (step 04) | Functional Requirements, v4 template | FR wireframe prompts + sections |
 
-### 4.2 Configuration and Templates
-
+**Deprecated Scripts** (moved to `archive/`):
+- `01-02-generate-product-specs.js` - Split into `01-generate-overview.js` + `02a-generate-user-story-spec.js` for operational consistency
 #### Key Configuration Files
 - `seed-story-config.json`: Seed generation configuration
 - `config/prompts-config.json`: Product spec generation configuration

@@ -4,6 +4,6 @@
     "functionalRequirements": "03-pipeline-functional-requirements.md",
     "overview": "01-pipeline-overview.md",
     "userStories": "02-pipeline-user-stories.md",
-    "userJourney": "03.5-pipeline-user-journey.md"
+    "userJourney": "02b-pipeline-user-journey.md"
   }
 }

@@ -123,7 +123,396 @@ The new process is simpler:
 
 ---
 
+## Script Duplication Analysis: 01-generate-overview.js vs 01-02-generate-product-specs.js
+
+### Questions Answered
+
+**Q1: What does `01-generate-overview.js` do?**
+- Generates **ONLY** the overview prompt
+- Processes `config.documents[0]` (the first document in prompts-config.json)
+- Outputs: `_run-prompts/01-product-{abbrev}-overview-prompt-v1.md`
+
+**Q2: What does `01-02-generate-product-specs.js` do?**
+- Generates **BOTH** overview and user stories prompts
+- Processes `config.documents[0]` for overview
+- Then processes `config.documents[1]` for user stories
+- Outputs: 
+  - `_run-prompts/01-product-{abbrev}-overview-prompt-v1.md`
+  - `_run-prompts/02-product-{abbrev}-user-stories-prompt-v1.md`
+
+**Q3: Is there duplicate functionality?**
+- **YES** - Both scripts generate the exact same overview prompt file
+- The output filename is identical: `01-product-{abbrev}-overview-prompt-v1.md`
+- The output directory is identical: `_run-prompts/`
+- The template used is identical: `01-product-overview-prompt-template_v1.md`
+- The placeholders processed are identical
+
+**Q4: Does running 01-02 overwrite the 01 prompt?**
+- **YES** - Running `01-02-generate-product-specs.js` will overwrite the file created by `01-generate-overview.js`
+- Since they write to the same filename, the second execution replaces the first
+
+**Q5: Are the prompts exactly the same in content?**
+- **YES** - Both scripts:
+  - Load the same `prompts-config.json`
+  - Process the same `config.documents[0]` entry
+  - Use the same template file
+  - Replace the same placeholders
+  - Generate byte-for-byte identical output
+
+### Process Impact
+
+**Current Tutorial Says:**
+1. Run `01-generate-overview.js` first
+2. Then run `01-02-generate-product-specs.js`
+
+**What Actually Happens:**
+1. `01-generate-overview.js` creates `01-product-{abbrev}-overview-prompt-v1.md`
+2. `01-02-generate-product-specs.js` **overwrites** that same file
+3. Then creates `02-product-{abbrev}-user-stories-prompt-v1.md`
+
+### Recommended Solution
+
+**Option A: Use only 01-02-generate-product-specs.js**
+- Skip `01-generate-overview.js` entirely
+- Run `01-02-generate-product-specs.js` once to generate both prompts
+- This is more efficient and avoids confusion
+
+**Option B: Keep both scripts (current approach)**
+- Useful if you only want to regenerate the overview prompt without user stories
+- Accept that running both will result in overwrite (harmless since content is identical)
+
+**Option C: Deprecate 01-generate-overview.js**
+- Since `01-02-generate-product-specs.js` is a superset
+- Move `01-generate-overview.js` to archive
+- Update tutorials to use only `01-02-generate-product-specs.js`
+
+### Current Decision
+- **Keep both scripts** for now
+- Update tutorial to clarify that running `01-02-generate-product-specs.js` alone is sufficient
+- Document that `01-generate-overview.js` is useful only for regenerating overview without touching user stories
+
+---
+
+## Step 03 & Step 04 Process Analysis (December 16, 2025)
+
+### User Questions & Context
+
+**Scenario:** User ran `03-generate-functional-requirements.js` which created:
+- Output: `_run-prompts/3a-preprocess-functional-requirements-prompt_v1-output.md`
+- User executed that prompt in AI, created: `03-pipeline-functional-requirements.md`
+- Script now asking for "FR Preprocessing Instructions" and path to `3b-functional-requirements-prompt_v1.md`
+
+**Questions:**
+1. What is expected to complete the enhancements?
+2. Is there another prompt for detailed enhancements?
+3. Does executing `3b-functional-requirements-prompt_v1.md` add value?
+4. Are wireframe scripts (`04-generate-FR-prompt-segments.js` and `04-generate-FR-wireframe-segments_v5.js`) the next step?
+5. Are those scripts/prompts templatized?
+
+---
+
+### Analysis: Step 03 Functional Requirements Process
+
+#### How Step 03 Works (Two-Phase Process)
+
+**Phase 1: Preprocess (3a)**
+```
+Input: Raw/initial functional requirements
+Script: 03-generate-functional-requirements.js (preprocess mode)
+Template: _prompt_engineering/3a-preprocess-functional-requirements-prompt_v1.md
+Output Prompt: _run-prompts/3a-preprocess-functional-requirements-prompt_v1-output.md
+Action: User copies prompt → AI execution → Saves as 03-{abbrev}-functional-requirements.md
+Purpose: Clean, deduplicate, and reorder requirements
+```
+
+**Phase 2: Enhance (3b) - TWO SEPARATE PROMPTS**
+
+After preprocessing, the script asks: "Ready to continue to enhancement step? (y/n)"
+
+When you say "yes", it generates **TWO enhancement prompts** (not one):
+
+**Enhancement Prompt #1:**
+```
+Template: _prompt_engineering/3b-#1-functional-requirements-legacy-prompt_v1.md
+Output Prompt: _run-prompts/3b-#1-functional-requirements-legacy-prompt_v1-output.md
+Purpose: Enhance requirements with detailed acceptance criteria and identify gaps
+Action: User copies prompt → AI execution → Updates 03-{abbrev}-functional-requirements.md
+```
+
+**Enhancement Prompt #2:**
+```
+Template: _prompt_engineering/3b-#2-functional-requirements-legacy-code-prompt_v1.md
+Output Prompt: _run-prompts/3b-#2-functional-requirements-legacy-code-prompt_v1-output.md
+Purpose: Add legacy code references underneath each acceptance criterion
+Action: User copies prompt → AI execution → Updates 03-{abbrev}-functional-requirements.md again
+```
+
+**Note:** The original `3b-functional-requirements-prompt_v1.md` template is **NOT used** by the script. It's kept for reference only.
+
+---
+
+### Answers to User Questions
+
+#### Q1: What is expected to complete the enhancements?
+
+**Answer:**
+When the script asks for "FR Preprocessing Instructions" at the enhance step, it's asking you to confirm the path to the enhancement template. You should:
+
+1. **Press Enter** to accept default: `_prompt_engineering/3b-functional-requirements-prompt_v1.md`
+2. Script will then ask for paths to:
+   - `03-{abbrev}-functional-requirements.md` (your preprocessed FR file)
+   - `01-{abbrev}-overview.md`
+   - `02-{abbrev}-user-stories.md`
+   - `02b-{abbrev}-user-journey.md`
+   - Reference example (if exists)
+   - Codebase review (optional - say "n" unless you have legacy code to reference)
+
+3. Script generates **TWO** enhancement prompts in `_run-prompts/`:
+   - `3b-#1-functional-requirements-legacy-prompt_v1-output.md`
+   - `3b-#2-functional-requirements-legacy-code-prompt_v1-output.md`
+
+4. Execute **Prompt #1** first:
+   - Copy content → Paste in AI
+   - AI enhances your FR with detailed acceptance criteria
+   - Save output, replacing your `03-{abbrev}-functional-requirements.md`
+
+5. Execute **Prompt #2** second (optional):
+   - Copy content → Paste in AI
+   - AI adds legacy code references under each criterion
+   - Save output, replacing your `03-{abbrev}-functional-requirements.md` again
+
+---
+
+#### Q2: Is there another prompt for detailed enhancements?
+
+**Answer:** YES - There are **TWO** enhancement prompts, not one.
+
+**Files Overview:**
+```
+_prompt_engineering/
+├── 3b-functional-requirements-prompt_v1.md              (REFERENCE ONLY - not used by script)
+├── 3b-#1-functional-requirements-legacy-prompt_v1.md    (ACTIVE - enhancement step 1)
+└── 3b-#2-functional-requirements-legacy-code-prompt_v1.md (ACTIVE - enhancement step 2)
+```
+
+**Status of Each File:**
+
+1. **`3b-functional-requirements-prompt_v1.md`**
+   - **Status:** Original/reference template
+   - **Used by script:** NO (script code has it commented out)
+   - **Purpose:** Historical reference, shows original single-step enhancement approach
+   - **Recommended:** Keep for reference, but don't execute
+
+2. **`3b-#1-functional-requirements-legacy-prompt_v1.md`**
+   - **Status:** ACTIVE - Part 1 of enhancement
+   - **Used by script:** YES
+   - **Purpose:** Enhance requirements with:
+     - Detailed acceptance criteria
+     - New requirements to fill gaps
+     - Consistent depth across all sections
+   - **Execution:** REQUIRED for quality FRs
+
+3. **`3b-#2-functional-requirements-legacy-code-prompt_v1.md`**
+   - **Status:** ACTIVE - Part 2 of enhancement
+   - **Used by script:** YES
+   - **Purpose:** Add legacy code references under each acceptance criterion
+   - **Execution:** OPTIONAL (only if you have legacy codebase to reference)
+
+**Why Two Prompts?**
+- AI context limits prevent doing everything in one pass
+- Splitting into two phases ensures:
+  - Phase 1: Deep enhancement of requirements quality
+  - Phase 2: Traceability to legacy code (if applicable)
+
+---
+
+#### Q3: Does executing `3b-functional-requirements-prompt_v1.md` add value?
+
+**Answer:** NO - Do NOT execute `3b-functional-requirements-prompt_v1.md` manually.
+
+**Reasoning:**
+1. **Script doesn't use it** - The code explicitly skips generating this prompt (it's commented out in lines 438-444)
+2. **Superseded by split prompts** - The `3b-#1` and `3b-#2` prompts replaced it
+3. **Will cause confusion** - Running it would duplicate enhancement work already done by `3b-#1`
+
+**What You Should Do:**
+- **Execute:** `3b-#1-functional-requirements-legacy-prompt_v1-output.md` (generated by script)
+- **Optionally Execute:** `3b-#2-functional-requirements-legacy-code-prompt_v1-output.md` (if you have legacy code)
+- **Ignore:** `3b-functional-requirements-prompt_v1.md` (reference only)
+
+**Recommendation:** Move `3b-functional-requirements-prompt_v1.md` to archive with note that it's superseded by split prompts.
+
+---
+
+#### Q4: Are wireframe scripts the next step?
+
+**Answer:** YES - After completing Step 03 enhancements, Step 04 generates wireframe prompts.
+
+**Correct Next Steps:**
+
+```
+Step 03 Complete ✅
+  ├─ 3a preprocessing executed
+  ├─ 3b-#1 enhancement executed
+  └─ 3b-#2 legacy code references executed (optional)
+        ↓
+Step 04: Wireframe Generation
+  ├─ Script: 04-generate-FR-wireframe-segments_v5.js (RECOMMENDED)
+  └─ Alternative: 04-generate-FR-prompt-segments.js (older version)
+```
+
+**Which Script to Use:**
+
+1. **`04-generate-FR-wireframe-segments_v5.js`** (RECOMMENDED - Latest)
+   - More sophisticated
+   - Uses journey mapping data
+   - Generates both generator prompts AND execution prompts
+   - Outputs to `_mapping/fr-maps/prompts/`
+
+2. **`04-generate-FR-prompt-segments.js`** (Older)
+   - Simpler segmentation
+   - Outputs to `_mapping/ui-functional-maps/`
+   - May be deprecated or for different use case
+
+**Recommendation:** Use `04-generate-FR-wireframe-segments_v5.js` (v5 is the latest version in your codebase).
+
+---
+
+#### Q5: Are wireframe scripts/prompts templatized?
+
+**Answer:** YES - Both scripts are fully templatized and automated.
+
+**How Step 04 Works:**
+
+**Script:** `04-generate-FR-wireframe-segments_v5.js`
+
+**Process:**
+1. **Reads** your `03-{abbrev}-functional-requirements.md`
+2. **Segments** it into sections (E01, E02, E03, etc.)
+3. **For each section:**
+   - Extracts all FR IDs (e.g., FR1.1.0, FR1.2.0, FR1.3.0)
+   - Generates a customized prompt PER FR using template
+   - Calculates line numbers for traceability
+4. **Outputs:**
+   - Generator prompts: `_mapping/fr-maps/prompts/04-FR-wireframes-prompt-E[XX].md`
+   - Execution prompts: `_mapping/fr-maps/prompts/04-FR-with-wireframes-execution-prompts_v1.md`
+   - Final wireframe output path: `_mapping/fr-maps/04-bmo-FR-wireframes-output-E[XX].md`
+
+**Templates Used:**
+- `_prompt_engineering/04-FR-with-wireframes-create-tasks_v1.md` (generator template)
+- `_prompt_engineering/04-FR-with-wireframes-execution-prompts_v1.md` (execution template)
+
+**Placeholders Replaced:**
+- `[FR_NUMBER_PLACEHOLDER]` → Actual FR ID (e.g., FR1.1.0)
+- `[STAGE_NAME_PLACEHOLDER]` → Section name
+- `[MINIMUM_PAGE_COUNT_PLACEHOLDER]` → Page count requirement
+- `[SECTION_ID_PLACEHOLDER]` → Section ID (e.g., E01)
+- `[FR_LOCATE_FILE_PATH_PLACEHOLDER]` → Path to FR file
+- `[FR_LOCATE_LINE_PLACEHOLDER]` → Line number in FR file
+- `[OUTPUT_FILE_PATH_PLACEHOLDER]` → Output path for wireframe
+
+**Execution Flow:**
+```
+1. Run: node 04-generate-FR-wireframe-segments_v5.js "Project Name" abbrev
+2. Script auto-generates all prompts for all sections
+3. For each section (E01, E02, etc.):
+   - Copy the generated prompt
+   - Paste in AI (Claude/ChatGPT)
+   - AI creates detailed wireframes with tasks
+   - Save to specified output path
+4. Repeat for all sections
+```
+
+**Yes, fully templatized** - No manual editing of prompts required.
+
+---
+
+### Complete Step 03 & 04 Workflow Summary
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ STEP 03: Functional Requirements (Two-Phase Enhancement)       │
+├─────────────────────────────────────────────────────────────────┤
+│ Phase 1: Preprocess (3a)                                        │
+│   Script: 03-generate-functional-requirements.js               │
+│   Template: 3a-preprocess-functional-requirements-prompt_v1.md │
+│   Output: 03-{abbrev}-functional-requirements.md               │
+│   Purpose: Clean, deduplicate, reorder                         │
+├─────────────────────────────────────────────────────────────────┤
+│ Phase 2: Enhance (3b) - TWO PROMPTS                            │
+│   Prompt #1: 3b-#1-functional-requirements-legacy-prompt_v1.md │
+│     → Adds detailed acceptance criteria                        │
+│     → Identifies gaps and adds new requirements                │
+│     → REQUIRED for quality                                     │
+│                                                                 │
+│   Prompt #2: 3b-#2-functional-requirements-legacy-code-...     │
+│     → Adds legacy code references under each criterion         │
+│     → OPTIONAL (only if you have legacy codebase)              │
+└─────────────────────────────────────────────────────────────────┘
+                           ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ STEP 04: Wireframe Generation                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ Script: 04-generate-FR-wireframe-segments_v5.js                │
+│ Templates:                                                      │
+│   - 04-FR-with-wireframes-create-tasks_v1.md                   │
+│   - 04-FR-with-wireframes-execution-prompts_v1.md              │
+│                                                                 │
+│ Process:                                                        │
+│   1. Reads 03-{abbrev}-functional-requirements.md              │
+│   2. Segments into sections (E01, E02, E03...)                 │
+│   3. Extracts FR IDs per section                               │
+│   4. Generates prompts per FR with placeholders filled         │
+│   5. Outputs to _mapping/fr-maps/prompts/                      │
+│                                                                 │
+│ Execution:                                                      │
+│   - For each section, copy generated prompt                    │
+│   - Paste in AI                                                │
+│   - AI creates detailed wireframes                             │
+│   - Save to specified output path                              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Recommended Actions
+
+#### Immediate (For Current Session)
+
+1. **Complete Step 03 Enhancement:**
+   - Press Enter to accept `3b-functional-requirements-prompt_v1.md` path
+   - Provide paths to all required files when prompted
+   - Say "n" to codebase review (unless you have legacy code)
+   - Execute the TWO generated prompts:
+     - `3b-#1-functional-requirements-legacy-prompt_v1-output.md` (REQUIRED)
+     - `3b-#2-functional-requirements-legacy-code-prompt_v1-output.md` (OPTIONAL - skip if no legacy code)
+
+2. **Proceed to Step 04:**
+   - Run: `node 04-generate-FR-wireframe-segments_v5.js "LoRA Pipeline" pipeline`
+   - Execute each generated wireframe prompt section by section
+
+#### Cleanup (For Next Session)
+
+1. **Archive obsolete template:**
+   ```bash
+   mv _prompt_engineering/3b-functional-requirements-prompt_v1.md \
+      _prompt_engineering/archive/3b-functional-requirements-prompt_v1.md
+   ```
+   - Add note: "Superseded by 3b-#1 and 3b-#2 split prompts"
+
+2. **Update tutorials** to clarify:
+   - Step 03 has TWO enhancement prompts (not one)
+   - `3b-functional-requirements-prompt_v1.md` is reference only
+   - Legacy code prompt (#2) is optional
+
+3. **Verify script versions:**
+   - Confirm `04-generate-FR-wireframe-segments_v5.js` is the canonical version
+   - Archive or deprecate `04-generate-FR-prompt-segments.js` if superseded
+
+---
+
 **Document Status:** Completed  
 **Executed By:** AI Agent  
-**Execution Date:** 2025-12-15
+**Execution Date:** 2025-12-15  
+**Updated:** 2025-12-16 (Script duplication analysis + Step 03/04 process analysis added)
 

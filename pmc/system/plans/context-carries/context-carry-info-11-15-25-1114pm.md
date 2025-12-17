@@ -4,9 +4,178 @@
 
 **Primary Task**: Implement Production LoRA Training Infrastructure for Existing 242-Conversation Dataset
 
+### ⚠️ IMMEDIATE NEXT TASK: PMC Script Consolidation (THIS SESSION - December 16, 2025)
+
+**What Was Just Completed**:
+
+1. ✅ **PMC Process Simplification** (Iteration 6)
+   - Deprecated v4 segmentation process (moved to archive/)
+   - Renamed 02.5 → 02b pattern for user journey files
+   - Created new `02b-generate-user-journey_v1.js` script
+   - Updated `03-generate-functional-requirements.js` to use 02b pattern
+   - Updated all PMC documentation and tutorials
+
+2. ✅ **Script Duplication Analysis**
+   - **Discovery**: Both `01-generate-overview.js` and `01-02-generate-product-specs.js` generate IDENTICAL overview prompts
+   - **File**: Both write to `_run-prompts/01-product-{abbrev}-overview-prompt-v1.md`
+   - **Content**: Byte-for-byte identical (same template, same placeholders, same config)
+   - **Impact**: Running both scripts causes harmless overwrite (second replaces first with identical content)
+   - **Root Cause**: `01-02-generate-product-specs.js` is a superset that generates BOTH overview + user stories prompts
+
+3. ✅ **Documentation Updated**
+   - Created comprehensive analysis in `pmc/context-ai/pmct/iteration-6-fixing-pmc-process_v1.md`
+   - Created operational tutorial: `pmc/docs/ltc-6a/00-pmc-ltc-operational-tutorial_v1.md`
+   - Updated overview tutorial: `pmc/docs/ltc-6a/00-pmc-ltc-overview-tutorial_v4.md`
+
+### 🎯 NEXT AGENT IMMEDIATE TASK: Split 01-02 Script for Operational Consistency
+
+**Current Problem**:
+- `01-02-generate-product-specs.js` generates BOTH step 01 (overview) and step 02 (user stories)
+- This violates operational consistency: one script should do one thing
+- Causes confusion: why run `01-generate-overview.js` if `01-02` overwrites it?
+
+**Solution to Implement**:
+
+**Step 1: Modify `01-02-generate-product-specs.js`**
+- **Location**: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\01-02-generate-product-specs.js`
+- **Action**: Remove all 01 (overview) generation functionality
+- **Keep**: Only the 02 (user stories) generation code
+- **Details**:
+  - Remove lines 535-551 (overview generation section)
+  - Remove `overviewDoc` variable
+  - Keep only `userStoriesDoc` processing (lines 563-581)
+  - Keep all utility functions (they're reused)
+  - Update script header comment to reflect new single purpose
+
+**Step 2: Create `02a-generate-user-story-spec.js`**
+- **Location**: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\02a-generate-user-story-spec.js`
+- **Action**: Create new script from modified `01-02-generate-product-specs.js`
+- **Functionality**: 
+  - Takes same inputs as current 02 process
+  - Outputs same 02 prompt: `_run-prompts/02-product-{abbrev}-user-stories-prompt-v1.md`
+  - Uses `config.documents[1]` (user stories config)
+  - Requires `01-{abbrev}-overview.md` as input (from config placeholders)
+- **Implementation**: Copy modified version of `01-02-generate-product-specs.js` with user stories code only
+
+**Step 3: Update Tutorial Documentation**
+- **File**: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\docs\ltc-6a\00-pmc-ltc-overview-tutorial_v4.md`
+- **Changes Required**:
+  - Update Section 2.2 (Step 01): Keep `01-generate-overview.js` instructions (no change)
+  - Update Section 2.3 (Step 02): Change from `01-02-generate-product-specs.js` to `02a-generate-user-story-spec.js`
+  - Add note: "`02a-generate-user-story-spec.js` requires `01-{abbrev}-overview.md` to exist first"
+  - Update process flow diagram if present
+  - Update any examples showing file execution order
+
+**Step 4: Update Operational Tutorial**
+- **File**: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\docs\ltc-6a\00-pmc-ltc-operational-tutorial_v1.md`
+- **Changes Required**:
+  - Update FAQ section about `01-02-generate-product-specs.js`
+  - Add note that script is now deprecated (functionality split)
+  - Update execution order: `01-generate-overview.js` → `02a-generate-user-story-spec.js`
+  - Update all examples and command sequences
+
+**Step 5: Archive Old Script**
+- **File**: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\01-02-generate-product-specs.js`
+- **Action**: Move to `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\archive/01-02-generate-product-specs.js`
+- **Reason**: Keep for reference but deprecate in favor of split scripts
+
+**Expected Result After Implementation**:
+
+```
+Step 00: Seed Story Generation
+  Script: 00-generate-seed-story.js
+  Output: 00-{abbrev}-seed-story.md
+
+Step 01: Overview Generation
+  Script: 01-generate-overview.js
+  Output prompt: _run-prompts/01-product-{abbrev}-overview-prompt-v1.md
+  Output document: 01-{abbrev}-overview.md
+
+Step 02: User Stories Generation (UPDATED)
+  Script: 02a-generate-user-story-spec.js (NEW - renamed from 01-02)
+  Input required: 01-{abbrev}-overview.md
+  Output prompt: _run-prompts/02-product-{abbrev}-user-stories-prompt-v1.md
+  Output document: 02-{abbrev}-user-stories.md
+
+Step 02b: User Journey Generation
+  Script: 02b-generate-user-journey_v1.js
+  Output prompt: _run-prompts/02b-product-{abbrev}-user-journey-prompt-v1.md
+  Output document: 02b-{abbrev}-user-journey.md
+
+Step 03: Functional Requirements Generation
+  Script: 03-generate-functional-requirements.js
+  Input: 02b-{abbrev}-user-journey.md
+  Output prompts: _run-prompts/3a-*.md, 3b-*.md
+  Output document: 03-{abbrev}-functional-requirements.md
+```
+
+**Rationale**:
+- **Operational Consistency**: Each script does ONE thing (matches rest of PMC process)
+- **Clear Dependencies**: Step 02a explicitly requires Step 01 output
+- **No Duplication**: Removes overlapping functionality between `01-generate-overview.js` and `01-02-generate-product-specs.js`
+- **Naming Convention**: 02a follows established pattern (like 02b for user journey)
+
+### 🚫 CRITICAL: DO NOT START LORA INFRASTRUCTURE WORK YET
+
+**After completing the PMC script consolidation task above**:
+1. ✅ Report completion summary
+2. ✅ Confirm all files modified/created correctly
+3. ✅ Wait for human confirmation
+4. ⚠️ **DO NOT** proceed to LoRA training infrastructure implementation
+5. ⚠️ **DO NOT** start building database tables, APIs, or Docker containers
+6. ✅ Internalize the LoRA context (read specs below) but DO NOT implement
+7. ✅ Wait for explicit human instruction to begin LoRA work
+
+---
+
+## 📋 PMC Process Current State (For Context)
+
+### PMC Script Execution Order (After Consolidation Above)
+
+```
+pmc/product/_tools/
+├── 00-generate-seed-story.js          → 00-{abbrev}-seed-story.md
+├── 01-generate-overview.js            → 01-product-{abbrev}-overview-prompt-v1.md
+├── 02a-generate-user-story-spec.js    → 02-product-{abbrev}-user-stories-prompt-v1.md (NEW)
+├── 02b-generate-user-journey_v1.js    → 02b-product-{abbrev}-user-journey-prompt-v1.md
+├── 03-generate-functional-requirements.js → 3a/3b prompts
+└── 04-generate-FR-wireframe-segments_v4.js → wireframe prompts
+```
+
+### Key PMC Files Modified This Session
+
+| File | Change | Status |
+|------|--------|--------|
+| `_tools/02-generate-user-journey-prompt-segments_v4.js` | Moved to archive/ | ✅ Deprecated |
+| `_prompt_engineering/02.5-user-journey-prompt_v8.md` | Renamed to 02b-user-journey-prompt_v8.md | ✅ Completed |
+| `_tools/02b-generate-user-journey_v1.js` | Created (409 lines) | ✅ Completed |
+| `_tools/03-generate-functional-requirements.js` | Updated for 02b pattern | ✅ Completed |
+| `docs/ltc-6a/00-pmc-ltc-overview-tutorial_v4.md` | Updated with 02b process | ✅ Completed |
+| `docs/ltc-6a/00-pmc-ltc-operational-tutorial_v1.md` | Created operational guide | ✅ Completed |
+| `context-ai/pmct/iteration-6-fixing-pmc-process_v1.md` | Added duplication analysis | ✅ Completed |
+| `_tools/01-02-generate-product-specs.js` | TO BE MODIFIED (remove 01 functionality) | ⏳ Next Task |
+| `_tools/02a-generate-user-story-spec.js` | TO BE CREATED (from modified 01-02) | ⏳ Next Task |
+
+### PMC Script Duplication Issue (Resolved by Next Task)
+
+**Current State**:
+- `01-generate-overview.js`: Generates overview prompt only
+- `01-02-generate-product-specs.js`: Generates BOTH overview + user stories prompts (duplicate!)
+- Both write to same file: `01-product-{abbrev}-overview-prompt-v1.md`
+- Content is byte-for-byte identical
+
+**After Next Task**:
+- `01-generate-overview.js`: Generates overview prompt only (no change)
+- `02a-generate-user-story-spec.js`: Generates user stories prompt only (new)
+- No duplication, operational consistency achieved
+
+---
+
+## 🏗️ LoRA Training Infrastructure (DO NOT IMPLEMENT YET - Context Only)
+
 ### Current Status: LoRA Training Infrastructure Specification Complete, Implementation Phase Next
 
-**What Was Completed** (December 13, 2025 - THIS SESSION):
+**What Was Completed** (December 13, 2025 - PREVIOUS SESSION):
 
 1. ✅ **Comprehensive LoRA Training Infrastructure Roadmap**
    - **File**: `pmc/context-ai/pmct/iteration-5-LoRA-training-initial.md` (2,139 lines)
@@ -57,11 +226,13 @@
    - **Cost Validated**: $50-150 per training run, $260-410 total first 3 months
    - **Timeline Validated**: 4 weeks to first trained model (achievable)
 
-**What's Next** (For Next Agent):
+**What's Next** (For Future Agent - AFTER PMC Task):
 
 ⚠️ **CRITICAL: DO NOT START BUILDING YET** ⚠️
 
-**First, you must internalize the context:**
+**First, complete the PMC script consolidation task above.**
+
+**Then, you must internalize the LoRA context:**
 
 1. **Read the Existing Codebase** (`C:\Users\james\Master\BrightHub\BRun\lora-pipeline\src`)
    - Understand current conversation generation pipeline
@@ -130,7 +301,7 @@
 
 ---
 
-## 🏗️ What We're Building: LoRA Training Infrastructure
+## 🏗️ What We're Building: LoRA Training Infrastructure (Context - DO NOT IMPLEMENT)
 
 ### System Architecture Overview
 
@@ -180,7 +351,7 @@
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Key Components to Build
+### Key Components to Build (FUTURE WORK)
 
 **Phase 1: Database & Vercel APIs (Week 1)**
 - Create new tables: training_jobs, model_artifacts, training_metrics_history
@@ -207,7 +378,7 @@
 
 ---
 
-## 📊 Training Approach: QLoRA on Llama 3 70B
+## 📊 Training Approach: QLoRA on Llama 3 70B (Context - DO NOT IMPLEMENT)
 
 ### Technical Details
 
@@ -257,7 +428,7 @@ training_args = {
 
 ---
 
-## 🧪 Testing Framework: Proving Dataset Effectiveness
+## 🧪 Testing Framework: Proving Dataset Effectiveness (Context - DO NOT IMPLEMENT)
 
 ### Two-Phase Testing Approach
 
@@ -309,7 +480,7 @@ training_args = {
 
 ---
 
-## 📦 Existing Dataset: Production-Ready
+## 📦 Existing Dataset: Production-Ready (Context Only)
 
 ### Dataset Location & Structure
 
@@ -380,7 +551,7 @@ training_args = {
 
 ---
 
-## 💰 Cost & Timeline Summary
+## 💰 Cost & Timeline Summary (Context Only)
 
 ### Infrastructure Investment
 
@@ -592,9 +763,24 @@ Dashboard View → Download (Raw or Enriched) → Combine Multiple JSON files in
 
 ## 🚀 Next Agent Instructions
 
-### ⚠️ CRITICAL: DO NOT START BUILDING YET ⚠️
+### ⚠️ IMMEDIATE TASK: PMC Script Consolidation (Complete This First)
 
-**Your First Task is Context Internalization, NOT Implementation**
+**Before doing anything else, complete the PMC script consolidation task described at the top of this document:**
+
+1. Modify `01-02-generate-product-specs.js` to remove 01 (overview) functionality
+2. Create `02a-generate-user-story-spec.js` with only 02 (user stories) functionality
+3. Update `00-pmc-ltc-overview-tutorial_v4.md` with new process
+4. Update `00-pmc-ltc-operational-tutorial_v1.md` with new execution order
+5. Archive old `01-02-generate-product-specs.js`
+
+**After completing PMC task, report**:
+- ✅ Summary of files modified/created
+- ✅ Confirmation all scripts work correctly
+- ✅ Any issues encountered
+
+### ⚠️ THEN: DO NOT START BUILDING LORA INFRASTRUCTURE YET ⚠️
+
+**After PMC task completion, your next task is context internalization:**
 
 ### Step 1: Internalize the Existing Codebase
 
@@ -701,7 +887,8 @@ Dashboard View → Download (Raw or Enriched) → Combine Multiple JSON files in
 
 ### Step 5: Wait for Human Direction
 
-**DO NOT start implementing until**:
+**DO NOT start implementing LoRA infrastructure until**:
+- PMC script consolidation is complete
 - Human reviews your understanding summary
 - Human confirms you've internalized the context correctly
 - Human explicitly says "proceed with Phase X implementation"
@@ -717,7 +904,7 @@ Dashboard View → Download (Raw or Enriched) → Combine Multiple JSON files in
 
 ## 📚 Reference Documents Index
 
-### Core Specifications (Read These)
+### Core Specifications (Read These After PMC Task)
 
 | Document | Lines | Purpose |
 |----------|-------|---------|
@@ -725,6 +912,7 @@ Dashboard View → Download (Raw or Enriched) → Combine Multiple JSON files in
 | **iteration-5-LoRA-training-initial-tldr.md** | 616 | Executive summary - business case, plain language |
 | **iteration-5-LoRA-emotional-training-measuring.md** | 1,687 | Testing framework - metrics, evaluation, statistics |
 | **iteration-5-LoRA-emotional-training-measurement-viability_v1.md** | 1,083 | Experimental design analysis - control groups, validity |
+| **iteration-6-fixing-pmc-process_v1.md** | ~180 | PMC process fixes + script duplication analysis |
 
 ### Dataset
 
@@ -743,7 +931,17 @@ Dashboard View → Download (Raw or Enriched) → Combine Multiple JSON files in
 
 ## 🎯 Success Criteria
 
-### For Context Internalization Phase
+### For PMC Script Consolidation (IMMEDIATE)
+
+**You successfully completed PMC task when**:
+- ✅ `01-02-generate-product-specs.js` has been modified to remove 01 functionality
+- ✅ `02a-generate-user-story-spec.js` exists and generates only 02 prompts
+- ✅ Both scripts tested and working correctly
+- ✅ `00-pmc-ltc-overview-tutorial_v4.md` updated with new process
+- ✅ `00-pmc-ltc-operational-tutorial_v1.md` updated with new execution order
+- ✅ Old `01-02-generate-product-specs.js` moved to archive/
+
+### For Context Internalization Phase (AFTER PMC TASK)
 
 **You successfully internalized context when you can**:
 - ✅ Explain the existing codebase architecture in your own words
@@ -755,23 +953,23 @@ Dashboard View → Download (Raw or Enriched) → Combine Multiple JSON files in
 - ✅ Explain why we're NOT using generic financial control for testing
 - ✅ Identify key risks and technical challenges
 
-### For Implementation Phase (Later)
+### For Implementation Phase (MUCH LATER - AFTER HUMAN APPROVAL)
 
 **Phase 1 Success**: Database tables created, API routes responding, TrainingService working  
 **Phase 2 Success**: Docker image builds, training orchestrator runs, can train a model  
 **Phase 3 Success**: End-to-end workflow from "click button" to "download LoRA adapters"  
 **Phase 4 Success**: Dashboard UI for training management, progress tracking
 
-### For Testing Phase (Much Later)
+### For Testing Phase (MUCH LATER)
 
 **Simple Test Success**: Model C beats Model A by ≥15%, evaluators prefer C ≥65% of time  
 **Gold Standard Success**: Model C beats both A and B, improvement attributed to emotional scaffolding  
 
 ---
 
-**Last Updated**: December 13, 2025  
-**Session Focus**: LoRA Training Infrastructure Specification Complete  
-**Current State**: Ready for context internalization, then phased implementation  
-**Document Version**: ll (LoRA infrastructure handoff)
+**Last Updated**: December 16, 2025  
+**Session Focus**: PMC Script Consolidation + LoRA Infrastructure Context Ready  
+**Current State**: PMC task ready to execute, then context internalization, then wait for human approval  
+**Document Version**: mm (PMC consolidation + LoRA context handoff)
 
-**Next Agent: Start with context internalization. Do NOT begin building until human confirms your understanding is correct. Report back with summary of your understanding and any questions.**
+**Next Agent: Do not execute the PMC script consolidation task without first halting after you are confident of the context. Before you start report back with summary of your understanding and any questions. Once those are satisfied we will begin to execute the PMC script consolidation task.

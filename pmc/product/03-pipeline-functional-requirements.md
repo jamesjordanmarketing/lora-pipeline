@@ -1,6 +1,6 @@
 # LoRA Pipeline - Functional Requirements
-**Version:** 1.0.0  
-**Date:** 12/15/2025  
+**Version:** 2.0.0  
+**Date:** 12/16/2025  
 **Category:** Design System Platform
 **Product Abbreviation:** pipeline
 
@@ -9,7 +9,7 @@
 - Overview Document: `pmc\product\01-pipeline-overview.md`
 - User Stories: `pmc\product\02-pipeline-user-stories.md`
 
-## 1. 1. Training Job Configuration & Setup
+## 1. Training Job Configuration & Setup
 
 - **FR1.1.1:** Create Training Job from Training File
   * Description: [To be filled]
@@ -166,7 +166,7 @@
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
-## 2. 2. Training Job Execution & Monitoring
+## 2. Training Job Execution & Monitoring
 
 - **FR2.1.1:** Live Training Progress Dashboard
   * Description: [To be filled]
@@ -213,6 +213,31 @@
   * Tasks: [T-2.1.2]
   * User Story Acceptance Criteria:
     - Visual stage progress bar with 4 stages:
+    1. **Preprocessing** (2-5 minutes):
+       - Dataset loading from Supabase Storage
+       - Tokenization and formatting
+       - Train/validation split (80/20)
+       - Status: "Tokenizing 242 conversations..."
+    2. **Model Loading** (10-15 minutes):
+       - Download Llama 3 70B from Hugging Face Hub (or load from cache)
+       - Apply 4-bit quantization (QLoRA)
+       - Initialize LoRA adapters with target modules
+       - Status: "Loading Llama 3 70B model (4-bit quantization)..."
+    3. **Training** (10-20 hours):
+       - Gradient updates across epochs
+       - Checkpoint saves every 100 steps
+       - Validation runs after each epoch
+       - Status: "Training epoch 2/3 - Step 850/2000..."
+    4. **Finalization** (5-10 minutes):
+       - Save final LoRA adapters (adapter_model.bin, adapter_config.json)
+       - Upload artifacts to Supabase Storage
+       - Calculate final metrics
+       - Status: "Saving adapters and finalizing..."
+    - Each stage shows: name, status (pending/active/complete), estimated duration, actual duration
+    - Progress bar fills proportionally (preprocessing 2%, model loading 8%, training 85%, finalization 5%)
+    - Current stage highlighted with animated indicator
+    - Completed stages show checkmark and actual duration
+    - Failed stage shows error icon and error message
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
@@ -340,7 +365,7 @@
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
-## 3. 3. Error Handling & Recovery
+## 3. Error Handling & Recovery
 
 - **FR3.1.1:** Out of Memory Error Handling
   * Description: [To be filled]
@@ -355,6 +380,13 @@
     - **Problem**: "Your configuration exceeded the 80GB VRAM capacity of the H100 GPU"
     - **Likely cause**: "batch_size=4 with 242 conversations and r=32 requires ~92GB VRAM"
     - **Suggested fixes**:
+      1. Reduce batch_size to 2 (recommended)
+      2. Switch to Conservative preset (r=8 instead of r=32)
+      3. Reduce sequence length (if conversations are very long)
+    - **Quick retry**: Button "Retry with batch_size=2" pre-fills configuration with suggested fix
+    - Link to documentation: "Understanding VRAM Usage in LoRA Training"
+    - Track OOM error frequency per configuration to improve preset recommendations
+    - Example error message: "OutOfMemoryError: Your dataset + batch_size=4 + r=32 exceeds 80GB VRAM. Try batch_size=2 (Conservative preset) or contact support if issue persists."
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
@@ -373,6 +405,14 @@
     - **Conversation details**: Show conversation metadata (persona, emotional_arc, topic)
     - **Data sample**: Display the malformed conversation JSON with error highlighted
     - **How to fix**:
+      1. Go to conversation editor
+      2. Fix missing field
+      3. Regenerate training file
+      4. Retry training job
+    - **Quick action**: "Open Conversation Editor" button (deep link to conversation ID)
+    - Validate training file schema before job creation to catch errors early
+    - Prevent job creation if validation fails with clear error message
+    - Example error: "DatasetFormatError: Training pair #47 missing 'target_response' field. Fix in conversation editor and regenerate training file."
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
@@ -392,6 +432,16 @@
     - **Problem**: "No H100 spot GPUs currently available"
     - **Reason**: "High demand in RunPod datacenter (92% utilization)"
     - **Options**:
+      1. **Auto-retry** (spot): "Automatically retry every 5 minutes until GPU available (max 1 hour)"
+      2. **Switch to on-demand**: "Start immediately on-demand GPU (+$5/hr, guaranteed availability)"
+      3. **Cancel and retry later**: "Cancel job, try again in 30-60 minutes during off-peak hours"
+    - **Estimated wait time**: "Historical data shows spot GPUs typically available within 15-30 minutes"
+    - If auto-retry selected:
+    - Job status: "queued_waiting_for_gpu"
+    - Retry every 5 minutes for 1 hour
+    - Notification when GPU provisioned and training starts
+    - Notification if 1 hour timeout reached: "Still no spot GPU available. Switch to on-demand or cancel?"
+    - Track provisioning failure rate to identify patterns (time of day, datacenter congestion)
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
@@ -410,6 +460,22 @@
     - Job status updates to "interrupted"
     - System initiates recovery immediately
     - **Automatic recovery process**:
+      1. Provision new spot instance (same configuration)
+      2. Download latest checkpoint from storage
+      3. Resume training from last saved step
+      4. Update status to "training" (resumed)
+      5. Track interruption count
+    - **Dashboard display**:
+    - Interruption badge: "Interrupted 2× (auto-recovered)"
+    - Interruption log: "Interrupted at step 850 (6h 23m), resumed at step 850 (6h 32m) - 9 min downtime"
+    - Total interruption downtime tracked separately
+    - **Success criteria**:
+    - Resume within 10 minutes of interruption
+    - 95%+ successful recovery rate
+    - Cost tracking includes interruption overhead
+    - Notification: "Training interrupted at 42% complete. Auto-recovery in progress... [Track Status]"
+    - Notification: "Training resumed from checkpoint (Step 850). Estimated completion: 8h 15m remaining."
+    - If recovery fails 3 times: Offer option to switch to on-demand instance
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
@@ -495,7 +561,7 @@
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
-## 4. 4. Model Artifacts & Downloads
+## 4. Model Artifacts & Downloads
 
 - **FR4.1.1:** Download Trained LoRA Adapters
   * Description: [To be filled]
@@ -517,6 +583,21 @@
     - Track download count and timestamp for audit trail
     - Notification after download: "Adapters downloaded. See README.txt for integration instructions."
     - Example README content:
+      ```
+      Bright Run LoRA Adapters - Training Job: {job_name}
+      
+      Files:
+      - adapter_model.bin: Trained weight matrices
+      - adapter_config.json: LoRA configuration
+      
+      Integration:
+      1. Install dependencies: pip install transformers peft torch
+      2. Load base model: Llama 3 70B
+      3. Load adapters: model = PeftModel.from_pretrained(base_model, adapter_path)
+      4. Run inference: See example_inference.py
+      
+      Support: docs.brightrun.ai/lora-adapters
+      ```
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
@@ -559,6 +640,21 @@
     - **CSV Export** includes columns:
     - step_number, epoch, training_loss, validation_loss, learning_rate, perplexity, gpu_utilization, timestamp, elapsed_time_seconds
     - **JSON Export** includes nested structure:
+      ```json
+      {
+        "job_metadata": { "job_id": "...", "name": "...", "configuration": {...} },
+        "training_metrics": [
+          { "step": 100, "epoch": 1, "training_loss": 0.521, "validation_loss": 0.538, ... },
+          { "step": 200, "epoch": 1, "training_loss": 0.489, "validation_loss": 0.502, ... }
+        ],
+        "final_metrics": { "final_training_loss": 0.287, "final_validation_loss": 0.312, "perplexity_improvement": "31%" }
+      }
+      ```
+    - Export includes all historical data from training start to completion
+    - File naming: `{job_name}-metrics-{timestamp}.{csv|json}`
+    - One-click download, no generation delay
+    - Option to include charts (loss curves) as embedded PNG in export package
+    - Track export count for audit trail
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
@@ -611,6 +707,32 @@
     - "Download Deployment Package" button on completed jobs
     - ZIP file: `{job_name}-deployment-package-{job_id}.zip`
     - **Package contents**:
+      1. `adapters/` folder:
+         - adapter_model.bin
+         - adapter_config.json
+      2. `inference.py`:
+         - Runnable Python script loading base model + adapters
+         - Accepts prompt as CLI argument
+         - Outputs model response
+         - Configurable temperature, max_tokens
+      3. `requirements.txt`:
+         - Exact Python dependencies with versions
+         - transformers==4.36.0, peft==0.7.1, torch==2.1.2, accelerate==0.25.0
+      4. `README.md`:
+         - Setup instructions (create venv, install deps)
+         - Usage examples (run inference.py)
+         - Deployment options (local, cloud, API endpoint)
+         - Troubleshooting common issues
+         - Support contact info
+      5. `example_prompts.json`:
+         - 10 sample prompts matching training domain (financial advisory)
+         - Expected response quality examples
+      6. `training_summary.json`:
+         - Job metadata, configuration, final metrics
+    - Inference script works with: `pip install -r requirements.txt && python inference.py "What are the benefits of a Roth IRA?"`
+    - README includes GPU requirements, VRAM usage, inference speed estimates
+    - Package size: ~500-700MB
+    - Generate signed URL, valid 48 hours
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
@@ -643,10 +765,16 @@
     - Cloud deployment: AWS ECS, GCP Cloud Run, Azure Container Instances
     - GPU support: Specify GPU requirements, optimize for A10G/A100/H100
     - Example API request:
+      ```bash
+      curl -X POST http://localhost:8000/api/v1/chat \
+        -H "Authorization: Bearer <api_key>" \
+        -H "Content-Type: application/json" \
+        -d '{"prompt": "Explain asset allocation", "max_tokens": 500}'
+      ```
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
-## 5. 5. Training Comparison & Optimization
+## 5. Training Comparison & Optimization
 
 - **FR5.1.1:** Compare Multiple Training Runs
   * Description: [To be filled]
@@ -793,7 +921,7 @@
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
-## 6. 6. Model Quality Validation
+## 6. Model Quality Validation
 
 - **FR6.1.1:** Calculate Perplexity Improvement
   * Description: [To be filled]
@@ -994,6 +1122,41 @@
   * Tasks: [T-6.4.1]
   * User Story Acceptance Criteria:
     - **Elena Morales Voice Rubric** (10 characteristics, each scored 1-5):
+      1. Warmth & Empathy: Genuine emotional connection
+      2. Directness & Clarity: Avoids jargon, gets to the point
+      3. Education-First Approach: Explains "why" behind advice
+      4. Pragmatic Optimism: Realistic yet hopeful tone
+      5. Question-Driven: Asks clarifying questions
+      6. Storytelling: Uses relatable examples
+      7. Action-Oriented: Provides concrete next steps
+      8. Patience: Never rushes or dismisses concerns
+      9. Humor (appropriate): Light touches when suitable
+      10. Confidence: Authoritative yet humble
+    - **Evaluation Process**:
+    - Generate 30 responses from trained model (diverse scenarios)
+    - Human evaluators score each response on 10 characteristics
+    - Calculate average score per characteristic
+    - Calculate overall voice consistency: Average of 10 characteristic scores
+    - **Results Display**:
+    - Overall voice consistency: 4.3/5 (**86% alignment**, target ≥85%)
+    - Per-characteristic breakdown:
+    - Warmth & Empathy: 4.5/5 (excellent)
+    - Directness: 4.2/5 (strong)
+    - Education-First: 4.1/5 (good)
+    - Pragmatic Optimism: 4.6/5 (excellent)
+    - ... (remaining characteristics)
+    - Flag characteristics scoring <3/5: "Humor: 2.8/5 (needs improvement)"
+    - **Quality Badge**:
+    - "✓ Excellent Brand Alignment" (≥4.5/5, 90%+)
+    - "✓ Strong Brand Alignment" (≥4.25/5, 85-89%)
+    - "⚠ Acceptable Alignment" (≥4.0/5, 80-84%)
+    - "✗ Needs Improvement" (<4.0/5, <80%)
+    - **Before/After Examples**:
+    - Show 5 responses demonstrating brand voice improvement
+    - Baseline: Generic financial advice
+    - Trained: Elena Morales style (warm, educational, action-oriented)
+    - Include voice consistency report in validation PDF
+    - Export detailed scoring (30 responses × 10 characteristics) as CSV
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
@@ -1014,7 +1177,7 @@
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
-## 7. 7. Cost Management & Budget Control
+## 7. Cost Management & Budget Control
 
 - **FR7.1.1:** Live Cost Accumulation Display
   * Description: [To be filled]
@@ -1120,8 +1283,8 @@
   * Description: [To be filled]
   * Impact Weighting: Proactive Management / Risk Mitigation / Communication
   * Priority: High
-  * User Stories: US7.2.2
-  * Tasks: [T-7.2.2]
+  * User Stories: US7.2.2, US8.2.2
+  * Tasks: [T-7.2.2], [T-8.2.2]
   * User Story Acceptance Criteria:
     - **Alert Triggers**:
     - 80% threshold: "You've used 80% of monthly training budget ($400 of $500)"
@@ -1147,6 +1310,14 @@
     - Audit trail of all budget limit changes
     - Who changed it, when, why (justification), old limit, new limit
     - Export log for financial reporting
+    - **Notification Recipients** (from US8.2.2):
+    - Configurable recipients: budget manager, finance team, operations
+    - **Escalation Levels** (from US8.2.2):
+    - 80% alert → email only
+    - 95% alert → email + Slack
+    - 100% alert → email + Slack + in-app banner
+    - **Daily Digest Option** (from US8.2.2):
+    - "Your daily training budget summary" (total spent today, remaining budget, active jobs)
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
@@ -1210,7 +1381,7 @@
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
-## 8. 8. Team Collaboration & Notifications
+## 8. Team Collaboration & Notifications
 
 - **FR8.1.1:** Job Creator Attribution
   * Description: [To be filled]
@@ -1309,21 +1480,7 @@
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
-- **FR8.2.2:** Budget Alert Notifications
-  * Description: [To be filled]
-  * Impact Weighting: Financial Control / Proactive Management / Risk Mitigation
-  * Priority: High
-  * User Stories: US8.2.2
-  * Tasks: [T-8.2.2]
-  * User Story Acceptance Criteria:
-    - (See US7.2.2 for detailed budget alert specifications)
-    - Additional: Notification recipients configurable (budget manager, finance team, operations)
-    - Escalation: 80% alert → email, 95% alert → email + Slack, 100% alert → email + Slack + in-app banner
-    - Daily digest option: "Your daily training budget summary" (total spent today, remaining budget, active jobs)
-  * Functional Requirements Acceptance Criteria:
-    - [To be filled]
-
-- **FR8.3.1:** Job Notes and Experiment Documentation
+- **FR8.2.2:** Job Notes and Experiment Documentation
   * Description: [To be filled]
   * Impact Weighting: Knowledge Preservation / Learning / Continuous Improvement
   * Priority: Medium
@@ -1356,7 +1513,7 @@
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
-- **FR8.3.2:** Team Knowledge Base Integration (Future)
+- **FR8.3.1:** Team Knowledge Base Integration (Future)
   * Description: [To be filled]
   * Impact Weighting: Knowledge Sharing / Team Learning / Onboarding
   * Priority: Low (Future Enhancement)
@@ -1373,7 +1530,6 @@
     - Knowledge base searchable: "How to train models on emotional datasets"
     - Use case: New engineer searches "retirement planning training" → finds 5 past successful jobs with notes and configurations
     - Auto-suggest: When creating new job, suggest related knowledge base articles: "Similar setup succeeded in Job XYZ"
-    ---
   * Functional Requirements Acceptance Criteria:
     - [To be filled]
 
