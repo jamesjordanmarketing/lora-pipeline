@@ -195,9 +195,8 @@ The functional requirements generation uses `03-generate-functional-requirements
 - `02b-{project-abbreviation}-user-journey.md` (from step 02b)
 - Template files:
   - `_prompt_engineering/3a-preprocess-functional-requirements-prompt_v1.md` (preprocessing)
-  - `_prompt_engineering/3b-functional-requirements-prompt_v1.md` (enhancement)
-  - `_prompt_engineering/3b-#1-functional-requirements-prompt_v1.md` (first enhancement step)
-  - `_prompt_engineering/3b-#2-functional-requirements-legacy-code-prompt_v1.md` (legacy code step)
+  - `_prompt_engineering/3b-#1-requirements-enhancement-prompt_v1.md` (PRIMARY enhancement - for ALL projects)
+  - `_prompt_engineering/3b-#2-functional-requirements-legacy-code-prompt_v1.md` (OPTIONAL - legacy code references)
 - Example file:
   - `_examples/03-{project-abbreviation}-functional-requirements.md`
 - Optional: Codebase for legacy integration
@@ -592,7 +591,8 @@ pmc/product/
 │   ├── 01-product-{abbrev}-overview-prompt-v1.md
 │   ├── 02b-product-{abbrev}-user-journey-prompt-v1.md
 │   ├── 3a-preprocess-functional-requirements-prompt_v1-output.md
-│   └── 3b-functional-requirements-prompt_v1-output.md
+│   ├── 3b-#1-requirements-enhancement-prompt_v1-output.md
+│   └── 3b-#2-functional-requirements-legacy-code-prompt_v1-output.md
 ├── 00-{abbrev}-seed-story.md                   # Step 0 output
 ├── 01-{abbrev}-overview.md                     # Step 1 output
 ├── 02-{abbrev}-user-stories.md                 # Step 2 output

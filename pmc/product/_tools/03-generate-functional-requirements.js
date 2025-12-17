@@ -7,13 +7,12 @@
  *  - Interactive version that works with Cursor's AI interface
  *  - Two-step process for functional requirements:
  *    1. Preprocess (3a): Clean, deduplicate, and reorder requirements
- *    2. Enhance (3b): Expand and improve requirements, then add legacy code references
+ *    2. Enhance (3b): Expand and improve requirements, then add legacy code references (optional)
  *  - Uses 3a-preprocess-functional-requirements-prompt_v1.md for preprocessing
- *  - Uses three prompts for enhancement:
- *     a. 3b-functional-requirements-prompt_v1.md (original, for reference)
- *     b. 3b-#1-functional-requirements-prompt_v1.md (first step - enhance requirements)
- *     c. 3b-#2-functional-requirements-legacy-code-prompt_v1.md (second step - add legacy code references)
- *  - Generates output prompt files in product/_prompt_engineering/output-prompts directory
+ *  - Uses two prompts for enhancement:
+ *     a. 3b-#1-requirements-enhancement-prompt_v1.md (PRIMARY - enhance requirements for ALL projects)
+ *     b. 3b-#2-functional-requirements-legacy-code-prompt_v1.md (OPTIONAL - add legacy code references)
+ *  - Generates output prompt files in product/_run-prompts directory
  *  - Maintains high-quality documentation through example-based generation
  *
  * Usage:
@@ -234,7 +233,7 @@ async function getReferencePaths(projectAbbrev, step) {
       'FR Preprocessing Instructions',
       step === 'preprocess' 
         ? '_prompt_engineering/3a-preprocess-functional-requirements-prompt_v1.md'
-        : '_prompt_engineering/3b-functional-requirements-prompt_v1.md',
+        : '_prompt_engineering/3b-#1-requirements-enhancement-prompt_v1.md',
       projectAbbrev
     )
   };
@@ -430,39 +429,32 @@ async function processStep(projectName, projectAbbrev, step) {
       process.exit(0);
     }
   } else {
-    // For enhance step, generate only the split prompts
+    // For enhance step, generate the two focused prompts
     
-    // We no longer generate the original reference template
-    // const originalTemplatePath = '_prompt_engineering/3b-functional-requirements-prompt_v1.md';
-    // const originalTemplate = normalizePath(originalTemplatePath, '');
+    // Generate the primary enhancement prompt (3b-#1)
+    // This is THE critical prompt for all projects - adds detailed acceptance criteria,
+    // user journey integration, expert analysis, and identifies requirements gaps
+    const enhancementTemplatePath = '_prompt_engineering/3b-#1-requirements-enhancement-prompt_v1.md';
+    const enhancementTemplate = normalizePath(enhancementTemplatePath, '');
     
-    // if (originalTemplate && fs.existsSync(originalTemplate)) {
-    //   await generatePrompt(pathsData, step, projectAbbrev, originalTemplate);
-    // } else {
-    //   console.warn(`Warning: Original template file not found: ${originalTemplatePath}`);
-    // }
-    
-    // Generate the first split prompt (3b-#1)
-    const firstSplitTemplatePath = '_prompt_engineering/3b-#1-functional-requirements-prompt_v1.md';
-    const firstSplitTemplate = normalizePath(firstSplitTemplatePath, '');
-    
-    if (!firstSplitTemplate || !fs.existsSync(firstSplitTemplate)) {
-      console.error(`Error: First split template file not found: ${firstSplitTemplatePath}`);
+    if (!enhancementTemplate || !fs.existsSync(enhancementTemplate)) {
+      console.error(`Error: Enhancement template file not found: ${enhancementTemplatePath}`);
       process.exit(1);
     }
     
-    await generatePrompt(pathsData, step, projectAbbrev, firstSplitTemplate);
+    await generatePrompt(pathsData, step, projectAbbrev, enhancementTemplate);
     
-    // Then the second split prompt (3b-#2)
-    const secondSplitTemplatePath = '_prompt_engineering/3b-#2-functional-requirements-legacy-code-prompt_v1.md';
-    const secondSplitTemplate = normalizePath(secondSplitTemplatePath, '');
+    // Then the optional legacy code reference prompt (3b-#2)
+    // ONLY use this if you have legacy code to reference - skip for greenfield projects
+    const legacyCodeTemplatePath = '_prompt_engineering/3b-#2-functional-requirements-legacy-code-prompt_v1.md';
+    const legacyCodeTemplate = normalizePath(legacyCodeTemplatePath, '');
     
-    if (!secondSplitTemplate || !fs.existsSync(secondSplitTemplate)) {
-      console.error(`Error: Second split template file not found: ${secondSplitTemplatePath}`);
+    if (!legacyCodeTemplate || !fs.existsSync(legacyCodeTemplate)) {
+      console.error(`Error: Legacy code template file not found: ${legacyCodeTemplatePath}`);
       process.exit(1);
     }
     
-    await generatePrompt(pathsData, step, projectAbbrev, secondSplitTemplate);
+    await generatePrompt(pathsData, step, projectAbbrev, legacyCodeTemplate);
   }
 }
 

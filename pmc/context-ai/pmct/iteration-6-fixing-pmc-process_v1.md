@@ -511,8 +511,377 @@ Step 04: Wireframe Generation
 
 ---
 
+---
+
+## 3b Enhancement Prompts: Quality Analysis and Naming Confusion (December 16, 2025)
+
+### Background: User Question
+
+**User raised valid confusion about prompt naming:**
+- Why is `3b-#1-functional-requirements-legacy-prompt_v1.md` labeled "legacy"?
+- What are the actual differences between `3b-functional-requirements-prompt_v1.md` and `3b-#1-functional-requirements-legacy-prompt_v1.md`?
+- Does `3b-functional-requirements-prompt_v1.md` have legacy code analysis built in?
+- Which prompt is actually used by the script?
+- Which prompt produces superior, more accurate functional requirements?
+- Are either of these prompts critical for quality?
+
+### Analysis: Script Behavior (Ground Truth)
+
+**What the script actually does** (`03-generate-functional-requirements.js`):
+
+1. **Line 437-443:** The script COMMENTS OUT generation of `3b-functional-requirements-prompt_v1.md`
+   ```javascript
+   // We no longer generate the original reference template
+   // const originalTemplatePath = '_prompt_engineering/3b-functional-requirements-prompt_v1.md';
+   // const originalTemplate = normalizePath(originalTemplatePath, '');
+   ```
+
+2. **Lines 446-454:** The script ACTIVELY USES `3b-#1-functional-requirements-prompt_v1.md`
+   ```javascript
+   const firstSplitTemplatePath = '_prompt_engineering/3b-#1-functional-requirements-prompt_v1.md';
+   ```
+
+3. **Lines 457-465:** The script ACTIVELY USES `3b-#2-functional-requirements-legacy-code-prompt_v1.md`
+   ```javascript
+   const secondSplitTemplatePath = '_prompt_engineering/3b-#2-functional-requirements-legacy-code-prompt_v1.md';
+   ```
+
+**Conclusion:** The script generates prompts from `3b-#1` and `3b-#2` ONLY. It does NOT use `3b-functional-requirements-prompt_v1.md`.
+
+---
+
+### Analysis: Prompt Differences (Content Comparison)
+
+#### Similarities (Both Prompts Share):
+- ✅ Same product summary
+- ✅ Same "Your Role" definition
+- ✅ Same critical rules for document handling
+- ✅ Same file handling instructions
+- ✅ Same required inputs structure
+- ✅ Same analysis steps 1-5 (Review, Enhance, Granular Analysis, Overview Integration, Expert Analysis)
+- ✅ Same output format
+- ✅ Same guidelines (Focus on WHAT, Testability, Traceability, etc.)
+- ✅ Same special considerations
+- ✅ Same deliverables structure
+
+#### KEY DIFFERENCE #1: Change Logging
+
+**`3b-functional-requirements-prompt_v1.md` (Line 66-73):**
+```markdown
+3. **Change Logging Requirements**
+   - Each atomic change MUST be logged individually in `{CHANGE_LOG_PATH}`:
+   - Each FR modification MUST generate multiple log entries, one for each:
+     * Acceptance criteria movement or modification
+     * Priority or impact weight change
+     * Description modification
+     * User Story reference change
+     * Append to the change log file, do not overwrite it.
+   - FORMAT: [ID/Type] -> [Action] -> [Destination] | REASON: [Detailed Rationale]
+   - Related changes MUST be grouped using change group IDs:
+```
+
+**`3b-#1-functional-requirements-legacy-prompt_v1.md`:**
+- ❌ **NO change logging section at all**
+- Change logging was REMOVED from the split prompts
+
+**Impact:** `3b-functional-requirements-prompt_v1.md` requires detailed change logs, which is good for traceability but adds overhead.
+
+#### KEY DIFFERENCE #2: Legacy Code References in Acceptance Criteria
+
+**`3b-functional-requirements-prompt_v1.md` (Lines 148-168):**
+```markdown
+### 3. Granular Requirement Analysis
+For each FR:
+- ...
+- You MUST transform User Acceptance Criteria into testable acceptance criteria
+- Ensure consistent depth across all requirements
+- Every time the legacy codebase here: {CODEBASE_REVIEW_PATH} is used to define an 
+  acceptance criteria you MUST include the path to the codebase file(s) directly 
+  under the applied acceptance criteria
+  - When developing acceptance criteria based on the legacy codebase, you must 
+    explicitly reference the specific file paths directly underneath each 
+    individual acceptance criterion
+  - For example, if you have multiple acceptance criteria like:
+    ```
+    1. The primary color palette must match the legacy implementation
+       Legacy Code Reference: aplio-legacy/tailwind.config.js:25-53
+    2. The typography scale must be identical to the legacy system
+       Legacy Code Reference: 
+       - aplio-legacy/styles/typography.css:12-45
+       - aplio-legacy/components/text/Text.tsx:8-32
+    3. The spacing system must maintain visual consistency
+       Legacy Code Reference: aplio-legacy/styles/spacing.css:5-28
+    ```
+  - Each acceptance criterion must have its own path reference(s) directly underneath it
+  - If an acceptance criterion is validated against multiple files, include all relevant paths
+  - Do not group path references at the end of sections - they must be directly under 
+    their specific criterion
+```
+
+**`3b-#1-functional-requirements-legacy-prompt_v1.md`:**
+- ❌ **NO instructions about adding legacy code references**
+- The legacy code reference instructions were REMOVED from `3b-#1`
+
+**Impact:** `3b-functional-requirements-prompt_v1.md` tries to do BOTH enhancement AND legacy code references in ONE step, while `3b-#1` focuses ONLY on enhancement.
+
+---
+
+### Analysis: Why the Split Approach is Superior
+
+**Original Problem (`3b-functional-requirements-prompt_v1.md`):**
+1. **Too much in one prompt**: Enhancement + change logging + legacy code references
+2. **Context limit issues**: LLMs struggle to maintain quality over long documents when doing multiple tasks
+3. **Complexity**: AI must simultaneously enhance requirements AND find legacy code references
+4. **Quality degradation**: Trying to do everything causes shortcuts and incomplete work
+
+**Split Solution (`3b-#1` + `3b-#2`):**
+
+**Prompt 3b-#1** (Enhancement Only):
+- **Focus**: ONLY enhance requirements and add detailed acceptance criteria
+- **No distractions**: No change logging, no legacy code references
+- **Result**: Higher quality enhancements because AI focuses on ONE task
+- **Named "legacy"**: Confusing name - should be called "3b-#1-enhancement" or "3b-requirements-enhancement"
+
+**Prompt 3b-#2** (Legacy Code References Only):
+- **Focus**: ONLY add legacy code file references under existing criteria
+- **Prerequisite**: Requires 3b-#1 to be completed first
+- **No modification**: Does NOT change criteria, only adds references
+- **Result**: Precise traceability without corrupting enhancement work
+- **Named correctly**: "legacy-code" accurately describes its purpose
+
+---
+
+### Analysis: Quality Comparison
+
+#### Question: Does `3b-functional-requirements-prompt_v1.md` produce better results?
+
+**Answer: NO - It attempts more but delivers less quality**
+
+**Evidence:**
+
+1. **AI Context Limits**:
+   - Single prompts that try to do 3+ tasks suffer from quality degradation
+   - LLMs perform better with focused, single-purpose instructions
+   - Split prompts allow AI to focus fully on each task
+
+2. **Change Logging Overhead**:
+   - While theoretically useful, change logs add significant overhead
+   - Most projects don't use detailed change logs from AI prompts
+   - Creates busywork that distracts from core enhancement task
+   - **Recommendation**: Remove or make optional
+
+3. **Legacy Code Integration**:
+   - Finding legacy code references WHILE enhancing requirements causes confusion
+   - AI must context-switch between "what should the requirement be?" and "where is this in legacy code?"
+   - Split approach: First perfect the requirement, THEN trace to legacy code
+
+4. **Document Completeness Risk**:
+   - More complex prompts increase risk of incomplete processing
+   - AI may shortcut or truncate when overwhelmed
+   - Simpler prompts = more reliable complete processing
+
+#### Question: Which produces more accurate functional requirements?
+
+**Answer: `3b-#1-functional-requirements-legacy-prompt_v1.md` (the "legacy" one) produces superior FRs**
+
+**Reasons:**
+
+1. **Focused Enhancement**:
+   - AI dedicates full attention to improving requirement quality
+   - No distraction from change logging or code hunting
+   - Results in deeper, more thoughtful acceptance criteria
+
+2. **Reduced Cognitive Load**:
+   - Single task = better execution
+   - AI can maintain consistency across entire document
+   - Less likely to skip sections or reduce quality mid-document
+
+3. **Two-Pass Quality**:
+   - Pass 1 (3b-#1): Perfect the requirements
+   - Pass 2 (3b-#2): Add traceability without corrupting requirements
+   - This is a proven software engineering pattern (separation of concerns)
+
+---
+
+### Analysis: Critical Prompts for Quality
+
+#### Question: Are EITHER of these prompts critical for quality?
+
+**Answer: YES - `3b-#1` is CRITICAL. `3b-functional-requirements-prompt_v1.md` is NOT.**
+
+**Rationale:**
+
+**`3b-#1-functional-requirements-legacy-prompt_v1.md` is CRITICAL because:**
+
+1. ✅ **Adds User Journey Integration**: Cross-references with UJ X.X.X elements
+2. ✅ **Adds Journey-Specific Success Metrics**: Time to complete, user confidence, error recovery
+3. ✅ **Maps to User Journey Stages**: Connects FRs to 6 stages of user workflow
+4. ✅ **Granular Requirement Analysis**: Breaks down complex requirements into modular components
+5. ✅ **Overview Document Integration**: Identifies requirements from overview missing from FRs
+6. ✅ **Expert Analysis Enhancement**: Applies senior product manager perspective to find gaps
+7. ✅ **Identifies System Integration Requirements**: Inter-component communication, APIs, data flow
+8. ✅ **Identifies Operational Requirements**: Monitoring, metrics, logging, error handling
+9. ✅ **Identifies Automation Opportunities**: Testing, CI/CD, maintenance
+10. ✅ **Identifies Future-Proofing Requirements**: Scalability, extensibility, configuration
+11. ✅ **Identifies Security Requirements**: Authentication, authorization, data protection
+
+**Without `3b-#1`, you would have:**
+- Shallow acceptance criteria
+- Missing requirements from overview
+- No connection to user journey
+- No system-level thinking
+- No operational or security requirements
+- Incomplete, low-quality functional requirements document
+
+**`3b-functional-requirements-prompt_v1.md` is NOT CRITICAL because:**
+- It ATTEMPTS the same enhancements as `3b-#1`
+- But it also tries to do change logging + legacy code references
+- Result: Lower quality due to AI context overload
+- **It's a worse version of `3b-#1`**
+
+**`3b-#2-functional-requirements-legacy-code-prompt_v1.md` is OPTIONAL:**
+- Only needed if you have legacy code to reference
+- Adds traceability but doesn't improve requirement quality
+- Can skip if building greenfield project
+
+---
+
+### Naming Confusion Analysis
+
+#### Why is it called "legacy"?
+
+**The naming is CONFUSING and MISLEADING:**
+
+1. **`3b-#1-functional-requirements-legacy-prompt_v1.md`**
+   - Name suggests: "Use this for legacy projects"
+   - Reality: This is the PRIMARY enhancement prompt for ALL projects
+   - Better name: `3b-#1-requirements-enhancement-prompt_v1.md`
+
+2. **`3b-#2-functional-requirements-legacy-code-prompt_v1.md`**
+   - Name is CORRECT: "Add legacy code references"
+   - This truly is about legacy code
+   - Name accurately reflects purpose
+
+3. **`3b-functional-requirements-prompt_v1.md`**
+   - Name suggests: "Main enhancement prompt"
+   - Reality: DEPRECATED, not used by script
+   - Better fate: Move to archive/ with note
+
+#### Root Cause of Confusion
+
+**Likely evolution:**
+
+1. **Original**: `3b-functional-requirements-prompt_v1.md` did everything
+2. **Problem discovered**: Prompt too complex, quality suffered
+3. **Solution**: Split into two prompts
+4. **Naming mistake**: Called first prompt "legacy" when they meant "for legacy projects that need enhancement"
+5. **Confusion**: Name implies wrong thing
+
+---
+
+### Recommendations
+
+#### Immediate Actions (High Priority)
+
+1. **Rename `3b-#1-functional-requirements-legacy-prompt_v1.md`**
+   ```bash
+   mv _prompt_engineering/3b-#1-functional-requirements-legacy-prompt_v1.md \
+      _prompt_engineering/3b-#1-requirements-enhancement-prompt_v1.md
+   ```
+   - Update script to use new name
+   - Remove "legacy" which is confusing
+   - Make it clear this is THE enhancement prompt
+
+2. **Archive `3b-functional-requirements-prompt_v1.md`**
+   ```bash
+   mv _prompt_engineering/3b-functional-requirements-prompt_v1.md \
+      _prompt_engineering/archive/3b-functional-requirements-prompt_v1-DEPRECATED.md
+   ```
+   - Add header: "DEPRECATED - Superseded by split approach"
+   - Explain: "This prompt tried to do too much. Use 3b-#1 + 3b-#2 instead"
+   - Document the split approach rationale
+
+3. **Update Script Comments** (`03-generate-functional-requirements.js`)
+   - Line 13: Remove reference to "legacy" naming
+   - Update comments to explain split approach clearly
+   - Document that 3b-#1 is primary, 3b-#2 is optional
+
+#### Documentation Updates (Medium Priority)
+
+1. **Update All Tutorials**:
+   - Clarify that `3b-#1` is the PRIMARY enhancement prompt
+   - Explain that "legacy" in filename is historical artifact, NOT about legacy projects
+   - Document that `3b-#2` is ONLY for projects with legacy codebases to reference
+   - Recommend NEW projects skip `3b-#2` entirely
+
+2. **Add FAQ Section** to operational tutorial:
+   ```markdown
+   Q: Why is 3b-#1 called "legacy" when it's used for all projects?
+   A: Historical naming mistake. It should be called "enhancement." The prompt is 
+      used for ALL projects, not just legacy ones. The "legacy" refers to when we 
+      split from the original monolithic prompt.
+   
+   Q: Do I need 3b-#2 for my new project with no legacy code?
+   A: NO. Skip 3b-#2 entirely. It only adds code references to existing codebases.
+      New projects don't have legacy code to reference.
+   
+   Q: Can I use the original 3b-functional-requirements-prompt_v1.md?
+   A: NO. It's deprecated. Use 3b-#1 (enhancement) + 3b-#2 (legacy code, if applicable).
+   ```
+
+#### Process Improvements (Low Priority)
+
+1. **Consider Removing Change Logging**:
+   - Most projects don't use AI-generated change logs
+   - Adds overhead without clear value
+   - Could make it optional via flag
+
+2. **Standardize Naming Convention**:
+   - `3b-#1-requirements-enhancement-prompt_v1.md` (PRIMARY)
+   - `3b-#2-legacy-code-references-prompt_v1.md` (OPTIONAL)
+   - Clear purpose in filename
+
+3. **Add Validation Script**:
+   - Check that all FR sections were processed
+   - Verify no truncation occurred
+   - Confirm consistent depth across sections
+
+---
+
+### Final Assessment: Which Prompts to Use?
+
+**For ANY project (new or legacy):**
+
+1. ✅ **REQUIRED**: `3b-#1-functional-requirements-legacy-prompt_v1.md`
+   - Despite confusing name, this is THE enhancement prompt
+   - Use for ALL projects
+   - Produces highest quality functional requirements
+
+2. ⚠️ **OPTIONAL**: `3b-#2-functional-requirements-legacy-code-prompt_v1.md`
+   - ONLY use if you have legacy codebase to reference
+   - Skip for greenfield/new projects
+   - Adds traceability, not quality
+
+3. ❌ **DEPRECATED**: `3b-functional-requirements-prompt_v1.md`
+   - Do NOT use
+   - Superseded by split approach
+   - Move to archive
+
+**Quality Ranking:**
+1. 🥇 `3b-#1` (focused enhancement) - BEST QUALITY
+2. 🥈 `3b-#1` + `3b-#2` (enhancement + traceability) - BEST QUALITY + TRACEABILITY
+3. 🥉 `3b-functional-requirements-prompt_v1.md` (tries everything) - LOWER QUALITY DUE TO COMPLEXITY
+
+---
+
+**Analysis Date:** December 16, 2025  
+**Analyst:** AI Agent  
+**Status:** Analysis Complete - Recommendations Ready for Implementation
+
+---
+
 **Document Status:** Completed  
 **Executed By:** AI Agent  
 **Execution Date:** 2025-12-15  
-**Updated:** 2025-12-16 (Script duplication analysis + Step 03/04 process analysis added)
+**Updated:** 2025-12-16 (Script duplication analysis + Step 03/04 process analysis + 3b prompt quality analysis added)
 

@@ -11,8 +11,8 @@ You are a Senior Technical Product Manager. Your task is to organize the script-
 ## File Processing Instructions
 
 1. **Input/Output File**
-   - Process file: `C:/Users/james/Master/BrightHub/BRun/lora-pipeline/pmc/product/03-pipeline-functional-requirements.md`
-   - You MUST process the ENTIRE `C:/Users/james/Master/BrightHub/BRun/lora-pipeline/pmc/product/03-pipeline-functional-requirements.md` document from start to finish
+   - Process file: `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/03-pipeline-functional-requirements.md`
+   - You MUST process the ENTIRE `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/03-pipeline-functional-requirements.md` document from start to finish
    - Create complete inventory of all FRs before beginning reorganization
    - Verify no FRs are missing from original count
    - Modify this file directly - do not create new files
@@ -20,13 +20,13 @@ You are a Senior Technical Product Manager. Your task is to organize the script-
    - Maintain the existing markdown format
    
 2. **Reference Files**
-- **Overview Document:** `C:/Users/james/Master/BrightHub/BRun/lora-pipeline/pmc/product/01-pipeline-overview.md`
+- **Overview Document:** `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/01-pipeline-overview.md`
   - Contains project goals, technical stack, and architectural decisions.
-- **User Stories:** `C:/Users/james/Master/BrightHub/BRun/lora-pipeline/pmc/product/02-pipeline-user-stories.md`
+- **User Stories:** `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/02-pipeline-user-stories.md`
   - Details the functional requirements and user needs.
 
 3. **User Journey Integration**
-   - **User Journey Document:** `C:/Users/james/Master/BrightHub/BRun/lora-pipeline/pmc/product/02b-pipeline-user-journey.md`
+   - **User Journey Document:** `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/02b-pipeline-user-journey.md`
    - Extract all UJ elements
    - Map journey stages to FR categories
    - Consolidate persona-specific acceptance criteria
@@ -39,9 +39,9 @@ You are a Senior Technical Product Manager. Your task is to organize the script-
 ## Input Requirements
 
 1. Read and analyze:
-   - The script-generated FR document - `C:/Users/james/Master/BrightHub/BRun/lora-pipeline/pmc/product/03-pipeline-functional-requirements.md`
-   - User Stories `C:/Users/james/Master/BrightHub/BRun/lora-pipeline/pmc/product/02-pipeline-user-stories.md`
-   - Overview Document `C:/Users/james/Master/BrightHub/BRun/lora-pipeline/pmc/product/01-pipeline-overview.md`
+   - The script-generated FR document - `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/03-pipeline-functional-requirements.md`
+   - User Stories `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/02-pipeline-user-stories.md`
+   - Overview Document `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/01-pipeline-overview.md`
 
 ## Primary Tasks
 

@@ -1,28 +1,4 @@
-# ⚠️ DEPRECATED - Functional Requirements Enhancement Prompt
-
-**Status:** DEPRECATED as of December 16, 2025  
-**Reason:** Superseded by split approach for better quality  
-**Replacement:**
-- Use `3b-#1-requirements-enhancement-prompt_v1.md` for enhancement (REQUIRED)
-- Use `3b-#2-functional-requirements-legacy-code-prompt_v1.md` for legacy code references (OPTIONAL)
-
-**Why Deprecated:**
-This prompt attempted to do too many things at once:
-1. Enhance requirements with detailed acceptance criteria
-2. Add change logging for every modification
-3. Add legacy code references during enhancement
-
-**Problem:** AI context overload led to lower quality output. The split approach allows the AI to focus fully on each task, resulting in superior functional requirements.
-
-**Migration:** Use the two-step process instead:
-- Step 1: Run `3b-#1-requirements-enhancement-prompt_v1.md` to enhance requirements
-- Step 2 (optional): Run `3b-#2-functional-requirements-legacy-code-prompt_v1.md` if you have legacy code to reference
-
-**Do NOT use this prompt.** It is kept for historical reference only.
-
----
-
-# Functional Requirements Enhancement Prompt (DEPRECATED VERSION)
+# Functional Requirements Enhancement Prompt - Part 1
 
 ## Product Summary
 Bright Run is a comprehensive LoRA fine-tuning training data platform that transforms an organization's raw, unstructured knowledge into proprietary LoRA-ready training datasets through an intuitive six-stage workflow. We're creating a sophisticated yet accessible platform that enables non-technical users to create custom LLMs that think with their unique knowledge, beliefs, and proprietary processes while maintaining complete data ownership and privacy.
@@ -33,7 +9,7 @@ Bright Run's frontier AI application sets a new standard for generative AI–dri
 You are a team of senior technical product managers with extensive experience in enterprise software development, system architecture, and product lifecycle management. 
 
 ## Context
-Your task is to enhance and expand the functional requirements document for the project.
+Your task is to enhance and expand the functional requirements document for the project by adding detailed acceptance criteria and identifying new requirements.
 
 ## CRITICAL RULES FOR DOCUMENT HANDLING
 
@@ -43,12 +19,12 @@ Your task is to enhance and expand the functional requirements document for the 
    - ALL existing content must be preserved and/or enhanced
 
 2. **Document Completeness**
-   - You MUST process the ENTIRE `{FUNCTIONAL_REQUIREMENTS_PATH}` document from start to finish
+   - You MUST process the ENTIRE `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/03-pipeline-functional-requirements.md` document from start to finish
    - You MUST maintain ALL existing sections
    - You MUST maintain the existing section numbering scheme
 
 3. **Enhancement Approach**
-   - Start with the existing document at `{FUNCTIONAL_REQUIREMENTS_PATH}`
+   - Start with the existing document at `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/03-pipeline-functional-requirements.md`
    - For each section:
      a. Preserve all existing content
      b. Enhance existing requirements with more detail
@@ -66,8 +42,8 @@ Your task is to enhance and expand the functional requirements document for the 
 
 ### 1. Input/Output File Handling
 1. File Specification:
-   - Input and output file: `{FUNCTIONAL_REQUIREMENTS_PATH}`       
-   - You MUST process the ENTIRE `{FUNCTIONAL_REQUIREMENTS_PATH}` document from start to finish
+   - Input and output file: `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/03-pipeline-functional-requirements.md`       
+   - You MUST process the ENTIRE `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/03-pipeline-functional-requirements.md` document from start to finish
    - Modify this file directly - do not create new files
    - Generate a complete updated version of the entire document
    - Maintain the existing markdown format 
@@ -80,25 +56,15 @@ Your task is to enhance and expand the functional requirements document for the 
    - Maintain consistent level of detail across all requirements
    - ENSURE ALL SECTIONS ARE PROCESSED TO COMPLETION
 
-3. **Change Logging Requirements**
-   - Each atomic change MUST be logged individually in `{CHANGE_LOG_PATH}`:
-   - Each FR modification MUST generate multiple log entries, one for each:
-     * Acceptance criteria movement or modification
-     * Priority or impact weight change
-     * Description modification
-     * User Story reference change
-     * Append to the change log file, do not overwrite it.
-   - FORMAT: [ID/Type] -> [Action] -> [Destination] | REASON: [Detailed Rationale]
-   - Related changes MUST be grouped using change group IDs:
 
 ### 2. Sequential Processing
 1. Process requirements in sequential order through ALL sections
 2. Maintain requirement hierarchy in the file structure
-3. Follow the template structure from `{FUNCTIONAL_REQUIREMENTS_TEMPLATE_PATH}`
+3. Follow the template structure from `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/_prompt_engineering/3b-#1-requirements-enhancement-prompt_v1.md`
 4. Track progress through sections to ensure completion
 
 ### 3. File Update Process
-1. Read the current content of `{FUNCTIONAL_REQUIREMENTS_PATH}`
+1. Read the current content of `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/03-pipeline-functional-requirements.md`
 2. Process one section at a time
 3. For each section:
    a. Preserve existing content
@@ -111,23 +77,23 @@ Your task is to enhance and expand the functional requirements document for the 
 ## Required Inputs
 Before expanding this document, you must read and fully understand the following files:
 
-- **Template:** `{FUNCTIONAL_REQUIREMENTS_TEMPLATE_PATH}`
+- **Template:** `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/_prompt_engineering/3b-#1-requirements-enhancement-prompt_v1.md`
   - Defines the required format for the resulting document.
-- **Overview Document:** `{OVERVIEW_PATH}`
+- **Overview Document:** `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/01-pipeline-overview.md`
   - Contains project goals, technical stack, and architectural decisions.
-- **User Stories:** `{USER_STORIES_PATH}`
+- **User Stories:** `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/02-pipeline-user-stories.md`
   - Details the functional requirements and user needs.
-- **Example:** `{REFERENCE_EXAMPLE_PATH}`
+- **Example:** `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/_examples/03-bmo-functional-requirements.md`
   - Provides a reference for structure, depth, and quality expectations.
-- **User Journey:** `{USER_JOURNEY_PATH}`
+- **User Journey:** `C:/Users/james/Master/BrightHub/brun/lora-pipeline/pmc/product/02b-pipeline-user-journey.md`
   - Contains persona definitions and stage-specific acceptance criteria
   - Maps user workflows to system requirements
   - Defines success metrics and KPIs per stage
-[[ if current_status.enabled ]]
-- **Current Status:** `{CODEBASE_REVIEW_PATH}`
+
+- **Current Status:** `C:/Users/james/Master/BrightHub/brun/lora-pipeline/src`
   - The entire current codebase is here. You MUST read it for the purpose of improving functional requirements and finding functional requirements not yet discovered.
   - Read all the files in all the folders & subfolders to determine the current state.
-[[ endif ]]
+
 
 ## Analysis Steps
 
@@ -169,22 +135,6 @@ For each FR:
 - Maintain clear parent-child relationships in numbering
 - You MUST transform User Acceptance Criteria into testable acceptance criteria
 - Ensure consistent depth across all requirements
-- Every time the legacy codebase here: {CODEBASE_REVIEW_PATH} is used to define an acceptance criteria you MUST include the path to the codebase file(s) directly under the applied acceptance criteria
-  - When developing acceptance criteria based on the legacy codebase, you must explicitly reference the specific file paths directly underneath each individual acceptance criterion
-  - For example, if you have multiple acceptance criteria like:
-    ```
-    1. The primary color palette must match the legacy implementation
-       Legacy Code Reference: aplio-legacy/tailwind.config.js:25-53
-    2. The typography scale must be identical to the legacy system
-       Legacy Code Reference: 
-       - aplio-legacy/styles/typography.css:12-45
-       - aplio-legacy/components/text/Text.tsx:8-32
-    3. The spacing system must maintain visual consistency
-       Legacy Code Reference: aplio-legacy/styles/spacing.css:5-28
-    ```
-  - Each acceptance criterion must have its own path reference(s) directly underneath it
-  - If an acceptance criterion is validated against multiple files, include all relevant paths
-  - Do not group path references at the end of sections - they must be directly under their specific criterion
 
 ### 4. Overview Document Integration
 CRITICAL: You MUST:
@@ -198,35 +148,35 @@ CRITICAL: You MUST:
 ### 5. Expert Analysis Enhancement
 Apply senior technical product management expertise to identify:
 
-#### System Integration Requirements that will contribute to a modern, scalable, and maintainable [core project deliverable]. Including:
+#### System Integration Requirements that will contribute to a modern, scalable, and maintainable modern Next.js 14 design system with premium aesthetics. Including:
 - Inter-component communication
 - External system interfaces
 - Data flow requirements
 - API contracts and specifications
 - Integration patterns and protocols
 
-#### Operational Requirements that will contribute to a modern, scalable, and maintainable [core project deliverable]. Including:
+#### Operational Requirements that will contribute to a modern, scalable, and maintainable modern Next.js 14 design system with premium aesthetics. Including:
 - System monitoring
 - Performance metrics
 - Logging requirements
 - Error handling
 - Recovery procedures
 
-#### Automation Opportunities that will contribute to a modern, scalable, and maintainable [core project deliverable]. Including: 
+#### Automation Opportunities that will contribute to a modern, scalable, and maintainable modern Next.js 14 design system with premium aesthetics. Including: 
 - Self-maintaining systems
 - Automated testing requirements
 - CI/CD pipeline requirements
 - Monitoring and alerting
 - Data maintenance and cleanup
 
-#### Future-Proofing Requirements that will contribute to a modern, scalable, and maintainable [core project deliverable]. Including:
+#### Future-Proofing Requirements that will contribute to a modern, scalable, and maintainable modern Next.js 14 design system with premium aesthetics. Including:
 - Scalability considerations
 - Extensibility points
 - Configuration management
 - Feature toggles
 - Version compatibility
 
-#### Security Requirements that will contribute to a modern, scalable, and maintainable [core project deliverable]. Including:
+#### Security Requirements that will contribute to a modern, scalable, and maintainable modern Next.js 14 design system with premium aesthetics. Including:
 - Authentication mechanisms
 - Authorization frameworks
 - Data protection
@@ -243,7 +193,7 @@ For each new or modified FR:
   * Impact Weighting: [Strategic Growth/Revenue Impact/Operational Efficiency]
   * Priority: [High/Medium/Low]
   * User Stories: [US reference if applicable]
-  * Tasks: [DO NOT ADD ANY CONTENT HERE]
+  * Tasks: [WARNING!!! READ THIS CAREFULLY!!!! DO NOT ADD ANY CONTENT HERE. Task #'s will be added in future steps]
   * User Story Acceptance Criteria: [already present from User Stories USX.Y.Z]
   * Functional Requirements Acceptance Criteria:
     - [Specific, measurable criterion 1]
@@ -271,7 +221,7 @@ For each new or modified FR:
 4. Think Systematically
    - Consider entire system lifecycle
    - Include operational requirements
-   - Account for non-functional aspects that will contribute to a modern, scalable, and maintainable [core project deliverable].
+   - Account for non-functional aspects that will contribute to a modern, scalable, and maintainable modern Next.js 14 design system with premium aesthetics.
 
 5. Future-Proof
    - Consider scalability
