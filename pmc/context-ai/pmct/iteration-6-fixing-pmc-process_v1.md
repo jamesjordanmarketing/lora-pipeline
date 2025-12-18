@@ -880,8 +880,32 @@ For each FR:
 
 ---
 
+---
+
+## Wireframe Generation Mystery Resolution (December 16, 2025)
+
+**Complete detailed analysis:**  
+See: `wireframe-generation-mystery-solved_v1.md`
+
+**Summary:**
+- ✅ **Restored missing Figma template** from chunks-alpha project
+- ✅ **Fixed critical BUG** in placeholder replacement (OUTPUT_FILE_PATH_PLACEHOLDER)
+- ✅ **Created dedicated Figma script**: `04a-generate-FIGMA-wireframe-prompts_v1.js`
+- ✅ **Separated TWO workflows**: Figma wireframes (visual design) vs Task lists (implementation)
+- ✅ **Documented complete solution** with verification and testing
+
+**Key Finding:**  
+The current `04-generate-FR-wireframe-segments_v4.js` was using the WRONG template (`04-FR-with-wireframes-create-tasks_v1.md` for task lists) instead of the CORRECT template (`04-FR-wireframes-prompt_v4.md` for Figma wireframes).
+
+**Solution:**  
+Two separate scripts for two separate workflows:
+- **04a-generate-FIGMA-wireframe-prompts_v1.js** → Creates Figma wireframe prompts (visual design)
+- **04-generate-FR-wireframe-segments_v4.js** → Creates task lists (implementation planning)
+
+---
+
 **Document Status:** Completed  
 **Executed By:** AI Agent  
 **Execution Date:** 2025-12-15  
-**Updated:** 2025-12-16 (Script duplication analysis + Step 03/04 process analysis + 3b prompt quality analysis added)
+**Updated:** 2025-12-16 (Script duplication analysis + Step 03/04 process analysis + 3b prompt quality analysis + Wireframe mystery excavation added)
 

@@ -1,6 +1,6 @@
 # LoRA Pipeline 04 segments Functional Requirements Wireframe - Section Index
 
-**Generated:** 2025-12-18T08:06:03.440Z
+**Generated:** 2025-12-18T06:11:42.658Z
 
 This index contains links to 04 wireframe segments functional requirements sections and their corresponding generator prompt files.
 

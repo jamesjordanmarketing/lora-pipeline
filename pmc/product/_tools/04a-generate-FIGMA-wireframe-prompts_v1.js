@@ -1,17 +1,19 @@
 /**
- * FR Wireframe Prompt Generator (v4)
+ * FIGMA Wireframe Prompt Generator (v1) - FOR FIGMA MAKE AI
  *
- * - Uses v4 generator template: product/_prompt_engineering/04-FR-with-wireframes-create-tasks_v1.md
+ * Purpose: Generates Figma-ready wireframe prompts from Functional Requirements
+ * 
+ * - Uses FIGMA template: product/_prompt_engineering/04-FR-wireframes-FIGMA-prompt_v4.md
  * - For each section E[XX], extracts all FR IDs (e.g., FR1.1.0, FR1.2.0, FR1.3.0)
- * - Generates a generator prompt per FR by replacing all placeholders:
+ * - Generates a Figma wireframe prompt per FR by replacing all placeholders:
  *   [FR_NUMBER_PLACEHOLDER], [STAGE_NAME_PLACEHOLDER], [MINIMUM_PAGE_COUNT_PLACEHOLDER],
  *   [SECTION_ID_PLACEHOLDER], [FR_LOCATE_FILE_PATH_PLACEHOLDER], [FR_LOCATE_LINE_PLACEHOLDER],
- *   [OUTPUT_FILE_PATH_PLACEHOLDER]
+ *   [OUTPUT_FILE_PATH_PLACEHOLDER], [JOURNEY_STAGE_NUMBER]
  * - Appends all FR generator prompts for a section into one file:
- *   product/_mapping/fr-maps/prompts/04-FR-wireframes-prompt-E[XX].md
+ *   product/_mapping/fr-maps/prompts/04a-FIGMA-wireframes-prompt-E[XX].md
  * - Computes the starting line number for each FR block within that file and injects it
- * - Enforces the final Figma prompt output path per section:
- *   product/_mapping/fr-maps/04-bmo-FR-wireframes-output-E[XX].md
+ * - Output: Figma-ready prompts to generate visual wireframes
+ *   product/_mapping/fr-maps/04-{abbrev}-FIGMA-wireframes-output-E[XX].md
  */
 
 const fs = require('fs');
@@ -138,6 +140,7 @@ function fillTemplateForFR(template, params) {
   let out = template;
 
   // Replace new variables first
+  out = out.replace(/\[PRODUCT_ABBR_PLACEHOLDER\]/g, productAbbreviation);
   out = out.replace(/\[prod-abbr\]/g, productAbbreviation);
   out = out.replace(/\[XX\]/g, sectionNumber);
 
@@ -152,6 +155,7 @@ function fillTemplateForFR(template, params) {
   out = out.replace(/\[JOURNEY_STAGE_NUMBER\]/g, String(journeyStageNumber));
 
   // Safety second pass
+  out = out.replace(/\[PRODUCT_ABBR_PLACEHOLDER\]/g, productAbbreviation);
   out = out.replace(/\[prod-abbr\]/g, productAbbreviation);
   out = out.replace(/\[XX\]/g, sectionNumber);
   out = out.replace(/\[FR_NUMBER_PLACEHOLDER\]/g, frNumber);
@@ -181,9 +185,9 @@ function generatePromptsForSection(sectionId, sectionContent, promptTemplate, pr
     return;
   }
 
-  const combinedFilePath = path.join(promptsOutputDir, `04-FR-wireframes-prompt-${sectionId}.md`);
-  const frLocateFilePath = `pmc/product/_mapping/fr-maps/prompts/04-FR-wireframes-prompt-${sectionId}.md`;
-  const outputFilePath = `pmc/product/_mapping/fr-maps/04-${productAbbreviation}-${sectionNumber}-task-list_v2.md`;
+  const combinedFilePath = path.join(promptsOutputDir, `04a-FIGMA-wireframes-prompt-${sectionId}.md`);
+  const frLocateFilePath = `pmc/product/_mapping/fr-maps/prompts/04a-FIGMA-wireframes-prompt-${sectionId}.md`;
+  const outputFilePath = `pmc/product/_mapping/fr-maps/04-${productAbbreviation}-FIGMA-wireframes-output-${sectionId}.md`;
 
   let combined = '';
   const separator = '\n\n';
@@ -220,10 +224,10 @@ function generatePromptsForSection(sectionId, sectionContent, promptTemplate, pr
   console.log(`Wrote combined generator prompts with line numbers: ${combinedFilePath}`);
 }
 
-function generateUIFunctionalRequirementsSegmentsV4(projectName, projectAbbreviation) {
+function generateFigmaWireframePromptsV1(projectName, projectAbbreviation) {
   const functionalRequirementsFileName = `03-${projectAbbreviation}-functional-requirements.md`;
   const functionalRequirementsFilePath = resolveProjectPath(`product/${functionalRequirementsFileName}`);
-  const promptTemplatePath = resolveProjectPath(`product/_prompt_engineering/04-FR-with-wireframes-create-tasks_v1.md`);
+  const promptTemplatePath = resolveProjectPath(`product/_prompt_engineering/04-FR-wireframes-FIGMA-prompt_v4.md`);
 
   const outputDir = resolveProjectPath(`product/_mapping/fr-maps`);
   const promptsOutputDir = path.join(outputDir, 'prompts');
@@ -287,17 +291,17 @@ function generateUIFunctionalRequirementsSegmentsV4(projectName, projectAbbrevia
 if (require.main === module) {
   const args = process.argv.slice(2);
   if (args.length !== 2) {
-    console.error('Usage: node product/_tools/04-generate-FR-wireframe-segments_v4.js "<Project Name>" <project-abbreviation>');
+    console.error('Usage: node product/_tools/04a-generate-FIGMA-wireframe-prompts_v1.js "<Project Name>" <project-abbreviation>');
     console.error('Example:');
-    console.error('  node product/_tools/04-generate-FR-wireframe-segments_v4.js "Bright Run LoRA Fine-Tuning Training Data Platform" bmo');
+    console.error('  node product/_tools/04a-generate-FIGMA-wireframe-prompts_v1.js "LoRA Pipeline" pipeline');
     process.exit(1);
   }
   const [projectName, projectAbbreviation] = args;
-  generateUIFunctionalRequirementsSegmentsV4(projectName, projectAbbreviation);
+  generateFigmaWireframePromptsV1(projectName, projectAbbreviation);
 }
 
 module.exports = {
-  generateUIFunctionalRequirementsSegmentsV4,
+  generateFigmaWireframePromptsV1,
   parseFunctionalRequirementsFile,
   extractSectionHeader,
   getSectionNumberAndTitle,
