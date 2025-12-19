@@ -42,7 +42,49 @@ The PMC system consists of four main components:
 
 ## 2. Document Generation Process
 
-### 2.1 Step 0: Seed Story Generation
+**Important:** Each script generates prompts that you must execute in an AI agent (like Claude or ChatGPT). The workflow is always:
+1. Run the script to generate a customized prompt
+2. Copy the prompt from `_run-prompts/`
+3. Paste into AI agent with required input files
+4. Save AI output to specified location
+5. Verify output is ready for next step
+
+### Process Overview by Step
+
+```
+Step 00 (Seed Story)
+  └─ Script generates final docs directly → No AI execution needed
+
+Step 01 (Overview)
+  └─ Script → Prompt → AI Agent → Save output → Verify
+
+Step 02a (User Stories)
+  └─ Script → Prompt → AI Agent → Save output → Verify
+
+Step 02b (User Journey)
+  └─ Script → Prompt → AI Agent → Save output → Verify
+
+Step 03 (Functional Requirements) - THREE PHASES
+  ├─ 3a: Script → Prompt → AI Agent → Save output
+  ├─ 3b-#1: Script → Prompt → AI Agent → REPLACE output
+  └─ 3b-#2: Script → Prompt → AI Agent → REPLACE output (optional)
+
+Step 04a (FIGMA Wireframes) - ITERATIVE PER SECTION
+  ├─ Script → Generates prompts per section (E01, E02, etc.)
+  └─ For each section:
+      ├─ For each FR prompt:
+      │   ├─ Copy FR prompt → VS Code Copilot Agent → Get wireframe spec
+      │   ├─ Copy spec → Figma Make AI → Generate visual wireframe
+      │   └─ Review & refine wireframe in Figma
+      └─ Save refined wireframes
+
+Step 04b (Task Breakdown) - OPTIONAL
+  └─ Script → Prompts → AI Agent → Task planning outputs
+```
+
+---
+
+### 2.0 Step 00: Seed Story Generation
 
 The seed story generation process uses the script `00-generate-seed-story.js` and follows these steps:
 
@@ -74,7 +116,14 @@ cd pmc/product/_tools
 node 00-generate-seed-story.js
 ```
 
-### 2.2 Step 1: Overview Generation
+**What to Do After Running:**
+- No AI execution needed - this script generates final documents directly
+- Verify both output files exist in `pmc/product/`
+- Review content for accuracy before proceeding to Step 01
+
+---
+
+### 2.1 Step 01: Overview Generation
 
 The overview generation uses `01-generate-overview.js` to create the product overview document:
 
@@ -97,8 +146,7 @@ The overview generation uses `01-generate-overview.js` to create the product ove
    - Technology stack and dependencies
 
 **Outputs:**
-- `01-{project-abbreviation}-overview.md`
-- Prompt file in `_run-prompts/01-product-{abbrev}-overview-prompt-v1.md`
+- Prompt file: `_run-prompts/01-product-{abbrev}-overview-prompt-v1.md`
 
 **Usage:**
 ```bash
@@ -106,7 +154,27 @@ cd pmc/product/_tools
 node 01-generate-overview.js "Project Name" project-abbreviation
 ```
 
-### 2.3 Step 2: User Stories Generation
+**What to Do After Running:**
+1. **Locate the generated prompt:**
+   - Open `pmc/product/_run-prompts/01-product-{abbrev}-overview-prompt-v1.md`
+
+2. **Execute in AI agent:**
+   - Copy the entire prompt content
+   - Paste into your AI assistant (Claude/ChatGPT)
+   - AI will generate the overview document
+
+3. **Output file location:**
+   - The prompt instructs the AI to write directly to: `pmc/product/01-{abbrev}-overview.md`
+   - No manual copy/save needed - AI handles file creation
+
+4. **Verify before next step:**
+   - File exists at correct location
+   - Contains all required sections (overview, goals, features, architecture)
+   - Ready to be referenced by Step 02a
+
+---
+
+### 2.2 Step 02a: User Stories Generation
 
 The user stories generation uses `02a-generate-user-story-spec.js` (or can be done manually):
 
@@ -128,8 +196,7 @@ The user stories generation uses `02a-generate-user-story-spec.js` (or can be do
   - Priority levels and FR mapping placeholders
 
 **Outputs:**
-- `02-{project-abbreviation}-user-stories.md`
-- Prompt files in `_run-prompts/` directory
+- Prompt file: `_run-prompts/02-product-{abbrev}-user-stories-prompt-v1.md`
 
 **Usage:**
 ```bash
@@ -137,9 +204,31 @@ cd pmc/product/_tools
 node 02a-generate-user-story-spec.js "Project Name" project-abbreviation
 ```
 
+**What to Do After Running:**
+1. **Locate the generated prompt:**
+   - Open `pmc/product/_run-prompts/02-product-{abbrev}-user-stories-prompt-v1.md`
+
+2. **Execute in AI agent:**
+   - Copy the entire prompt content
+   - Paste into your AI assistant
+   - Ensure AI has access to `01-{abbrev}-overview.md` (referenced in prompt)
+   - AI will generate user stories document
+
+3. **Output file location:**
+   - The prompt instructs the AI to write directly to: `pmc/product/02-{abbrev}-user-stories.md`
+   - No manual copy/save needed - AI handles file creation
+
+4. **Verify before next step:**
+   - File exists at correct location
+   - Contains categorized user stories by impact area
+   - Includes personas, use cases, acceptance criteria
+   - Ready to be referenced by Step 02b
+
 **Note:** This script ONLY generates user stories (step 02). Run `01-generate-overview.js` first to create the overview document.
 
-### 2.4 Step 02b: User Journey Generation
+---
+
+### 2.3 Step 02b: User Journey Generation
 
 The user journey generation uses `02b-generate-user-journey_v1.js` to create a comprehensive user journey document:
 
@@ -171,7 +260,6 @@ The user journey generation uses `02b-generate-user-journey_v1.js` to create a c
 
 **Outputs:**
 - Prompt file: `_run-prompts/02b-product-{abbrev}-user-journey-prompt-v1.md`
-- Document (created via AI): `02b-{project-abbreviation}-user-journey.md`
 
 **Usage:**
 ```bash
@@ -179,13 +267,31 @@ cd pmc/product/_tools
 node 02b-generate-user-journey_v1.js "Project Name" project-abbreviation
 ```
 
-**Next Steps After Script:**
-1. Open the generated prompt: `pmc/product/_run-prompts/02b-product-{abbrev}-user-journey-prompt-v1.md`
-2. Copy the complete prompt content
-3. Paste into AI assistant along with the input files
-4. Save AI output as `pmc/product/02b-{abbrev}-user-journey.md`
+**What to Do After Running:**
+1. **Locate the generated prompt:**
+   - Open `pmc/product/_run-prompts/02b-product-{abbrev}-user-journey-prompt-v1.md`
 
-### 2.5 Step 3: Enhanced Functional Requirements Generation
+2. **Execute in AI agent:**
+   - Copy the entire prompt content
+   - Paste into your AI assistant
+   - Ensure AI has access to:
+     - `01-{abbrev}-overview.md`
+     - `02-{abbrev}-user-stories.md`
+   - AI will generate comprehensive user journey document
+
+3. **Output file location:**
+   - The prompt instructs the AI to write directly to: `pmc/product/02b-{abbrev}-user-journey.md`
+   - No manual copy/save needed - AI handles file creation
+
+4. **Verify before next step:**
+   - File exists at correct location
+   - Contains progressive stages with UJ#.#.# format criteria
+   - Includes entry/exit criteria for each stage
+   - Ready to be referenced by Step 03
+
+---
+
+### 2.4 Step 03: Functional Requirements Generation (Two-Phase Process)
 
 The functional requirements generation uses `03-generate-functional-requirements.js` with a sophisticated two-step process:
 
@@ -232,44 +338,107 @@ The functional requirements generation uses `03-generate-functional-requirements
 - **Output management**: Saves prompts to `_run-prompts/`
 
 **Outputs:**
-- Enhanced `03-{project-abbreviation}-functional-requirements.md`
-- Prompt files in `_run-prompts/`
+- Phase 1 prompt: `_run-prompts/3a-preprocess-functional-requirements-prompt_v1-output.md`
+- Phase 2 prompts:
+  - `_run-prompts/3b-#1-functional-requirements-legacy-prompt_v1-output.md`
+  - `_run-prompts/3b-#2-functional-requirements-legacy-code-prompt_v1-output.md` (optional)
 
 **Usage:**
 ```bash
 cd pmc/product/_tools
-
-# Optional: Generate initial FR structure first
-node 03-generate-FR-initial.js "Project Name" project-abbreviation
-
-# Then run the main FR generator
 node 03-generate-functional-requirements.js "Project Name" project-abbreviation
 ```
 
-### 2.6 Step 4: Wireframe Generation System (v4)
+**What to Do After Running (Three-Phase Execution):**
 
-Uses `04-generate-FR-wireframe-segments_v4.js` for advanced wireframe prompt generation:
+#### Phase 1: Preprocessing (3a)
+
+1. **Locate the generated prompt:**
+   - Open `pmc/product/_run-prompts/3a-preprocess-functional-requirements-prompt_v1-output.md`
+
+2. **Execute in AI agent:**
+   - Copy the entire prompt content
+   - Paste into your AI assistant
+   - AI will clean, deduplicate, and reorder requirements
+
+3. **Output file location:**
+   - The prompt instructs the AI to write directly to: `pmc/product/03-{abbrev}-functional-requirements.md`
+   - No manual copy/save needed - AI handles file creation
+
+4. **Return to script:**
+   - Script will ask: "Ready to continue to enhancement step? (y/n)"
+   - Type `y` to proceed to Phase 2
+
+#### Phase 2: Enhancement #1 (3b-#1) - REQUIRED
+
+1. **Locate the generated prompt:**
+   - Open `pmc/product/_run-prompts/3b-#1-functional-requirements-legacy-prompt_v1-output.md`
+
+2. **Execute in AI agent:**
+   - Copy the entire prompt content
+   - Paste into your AI assistant
+   - AI will add detailed acceptance criteria and identify gaps
+
+3. **Output file location:**
+   - The prompt instructs the AI to modify: `pmc/product/03-{abbrev}-functional-requirements.md`
+   - AI will **UPDATE** the existing file with enhanced content
+   - No manual copy/save needed - AI handles file modification
+
+#### Phase 3: Enhancement #2 (3b-#2) - OPTIONAL (Only if you have legacy code)
+
+1. **Locate the generated prompt:**
+   - Open `pmc/product/_run-prompts/3b-#2-functional-requirements-legacy-code-prompt_v1-output.md`
+
+2. **Execute in AI agent:**
+   - Copy the entire prompt content
+   - Paste into your AI assistant
+   - AI will add legacy code references under each criterion
+
+3. **Output file location:**
+   - The prompt instructs the AI to modify: `pmc/product/03-{abbrev}-functional-requirements.md`
+   - AI will **UPDATE** the existing file with legacy code references
+   - No manual copy/save needed - AI handles file modification
+
+4. **Verify before next step:**
+   - File exists at `pmc/product/03-{abbrev}-functional-requirements.md`
+   - Contains detailed acceptance criteria
+   - All sections are complete (not truncated)
+   - Ready for Step 04 wireframe generation
+
+---
+
+### 2.5 Step 04a: FIGMA Wireframe Prompts Generation
+
+---
+
+### 2.5 Step 04a: FIGMA Wireframe Prompts Generation
+
+**Purpose:** Generate Figma-ready wireframe prompts from your functional requirements to create visual wireframes in Figma Make AI.
+
+Uses `04a-generate-FIGMA-wireframe-prompts_v1.js` for Figma-ready prompt generation:
 
 **Input Files:**
-- `03-{project-abbreviation}-functional-requirements.md` (from step 3)
-- `_prompt_engineering/04-FR-wireframes-prompt_v4.md` (v4 template)
+- `03-{project-abbreviation}-functional-requirements.md` (from step 03)
+- `_prompt_engineering/04-FR-wireframes-FIGMA-prompt_v4.md` (FIGMA template)
+- `_mapping/journey-to-wireframe-mapping.json` (journey mapping data)
 
 **Process:**
-1. **FR-Level Wireframe Generation**
-   - Extracts individual FR identifiers from each section
-   - Generates wireframe prompts per FR (not per section)
-   - Calculates precise line numbers for prompt targeting
-   - Creates comprehensive generator prompt files
+1. **FR-Level FIGMA Prompt Generation**
+   - Reads your enhanced functional requirements
+   - Segments by sections (E01, E02, E03, etc.)
+   - Extracts individual FR identifiers per section (e.g., FR1.1.0, FR1.2.0)
+   - Generates Figma-specific wireframe prompts per FR
 
-2. **Advanced Features**
-   - **Multi-FR Processing**: Handles multiple FRs per section
-   - **Line Number Precision**: Calculates exact starting lines for each FR block
-   - **Template-Based Generation**: Uses v4 template with full placeholder replacement
-   - **Automated Output Paths**: Enforces consistent file naming and organization
+2. **FIGMA-Specific Features**
+   - **Journey Integration**: Maps FRs to user journey stages
+   - **Visual Design Focus**: Prompts optimized for Figma Make AI
+   - **Page Count Specifications**: Includes minimum wireframe pages per FR
+   - **Line Number Precision**: Calculates exact FR locations for traceability
 
 3. **Template Placeholder System**
    - `[FR_NUMBER_PLACEHOLDER]`: Specific FR identifier (e.g., FR1.1.0)
    - `[STAGE_NAME_PLACEHOLDER]`: Section stage name
+   - `[JOURNEY_STAGE_NUMBER]`: Corresponding journey stage
    - `[MINIMUM_PAGE_COUNT_PLACEHOLDER]`: Required wireframe pages
    - `[SECTION_ID_PLACEHOLDER]`: Section identifier (E01, E02, etc.)
    - `[FR_LOCATE_FILE_PATH_PLACEHOLDER]`: Path to prompt file
@@ -279,27 +448,136 @@ Uses `04-generate-FR-wireframe-segments_v4.js` for advanced wireframe prompt gen
 **Output Structure:**
 ```
 product/_mapping/fr-maps/
-├── 04-{project-abbrev}-FR-wireframes-E01.md    # Section files
-├── 04-{project-abbrev}-FR-wireframes-E02.md
 ├── prompts/
-│   ├── 04-FR-wireframes-prompt-E01.md          # All FRs for section E01
-│   └── 04-FR-wireframes-prompt-E02.md          # All FRs for section E02
-├── 04-bmo-FR-wireframes-output-E01.md          # Figma outputs (created by agent)
-├── 04-bmo-FR-wireframes-output-E02.md
-└── 04-FR-wireframes-index.md                   # Master index
+│   ├── 04a-FIGMA-wireframes-prompt-E01.md     # All Figma prompts for section E01
+│   ├── 04a-FIGMA-wireframes-prompt-E02.md     # All Figma prompts for section E02
+│   └── 04a-FIGMA-wireframes-prompt-E03.md     # ...and so on
+├── 04-{abbrev}-FIGMA-wireframes-output-E01.md # Placeholder for Figma outputs
+└── 04-{abbrev}-FIGMA-wireframes-output-E02.md
 ```
-
-**Outputs:**
-- Section-based FR wireframe files
-- Combined generator prompt files per section
-- Master index file
-- Output placeholder files for Figma results
 
 **Usage:**
 ```bash
 cd pmc/product/_tools
-node 04-generate-FR-wireframe-segments_v4.js "Project Name" project-abbreviation
+node 04a-generate-FIGMA-wireframe-prompts_v1.js "Project Name" project-abbreviation
 ```
+
+**What to Do After Running:**
+
+#### Step 1: Review Generated Prompts
+- Script generates one prompt file per section (E01, E02, etc.)
+- Each file contains multiple FR-specific Figma prompts
+- Locate prompts in: `pmc/product/_mapping/fr-maps/prompts/04a-FIGMA-wireframes-prompt-E[XX].md`
+
+#### Step 2: Execute Each Section's Prompts in Sequence
+
+For each section (E01, E02, E03, etc.):
+
+1. **Open the section prompt file:**
+   - Example: `pmc/product/_mapping/fr-maps/prompts/04a-FIGMA-wireframes-prompt-E01.md`
+   - This file contains ALL FR prompts for that section
+
+2. **Locate each individual FR prompt within the file:**
+   - File contains multiple prompts, one per FR (FR1.1.0, FR1.2.0, etc.)
+   - Each prompt is clearly marked with FR number and line number reference
+
+3. **Execute FR prompt in VS Code Copilot Agent:**
+   - Copy one FR prompt at a time
+   - Paste into VS Code Copilot Agent chat
+   - Ensure agent has access to your `03-{abbrev}-functional-requirements.md`
+   - Agent will generate detailed wireframe specifications for that FR
+
+4. **Save intermediate output:**
+   - Copy agent's wireframe specification
+   - Keep for next step (Figma Make execution)
+
+#### Step 3: Create Visual Wireframes in Figma Make
+
+1. **Open Figma Make AI:**
+   - Access Figma Make's AI wireframe generation feature
+   - Ensure you have a Figma project ready
+
+2. **Execute wireframe specification:**
+   - Copy the wireframe specification from VS Code agent output
+   - Paste into Figma Make AI
+   - Figma Make will generate visual wireframes
+
+3. **Review and refine Figma wireframes:**
+   - **CRITICAL**: This is where you apply your design expertise
+   - Evaluate each wireframe for:
+     - **Usability**: Are all user goals achievable?
+     - **Interface completeness**: Does it have all needed controls/inputs?
+     - **User flow**: Is the navigation logical and intuitive?
+     - **Visual hierarchy**: Is information properly organized?
+     - **Accessibility**: Are interactions clear and accessible?
+   - Make design decisions to improve wireframes:
+     - Adjust layout and spacing
+     - Refine component placement
+     - Add missing interface elements
+     - Improve visual consistency
+   - **Goal**: Ensure if these wireframes were built into an actual app, they would fully meet the functional requirements
+
+4. **Save final wireframes:**
+   - Export/save your refined Figma wireframes
+   - Document design decisions
+   - Save to: `pmc/product/_mapping/fr-maps/04-{abbrev}-FIGMA-wireframes-output-E[XX].md`
+
+#### Step 4: Repeat for All Sections
+
+- Repeat Steps 2-3 for each section (E02, E03, etc.)
+- Maintain consistency across sections
+- Cross-reference between related FRs
+
+**Important Notes:**
+- **Human judgment is essential**: The AI generates starting points, but YOU make final design decisions
+- **Iterative refinement**: Don't accept first wireframe - iterate to perfection
+- **Functional validation**: Every wireframe must enable users to complete their goals
+- **Document decisions**: Note why you made specific design choices
+
+---
+
+### 2.6 Step 04b: FR Wireframe Task Generator (Alternative/Supplementary)
+
+**Purpose:** Generate detailed task breakdowns from wireframes (alternative workflow for development task planning).
+
+Uses `04b-generate-FR-wireframe-segments_v1.js` for task-oriented wireframe prompts:
+
+**Input Files:**
+- `03-{project-abbreviation}-functional-requirements.md` (from step 03)
+- `_prompt_engineering/04-FR-with-wireframes-create-tasks_v1.md` (task template)
+- `_prompt_engineering/04-FR-with-wireframes-execution-prompts_v1.md` (execution template)
+
+**Process:**
+1. **Task-Oriented Wireframe Generation**
+   - Generates prompts that focus on development task breakdown
+   - Creates both generator prompts AND execution prompts
+   - Maps FRs to actionable implementation tasks
+
+**Output Structure:**
+```
+product/_mapping/fr-maps/
+├── prompts/
+│   ├── 04-FR-wireframes-prompt-E01.md               # Generator prompts for section E01
+│   ├── 04-FR-wireframes-prompt-E02.md               # Generator prompts for section E02
+│   └── 04-FR-with-wireframes-execution-prompts_v1.md # Execution instructions
+└── 04-bmo-FR-wireframes-output-E[XX].md             # Task outputs
+```
+
+**Usage:**
+```bash
+cd pmc/product/_tools
+node 04b-generate-FR-wireframe-segments_v1.js "Project Name" project-abbreviation
+```
+
+**When to Use:**
+- Use **04a** for visual wireframe design in Figma
+- Use **04b** for development task planning and breakdown
+- Can use both: 04a for design, then 04b for implementation planning
+
+**What to Do After Running:**
+1. Similar process to 04a, but outputs focus on tasks rather than visual design
+2. Execute prompts in AI agent to get task breakdowns
+3. Use for project planning and sprint organization
 
 ## 3. Document Hierarchy and Purpose
 
@@ -377,17 +655,19 @@ graph TD
 
 ### 4.1 Generation Scripts
 
-| Script | Purpose | Input Files | Outputs |
-|--------|---------|-------------|---------|
-| `00-generate-seed-story.js` | Creates seed narrative and story | `_seeds/seed-narrative-v1.md`, templates, examples | Narrative + Story docs |
-| `01-generate-overview.js` | Overview generation (step 01) | Seed story, config, templates, examples | Overview doc + prompt |
-| `02a-generate-user-story-spec.js` | User stories generation (step 02) | Overview (required), config, templates, examples | User Stories doc + prompt |
-| `02b-generate-user-journey_v1.js` | User journey prompt generation (step 02b) | Overview, User Stories, templates | User Journey prompt |
-| `03-generate-functional-requirements.js` | Enhanced FR generation (step 03) | Overview, User Stories, User Journey, templates | Enhanced FR + prompts |
-| `04-generate-FR-wireframe-segments_v4.js` | Wireframe generation (step 04) | Functional Requirements, v4 template | FR wireframe prompts + sections |
+| Script | Step | Purpose | Input Files | Outputs |
+|--------|------|---------|-------------|---------|
+| `00-generate-seed-story.js` | 00 | Creates seed narrative and story | `_seeds/seed-narrative-v1.md`, templates, examples | Narrative + Story docs |
+| `01-generate-overview.js` | 01 | Overview prompt generation | Seed story, config, templates, examples | Overview prompt |
+| `02a-generate-user-story-spec.js` | 02a | User stories prompt generation | Overview (required), config, templates, examples | User Stories prompt |
+| `02b-generate-user-journey_v1.js` | 02b | User journey prompt generation | Overview, User Stories, templates | User Journey prompt |
+| `03-generate-functional-requirements.js` | 03 | Enhanced FR generation (3a + 3b) | Overview, User Stories, User Journey, templates | FR prompts (3 phases) |
+| `04a-generate-FIGMA-wireframe-prompts_v1.js` | 04a | FIGMA wireframe prompt generation | Functional Requirements, FIGMA template | Figma-ready prompts per section |
+| `04b-generate-FR-wireframe-segments_v1.js` | 04b | Task-oriented wireframe prompts | Functional Requirements, task templates | Task breakdown prompts |
 
 **Deprecated Scripts** (moved to `archive/`):
 - `01-02-generate-product-specs.js` - Split into `01-generate-overview.js` + `02a-generate-user-story-spec.js` for operational consistency
+- `04-generate-FR-wireframe-segments_v4.js` - Replaced by `04a-generate-FIGMA-wireframe-prompts_v1.js` (Figma focus) and `04b-generate-FR-wireframe-segments_v1.js` (task focus)
 #### Key Configuration Files
 - `seed-story-config.json`: Seed generation configuration
 - `config/prompts-config.json`: Product spec generation configuration
@@ -434,24 +714,39 @@ graph TD
    ```bash
    cd pmc/product/_tools
    
-   # Step 0: Foundation
+   # Step 00: Foundation
    node 00-generate-seed-story.js
+   # No AI execution needed - generates documents directly
    
-   # Step 1: Overview
+   # Step 01: Overview
    node 01-generate-overview.js "Project Name" abbrev
+   # → Execute prompt in AI → Save as 01-{abbrev}-overview.md
    
-   # Step 2: User Stories
-   node 01-02-generate-product-specs.js "Project Name" abbrev
+   # Step 02a: User Stories
+   node 02a-generate-user-story-spec.js "Project Name" abbrev
+   # → Execute prompt in AI → Save as 02-{abbrev}-user-stories.md
    
    # Step 02b: User Journey
    node 02b-generate-user-journey_v1.js "Project Name" abbrev
-   # Then: Run generated prompt in AI, save output as 02b-{abbrev}-user-journey.md
+   # → Execute prompt in AI → Save as 02b-{abbrev}-user-journey.md
    
-   # Step 3: Enhanced requirements
+   # Step 03: Enhanced requirements (THREE prompts)
    node 03-generate-functional-requirements.js "Project Name" abbrev
+   # → Execute 3a prompt in AI → Save as 03-{abbrev}-functional-requirements.md
+   # → Execute 3b-#1 prompt in AI → REPLACE 03-{abbrev}-functional-requirements.md
+   # → Execute 3b-#2 prompt in AI (optional) → REPLACE 03-{abbrev}-functional-requirements.md
    
-   # Step 4: Wireframe generation
-   node 04-generate-FR-wireframe-segments_v4.js "Project Name" abbrev
+   # Step 04a: FIGMA wireframe generation
+   node 04a-generate-FIGMA-wireframe-prompts_v1.js "Project Name" abbrev
+   # → For each section (E01, E02, etc.):
+   #    1. Execute each FR prompt in VS Code Copilot Agent
+   #    2. Take agent output to Figma Make AI
+   #    3. Review and refine Figma wireframes
+   #    4. Save refined wireframes
+   
+   # Step 04b: Task breakdown (optional)
+   node 04b-generate-FR-wireframe-segments_v1.js "Project Name" abbrev
+   # → Execute prompts for development task planning
    ```
 
 3. **Validation Phase**
@@ -587,20 +882,27 @@ All generated prompts are now saved to a unified location:
 
 ```
 pmc/product/
-├── _run-prompts/                               # All generated prompts
-│   ├── 01-product-{abbrev}-overview-prompt-v1.md
-│   ├── 02b-product-{abbrev}-user-journey-prompt-v1.md
-│   ├── 3a-preprocess-functional-requirements-prompt_v1-output.md
-│   ├── 3b-#1-requirements-enhancement-prompt_v1-output.md
-│   └── 3b-#2-functional-requirements-legacy-code-prompt_v1-output.md
-├── 00-{abbrev}-seed-story.md                   # Step 0 output
-├── 01-{abbrev}-overview.md                     # Step 1 output
-├── 02-{abbrev}-user-stories.md                 # Step 2 output
-├── 02b-{abbrev}-user-journey.md                # Step 02b output
-├── 03-{abbrev}-functional-requirements.md      # Step 3 output
-└── _mapping/fr-maps/                           # Step 4 outputs
-    ├── 04-{abbrev}-FR-wireframes-E01.md
-    └── prompts/
+├── _run-prompts/                                      # All generated prompts
+│   ├── 01-product-{abbrev}-overview-prompt-v1.md     # Step 01 output
+│   ├── 02-product-{abbrev}-user-stories-prompt-v1.md # Step 02a output
+│   ├── 02b-product-{abbrev}-user-journey-prompt-v1.md # Step 02b output
+│   ├── 3a-preprocess-functional-requirements-prompt_v1-output.md # Step 03 Phase 1
+│   ├── 3b-#1-functional-requirements-legacy-prompt_v1-output.md  # Step 03 Phase 2
+│   └── 3b-#2-functional-requirements-legacy-code-prompt_v1-output.md # Step 03 Phase 3 (optional)
+├── 00-{abbrev}-seed-narrative.md                      # Step 00 output
+├── 00-{abbrev}-seed-story.md                          # Step 00 output
+├── 01-{abbrev}-overview.md                            # Step 01 final (from AI)
+├── 02-{abbrev}-user-stories.md                        # Step 02a final (from AI)
+├── 02b-{abbrev}-user-journey.md                       # Step 02b final (from AI)
+├── 03-{abbrev}-functional-requirements.md             # Step 03 final (from AI)
+└── _mapping/fr-maps/                                  # Step 04 outputs
+    ├── prompts/
+    │   ├── 04a-FIGMA-wireframes-prompt-E01.md        # Step 04a prompts
+    │   ├── 04a-FIGMA-wireframes-prompt-E02.md
+    │   ├── 04-FR-wireframes-prompt-E01.md            # Step 04b prompts (optional)
+    │   └── 04-FR-wireframes-prompt-E02.md
+    ├── 04-{abbrev}-FIGMA-wireframes-output-E01.md    # Final Figma wireframes
+    └── 04-{abbrev}-FIGMA-wireframes-output-E02.md
 ```
 
 ## 9. Future Enhancements
