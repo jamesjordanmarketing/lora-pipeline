@@ -462,6 +462,10 @@ cd pmc/product/_tools
 node 04a-generate-FIGMA-wireframe-prompts_v1.js "Project Name" project-abbreviation
 ```
 
+cd pmc/product/_tools
+node 04b-generate-FIGMA-wireframe-combined-prompt_v1.js "LoRA Pipeline" pipeline
+
+
 **What to Do After Running:**
 
 #### Step 1: Review Generated Prompts

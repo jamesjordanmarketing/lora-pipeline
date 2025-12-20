@@ -1,31 +1,49 @@
-# TODO: Complete User Journey Document
+# E03 Combined Wireframe Generator - Task List
 
-## Plan
+## Stage: Stage 3 — Error Handling & Recovery
+## Section ID: E03
 
-- [x] Review existing document structure and format
-- [ ] Complete Section 3: Training Execution & Progress Monitoring (UJ3.2 through UJ3.4)
-- [ ] Write Section 4: Quality Validation & Model Assessment (UJ4.1 through UJ4.5)
-- [ ] Write Section 5: Model Artifact Delivery & Client Presentation (UJ5.1 through UJ5.4)
-- [ ] Write Section 6: Optimization, Iteration & Knowledge Building (UJ6.1 through UJ6.4)
-- [ ] Add Cross-Stage Integration section
-- [ ] Add Acceptance Criteria Inventory
-- [ ] Add Implementation Guidance section
-- [ ] Final review and formatting check
+---
 
-## Notes
+## Phase 1: Deep Analysis
+- [x] Extract and catalog all 7 FR prompts (FR3.1.1 through FR3.3.2)
+- [x] Identify relationships and integration points between FRs
+- [x] Identify overlapping/duplicate functionality
+- [x] Identify POC simplification opportunities
 
-Each UJ element follows the established format:
-- Description with clear user perspective
-- Impact Weighting (Revenue Impact/Strategic Growth/Operational Efficiency)
-- Priority (High/Medium/Low)
-- User Stories references
-- Tasks placeholders
-- GIVEN-WHEN-THEN acceptance criteria
-- Technical Notes
-- Data Requirements
-- Error Scenarios
-- Performance Criteria
-- User Experience Notes
+## Phase 2: Integration Planning
+- [x] Design unified UX flow across all error handling scenarios
+- [x] Define component relationships and interactions
+- [x] Create unified state management model
 
-Target: 5-8 UJ elements per subsection
-Language: Non-technical, accessible to smart 10th grader with AI basics
+## Phase 3: POC Simplification
+- [x] Create simplified feature list (essential vs nice-to-have)
+- [x] Calculate page count reduction (original 40 pages → target 12)
+
+## Phase 4: Combined Prompt Generation
+- [x] Write analysis worksheet to: 04b-FIGMA-combined-E03-WORKSHEET.md
+- [x] Write final combined Figma prompt to: 04b-FIGMA-combined-prompt-E03-output.md
+
+---
+
+**Status:** COMPLETE
+
+## Summary
+
+### Files Generated:
+1. **Analysis Worksheet:** `pmc/product/_mapping/pipeline/figma-combined/04b-FIGMA-combined-E03-WORKSHEET.md`
+2. **Combined Figma Prompt:** `pmc/product/_mapping/pipeline/figma-combined/04b-FIGMA-combined-prompt-E03-output.md`
+
+### Key Metrics:
+- **Input:** 7 individual FR prompts totaling 40 wireframe pages
+- **Output:** 1 combined prompt with 12 integrated wireframe pages
+- **Reduction:** 70% page reduction while maintaining all essential functionality
+
+### FRs Consolidated:
+- FR3.1.1: Out of Memory Error Handling
+- FR3.1.2: Dataset Format Error Handling
+- FR3.1.3: GPU Provisioning Error Handling
+- FR3.2.1: Spot Instance Interruption Recovery
+- FR3.2.2: Manual Checkpoint Resume
+- FR3.3.1: One-Click Retry with Same Configuration
+- FR3.3.2: Retry with Suggested Adjustments
