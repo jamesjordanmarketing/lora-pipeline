@@ -236,7 +236,7 @@ function toLLMPath(absolutePath) {
 
 // Ensure output directory exists and save prompt to file
 function savePromptToFile(prompt, filename, projectAbbrev) {
-  const outputDir = path.resolve(__dirname, '../_run-prompts');
+  const outputDir = path.resolve(__dirname, `../_mapping/${projectAbbrev}/_run-prompts`);
   
   // Create directory if it doesn't exist
   if (!fs.existsSync(outputDir)) {
@@ -314,38 +314,13 @@ async function getValidFilePath(description, defaultPath, projectAbbrev) {
     const processedDefaultPath = defaultPath.replace(/\{\{project_abbreviation\}\}/g, projectAbbrev);
     const fullDefaultPath = path.resolve(__dirname, '..', processedDefaultPath).replace(/\\pmc\\(?!product)/, '\\pmc\\product\\');
     
-    console.log(`\nRequesting path for: ${description}`);
-    console.log(`Default path: ${fullDefaultPath}`);
-    console.log(`Default path exists: ${fs.existsSync(fullDefaultPath) ? 'TRUE' : 'FALSE'}`);
-    
-    const pathCache = loadPathCache(projectAbbrev);
-    if (pathCache && pathCache[description]) {
-      const cachedPath = pathCache[description];
-      const fullCachedPath = path.resolve(__dirname, '..', cachedPath).replace(/\\pmc\\(?!product)/, '\\pmc\\product\\');
-      
-      if (fs.existsSync(fullCachedPath)) {
-        console.log(`\nCached path: ${fullCachedPath}`);
-        console.log(`Cached path exists: TRUE`);
-        console.log(`\nEnter path for ${description}`);
-        console.log('Press Enter to use this path, or enter a new one:');
-        const input = await question('Path > ');
-        if (isQuit(input)) {
-          console.log('Exiting...');
-          process.exit(0);
-        }
-        if (input.trim()) {
-          return input.trim();
-        }
-        return cachedPath;
-      }
-    }
-    
     // Keep trying until we get a valid path or user quits
     while (true) {
-              console.log(`\nEnter path for ${description}`);
-      console.log('(Press Enter to use default, or type a new path)');
+      console.log(`\nEnter path for ${description}`);
+      console.log(`Default: ${fullDefaultPath}`);
+      console.log(`Exists: ${fs.existsSync(fullDefaultPath) ? 'TRUE' : 'FALSE'}`);
       
-      const input = await question('Path > ');
+      const input = await question('> ');
       if (isQuit(input)) {
         console.log('Exiting...');
         process.exit(0);
@@ -355,19 +330,11 @@ async function getValidFilePath(description, defaultPath, projectAbbrev) {
       const fullFinalPath = path.resolve(__dirname, '..', finalPath).replace(/\\pmc\\(?!product)/, '\\pmc\\product\\');
       
       if (fs.existsSync(fullFinalPath)) {
-        console.log(`Using path: ${fullFinalPath}`);
-        console.log(`Path exists: TRUE`);
-        // Update cache
-        const newCache = { ...(pathCache || {}), [description]: finalPath };
-        savePathCache(projectAbbrev, newCache);
         return finalPath;
       }
       
       console.log(`Path not found: ${fullFinalPath}`);
       console.log('Please verify the file exists and try again.');
-      console.log(`Looking in directory: ${path.resolve(__dirname, '..', defaultDir).replace(/\\pmc\\(?!product)/, '\\pmc\\product\\')}`);
-      
-      // Show available files in the directory to help user
       try {
         const dir = path.resolve(__dirname, '..', defaultDir).replace(/\\pmc\\(?!product)/, '\\pmc\\product\\');
         if (fs.existsSync(dir)) {
@@ -413,8 +380,6 @@ async function getReferencePaths(docConfig, projectAbbrev, projectName) {
       const path = await getValidFilePath(key, processedPath, projectAbbrev);
       const llmPath = toLLMPath(path || processedPath);
       paths[key] = llmPath;
-      // Store the LLM path in cache for consistency
-      newPaths[key] = llmPath;
     }
 
     // Ask user if they want to review the codebase
@@ -436,8 +401,7 @@ async function getReferencePaths(docConfig, projectAbbrev, projectName) {
       // If codebase review is enabled, get the codebase path
       if (docConfig.template_config.conditional_sections?.current_status?.placeholders?.CODEBASE_REVIEW_PATH !== undefined) {
         console.log('\nProcessing codebase path:');
-        const defaultDir = '../../'; // Go up to workspace root
-        const defaultPath = path.resolve(__dirname, defaultDir);
+        const defaultPath = path.resolve(__dirname, '../../../src');
         const codebasePath = await getValidFilePath('CODEBASE_REVIEW_PATH', defaultPath, projectAbbrev);
         
         if (codebasePath) {

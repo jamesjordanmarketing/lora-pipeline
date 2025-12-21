@@ -171,12 +171,12 @@ function savePathCache(projectAbbrev, cache, docType) {
 // Load prompts configuration
 function loadPromptsConfig(projectAbbrev) {
   try {
-    const configPath = path.resolve(__dirname, 'config', `${projectAbbrev}-prompts-config.json`);
+    const configPath = path.resolve(__dirname, 'config', 'prompts-config.json');
     const configData = fs.readFileSync(configPath, 'utf-8');
     return JSON.parse(configData);
   } catch (error) {
     console.error('Error loading prompts config:', error);
-    console.log(`Expected config file at: ${path.resolve(__dirname, 'config', `${projectAbbrev}-prompts-config.json`)}`);
+    console.log(`Expected config file at: ${path.resolve(__dirname, 'config', 'prompts-config.json')}`);
     process.exit(1);
   }
 }
@@ -218,7 +218,7 @@ function toLLMPath(absolutePath) {
 
 // Ensure output directory exists and save prompt to file
 function savePromptToFile(prompt, filename, projectAbbrev) {
-  const outputDir = path.resolve(__dirname, '../_run-prompts');
+  const outputDir = path.resolve(__dirname, `../_mapping/${projectAbbrev}/_run-prompts`);
   
   // Create directory if it doesn't exist
   if (!fs.existsSync(outputDir)) {
@@ -287,47 +287,17 @@ function isQuit(input) {
 // Get valid file path with improved error handling
 async function getValidFilePath(description, defaultPath, projectAbbrev, docType = '') {
   try {
-    let defaultDir = '_templates';
-    if (description.includes('SEED_STORY') || description.includes('OVERVIEW')) {
-      defaultDir = '..';
-    }
-    
     // Process the default path
     const processedDefaultPath = defaultPath.replace(/\{\{project_abbreviation\}\}/g, projectAbbrev);
     const fullDefaultPath = path.resolve(__dirname, '..', processedDefaultPath).replace(/\\pmc\\(?!product)/, '\\pmc\\product\\');
     
-    console.log(`\nRequesting path for: ${description}`);
-    console.log(`Default path: ${fullDefaultPath}`);
-    console.log(`Default path exists: ${fs.existsSync(fullDefaultPath) ? 'TRUE' : 'FALSE'}`);
-    
-    const pathCache = loadPathCache(projectAbbrev, docType);
-    if (pathCache && pathCache[description]) {
-      const cachedPath = pathCache[description];
-      const fullCachedPath = path.resolve(__dirname, '..', cachedPath).replace(/\\pmc\\(?!product)/, '\\pmc\\product\\');
-      
-      if (fs.existsSync(fullCachedPath)) {
-        console.log(`\nCached path: ${fullCachedPath}`);
-        console.log(`Cached path exists: TRUE`);
-        console.log(`\nEnter path for ${description}`);
-        console.log('Press Enter to use this path, or enter a new one:');
-        const input = await question('Path > ');
-        if (isQuit(input)) {
-          console.log('Exiting...');
-          process.exit(0);
-        }
-        if (input.trim()) {
-          return input.trim();
-        }
-        return cachedPath;
-      }
-    }
-    
     // Keep trying until we get a valid path or user quits
     while (true) {
       console.log(`\nEnter path for ${description}`);
-      console.log('(Press Enter to use default, or type a new path)');
+      console.log(`Default: ${fullDefaultPath}`);
+      console.log(`Exists: ${fs.existsSync(fullDefaultPath) ? 'TRUE' : 'FALSE'}`);
       
-      const input = await question('Path > ');
+      const input = await question('> ');
       if (isQuit(input)) {
         console.log('Exiting...');
         process.exit(0);
@@ -337,17 +307,11 @@ async function getValidFilePath(description, defaultPath, projectAbbrev, docType
       const fullFinalPath = path.resolve(__dirname, '..', finalPath).replace(/\\pmc\\(?!product)/, '\\pmc\\product\\');
       
       if (fs.existsSync(fullFinalPath)) {
-        console.log(`Using path: ${fullFinalPath}`);
-        console.log(`Path exists: TRUE`);
-        // Update cache
-        const newCache = { ...(pathCache || {}), [description]: finalPath };
-        savePathCache(projectAbbrev, newCache, docType);
         return finalPath;
       }
       
       console.log(`Path not found: ${fullFinalPath}`);
       console.log('Please verify the file exists and try again.');
-      console.log(`Looking in directory: ${path.resolve(__dirname, '..', defaultDir).replace(/\\pmc\\(?!product)/, '\\pmc\\product\\')}`);
       
       // Show available files in the directory to help user
       try {
@@ -377,12 +341,12 @@ async function getReferencePaths(docConfig, projectAbbrev, projectName) {
   try {
     // Handle regular placeholders
     for (const [key, defaultPath] of Object.entries(docConfig.template_config.required_placeholders)) {
-      if (key === 'OUTPUT_PATH' || key === 'OVERVIEW_PATH' || !key.endsWith('_PATH')) {
+      if (key === 'OUTPUT_PATH' || key === 'OVERVIEW_PATH' || key === 'SEED_STORY_PATH' || !key.endsWith('_PATH')) {
         let processedValue = defaultPath.replace(/\{\{project_abbreviation\}\}/g, projectAbbrev);
         processedValue = processedValue.replace(/\{project_name\}/g, projectName);
         
-        // For OUTPUT_PATH and OVERVIEW_PATH, add the full project prefix
-        if (key === 'OUTPUT_PATH' || key === 'OVERVIEW_PATH') {
+        // For OUTPUT_PATH, OVERVIEW_PATH, and SEED_STORY_PATH, add the full project prefix
+        if (key === 'OUTPUT_PATH' || key === 'OVERVIEW_PATH' || key === 'SEED_STORY_PATH') {
           processedValue = `pmc/product/${processedValue}`;
         }
         
@@ -395,9 +359,20 @@ async function getReferencePaths(docConfig, projectAbbrev, projectName) {
       const path = await getValidFilePath(key, processedPath, projectAbbrev, docConfig.type);
       const llmPath = toLLMPath(path || processedPath);
       paths[key] = llmPath;
-      // Store the LLM path in cache for consistency
-      newPaths[key] = llmPath;
     }
+
+    // Display all collected paths for confirmation
+    console.log('\n=== Input Specification Files ===');
+    for (const [key, value] of Object.entries(paths)) {
+      if (key.endsWith('_PATH')) {
+        const fullPath = path.resolve(__dirname, '..', value.replace('pmc/product/', ''));
+        const exists = fs.existsSync(fullPath);
+        console.log(`${key}:`);
+        console.log(`  Path: ${value}`);
+        console.log(`  Exists: ${exists ? 'TRUE' : 'FALSE'}`);
+      }
+    }
+    console.log('=================================\n');
 
     // Ask user if they want to review the codebase
     const enable = await question('\nInclude codebase review in prompt? (y/n) [default: n] > ');

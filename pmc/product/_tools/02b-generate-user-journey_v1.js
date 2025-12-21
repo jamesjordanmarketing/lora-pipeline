@@ -33,12 +33,12 @@ const USER_JOURNEY_CONFIG = {
   required_placeholders: {
     "PROJECT_NAME": "{project_name}",
     "PROJECT_ABBREVIATION": "{{project_abbreviation}}",
-    "SEED_STORY_PATH": "pmc/product/00-{{project_abbreviation}}-seed-story.md",
-    "OVERVIEW_PATH": "pmc/product/01-{{project_abbreviation}}-overview.md",
-    "USER_STORIES_PATH": "pmc/product/02-{{project_abbreviation}}-user-stories.md",
+    "SEED_STORY_PATH": "pmc/product/_mapping/{{project_abbreviation}}/00-{{project_abbreviation}}-seed-story.md",
+    "OVERVIEW_PATH": "pmc/product/_mapping/{{project_abbreviation}}/01-{{project_abbreviation}}-overview.md",
+    "USER_STORIES_PATH": "pmc/product/_mapping/{{project_abbreviation}}/02-{{project_abbreviation}}-user-stories.md",
     "TEMPLATE_PATH": "pmc/product/_templates/03-functional-requirements-template.md",
     "EXAMPLE_PATH": "pmc/product/_examples/03-bmo-functional-requirements.md",
-    "OUTPUT_PATH": "pmc/product/02b-{{project_abbreviation}}-user-journey.md"
+    "OUTPUT_PATH": "pmc/product/_mapping/{{project_abbreviation}}/02b-{{project_abbreviation}}-user-journey.md"
   }
 };
 
@@ -172,44 +172,13 @@ async function getValidFilePath(description, defaultPath, projectAbbrev) {
       fullDefaultPath = path.resolve(__dirname, '..', processedDefaultPath);
     }
     
-    console.log(`\nRequesting path for: ${description}`);
-    console.log(`Default path: ${fullDefaultPath}`);
-    console.log(`Default path exists: ${fs.existsSync(fullDefaultPath) ? 'TRUE' : 'FALSE'}`);
-    
-    const pathCache = loadPathCache(projectAbbrev);
-    if (pathCache && pathCache[description]) {
-      const cachedPath = pathCache[description];
-      let fullCachedPath;
-      if (cachedPath.startsWith('pmc/product/')) {
-        const relativePath = cachedPath.replace('pmc/product/', '');
-        fullCachedPath = path.resolve(__dirname, '..', relativePath);
-      } else {
-        fullCachedPath = path.resolve(__dirname, '..', cachedPath);
-      }
-      
-      if (fs.existsSync(fullCachedPath)) {
-        console.log(`\nCached path: ${fullCachedPath}`);
-        console.log(`Cached path exists: TRUE`);
-        console.log(`\nEnter path for ${description}`);
-        console.log('Press Enter to use cached path, or enter a new one:');
-        const input = await question('Path > ');
-        if (isQuit(input)) {
-          console.log('Exiting...');
-          process.exit(0);
-        }
-        if (input.trim()) {
-          return input.trim();
-        }
-        return cachedPath;
-      }
-    }
-    
     // Keep trying until we get a valid path or user quits
     while (true) {
       console.log(`\nEnter path for ${description}`);
-      console.log('(Press Enter to use default, or type a new path)');
+      console.log(`Default: ${fullDefaultPath}`);
+      console.log(`Exists: ${fs.existsSync(fullDefaultPath) ? 'TRUE' : 'FALSE'}`);
       
-      const input = await question('Path > ');
+      const input = await question('> ');
       if (isQuit(input)) {
         console.log('Exiting...');
         process.exit(0);
@@ -225,11 +194,6 @@ async function getValidFilePath(description, defaultPath, projectAbbrev) {
       }
       
       if (fs.existsSync(fullFinalPath)) {
-        console.log(`Using path: ${fullFinalPath}`);
-        console.log(`Path exists: TRUE`);
-        // Update cache
-        const newCache = { ...(pathCache || {}), [description]: finalPath };
-        savePathCache(projectAbbrev, newCache);
         return finalPath;
       }
       
@@ -243,8 +207,8 @@ async function getValidFilePath(description, defaultPath, projectAbbrev) {
 }
 
 // Ensure output directory exists and save prompt to file
-function savePromptToFile(prompt, filename) {
-  const outputDir = path.resolve(__dirname, '../_run-prompts');
+function savePromptToFile(prompt, filename, projectAbbrev) {
+  const outputDir = path.resolve(__dirname, `../_mapping/${projectAbbrev}/_run-prompts`);
   
   // Create directory if it doesn't exist
   if (!fs.existsSync(outputDir)) {
@@ -367,14 +331,14 @@ async function main() {
       console.log('\n============================');
       console.log('Generated User Journey Prompt');
       console.log('============================');
-      savePromptToFile(prompt, filename);
+      savePromptToFile(prompt, filename, projectAbbrev);
       console.log('============================\n');
       
       console.log('Next steps:');
-      console.log(`1. Open the generated prompt: pmc/product/_run-prompts/${filename}`);
+      console.log(`1. Open the generated prompt: pmc/product/_mapping/${projectAbbrev}/_run-prompts/${filename}`);
       console.log('2. Copy the prompt content');
       console.log('3. Paste into your AI assistant to generate the user journey document');
-      console.log(`4. Save the AI output as: pmc/product/02b-${projectAbbrev}-user-journey.md`);
+      console.log(`4. Save the AI output as: pmc/product/_mapping/${projectAbbrev}/02b-${projectAbbrev}-user-journey.md`);
     } else {
       console.error('Failed to generate prompt');
       process.exit(1);

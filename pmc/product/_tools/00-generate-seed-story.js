@@ -11,10 +11,13 @@
  *
  * Usage:
  *  From pmc/product/_tools/, run:
- *     node generate-seed-story.js
+ *     node 00-generate-seed-story.js "Project Name" project-abbreviation
+ *
+ * Examples:
+ *     node 00-generate-seed-story.js "LoRA Training Pipeline" lora
+ *     node 00-generate-seed-story.js "Project Memory Core Tracking" pmct
  *
  * Notes:
- *  - Project name and abbreviation are read from seed-narrative-v1.md
  *  - Progress is saved automatically and can be resumed
  *  - Use 'quit' at any prompt to exit safely
  *  - File paths are cached per project for reuse
@@ -35,13 +38,9 @@ function question(query) {
   return new Promise(resolve => rl.question(query, resolve));
 }
 
-// Convert absolute path to project-relative path for display
+// Convert absolute path to full path for display (no longer converts to relative)
 function toProjectPath(absolutePath) {
   const normalized = absolutePath.replace(/\\/g, '/');
-  const projectRoot = 'pmc/';
-  if (normalized.includes(projectRoot)) {
-    return normalized.substring(normalized.indexOf(projectRoot));
-  }
   return normalized;
 }
 
@@ -123,14 +122,6 @@ function validateProcessedPath(processedPath, key) {
   return true;
 }
 
-// Log path resolution for debugging
-function logPathResolution(key, originalPath, processedPath) {
-  console.log(`Processing ${key}:`);
-  console.log(`  Original: ${originalPath}`);
-  console.log(`  Processed: ${toProjectPath(processedPath)}`);
-  console.log(`  Exists: ${fs.existsSync(processedPath)}`);
-}
-
 // Load the seed story configuration
 function loadConfig() {
   const configPath = path.resolve(__dirname, './seed-story-config.json');
@@ -145,7 +136,7 @@ function loadConfig() {
 
 // Ensure output directory exists and save prompt to file
 function savePromptToFile(prompt, filename, projectAbbrev) {
-  const outputDir = path.resolve(__dirname, '../_run-prompts');
+  const outputDir = path.resolve(__dirname, `../_mapping/${projectAbbrev}/_run-prompts`);
   
   // Create directory if it doesn't exist
   if (!fs.existsSync(outputDir)) {
@@ -200,7 +191,6 @@ async function getReferencePaths(config, projectName, projectAbbrev, step) {
   console.log(`\nValidating reference documents for ${step}...`);
   
   const paths = {};
-  const cache = loadPathCache(projectAbbrev);
   
   // First handle regular placeholders
   for (const [key, value] of Object.entries(config[step].required_placeholders)) {
@@ -230,14 +220,6 @@ async function getReferencePaths(config, projectName, projectAbbrev, step) {
     // Process the path first
     let processedPath = processPath(value.default, projectAbbrev, projectName, defaultDir);
     
-    // For path fields, validate and get user input if needed
-    if (cache?.[step]?.placeholders?.[key]) {
-      processedPath = cache[step].placeholders[key];
-    }
-    
-    // Log path resolution
-    logPathResolution(key, value.default, processedPath);
-    
     // Skip validation for OUTPUT_PATH since it's a destination, not a source
     if (key === 'OUTPUT_PATH') {
       paths[key] = processedPath;
@@ -263,8 +245,7 @@ async function getReferencePaths(config, projectName, projectAbbrev, step) {
       
       // If enabled and has a path variable, we'll need to get that path
       if (isEnabled && sectionConfig.path_variable) {
-        const defaultDir = '_templates'; // You can adjust this based on the variable type
-        const defaultPath = path.resolve(__dirname, '../../product', defaultDir);
+        const defaultPath = path.resolve(__dirname, '../../../src');
         
         console.log(`\nProcessing ${sectionConfig.path_variable}:`);
         const processedPath = await getValidFilePath(sectionConfig.path_variable, defaultPath, projectAbbrev);
@@ -276,14 +257,6 @@ async function getReferencePaths(config, projectName, projectAbbrev, step) {
     }
   }
   
-  // Save processed paths to cache
-  const cacheData = cache || {};
-  cacheData[step] = {
-    placeholders: paths,
-    conditionals: conditionals
-  };
-  savePathCache(projectAbbrev, cacheData);
-  
   return {
     placeholders: paths,
     conditionals: conditionals
@@ -292,11 +265,11 @@ async function getReferencePaths(config, projectName, projectAbbrev, step) {
 
 // Get valid file path with user interaction
 async function getValidFilePath(description, defaultPath, projectAbbrev) {
-  // Clean up the display path
   const displayPath = toProjectPath(defaultPath).trim();
+  const fileExists = validateProcessedPath(defaultPath, description, true);
   
   while (true) {
-    process.stdout.write(`Enter path for ${description}\nDefault: ${displayPath}\n> `);
+    process.stdout.write(`\nEnter path for ${description}\nDefault: ${displayPath}\nExists: ${fileExists ? 'TRUE' : 'FALSE'}\n> `);
     const filePath = await question('');
     
     // If user just hits enter, use the default path
@@ -317,40 +290,26 @@ async function getValidFilePath(description, defaultPath, projectAbbrev) {
   }
 }
 
-// Read project details from narrative
-function readProjectDetails() {
-  const narrativePath = path.resolve(__dirname, '../../product/_seeds/seed-narrative-v1.md');
-  try {
-    const content = fs.readFileSync(narrativePath, 'utf-8');
-    const lines = content.split('\n');
-    
-    // Extract project name and abbreviation from first two lines
-    const projectName = lines[0].replace(/^#\s+/, '').trim();
-    // Handle markdown bold formatting: **Product Abbreviation:** value or **Product Abbreviation:** value**
-    const projectAbbrev = lines[1]
-      .replace(/^\*{0,2}Product Abbreviation:\*{0,2}\s*/, '')  // Remove label with optional ** on both sides
-      .replace(/\*{1,2}/g, '')  // Remove any remaining asterisks
-      .trim();
-    
-    console.log(`Found project details:`);
-    console.log(`Name: ${projectName}`);
-    console.log(`Abbreviation: ${projectAbbrev}\n`);
-    
-    return { projectName, projectAbbrev };
-  } catch (error) {
-    console.error('Error reading seed narrative:', error);
-    process.exit(1);
-  }
-}
-
 // Main execution
 async function main() {
   try {
+    // Get project details from command-line arguments
+    const projectName = process.argv[2];
+    const projectAbbrev = process.argv[3];
+    
+    if (!projectName || !projectAbbrev) {
+      console.log('Usage: node 00-generate-seed-story.js "Project Name" project-abbreviation');
+      console.log('\nExamples:');
+      console.log('  node 00-generate-seed-story.js "LoRA Training Pipeline" lora');
+      console.log('  node 00-generate-seed-story.js "Project Memory Core Tracking" pmct');
+      process.exit(1);
+    }
+    
+    console.log(`Project Name: ${projectName}`);
+    console.log(`Project Abbreviation: ${projectAbbrev}\n`);
+    
     // Load configuration
     const config = loadConfig();
-    
-    // Read project details
-    const { projectName, projectAbbrev } = readProjectDetails();
     
     // Load or initialize progress
     const progress = loadProgress(projectName, projectAbbrev);

@@ -12,7 +12,7 @@
       },
       "RAW_DATA_PATH": {
         "type": "seed_path",
-        "default": "product/_seeds/seed-narrative-v1.md"
+        "default": "product/_mapping/{{project_abbreviation}}/seed-narrative-v1.md"
       },
       "REFERENCE_EXAMPLE_PATH": {
         "type": "example_path",
@@ -20,7 +20,7 @@
       },
       "OUTPUT_PATH": {
         "type": "product_path",
-        "default": "00-{{project_abbreviation}}-seed-narrative.md"
+        "default": "_mapping/{{project_abbreviation}}/00-{{project_abbreviation}}-seed-narrative.md"
       }
     },
     "conditional_sections": {
@@ -42,7 +42,7 @@
       },
       "SEED_NARRATIVE_PATH": {
         "type": "product_path",
-        "default": "product/00-{{project_abbreviation}}-seed-narrative.md"
+        "default": "product/_mapping/{{project_abbreviation}}/00-{{project_abbreviation}}-seed-narrative.md"
       },
       "REFERENCE_EXAMPLE_PATH": {
         "type": "example_path",
@@ -50,7 +50,7 @@
       },
       "OUTPUT_PATH": {
         "type": "product_path",
-        "default": "product/00-{{project_abbreviation}}-seed-story.md"
+        "default": "product/_mapping/{{project_abbreviation}}/00-{{project_abbreviation}}-seed-story.md"
       }
     },
     "conditional_sections": {

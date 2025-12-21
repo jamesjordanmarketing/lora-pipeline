@@ -189,35 +189,20 @@ const isQuit = input => /^(q|quit)$/i.test(input);
 
 // Get valid file path with status display
 async function getValidFilePath(description, defaultPath, projectAbbrev) {
-  const cache = loadPathCache(projectAbbrev);
-  let cachedPath = cache ? cache[description] : null;
-  
   const fullDefaultPath = path.resolve(__dirname, '..', defaultPath);
   
-  console.log(`\nRequesting path for: ${description}`);
-  console.log(`Default path: ${fullDefaultPath}`);
-  console.log(`Default path exists: ${fs.existsSync(fullDefaultPath) ? 'TRUE' : 'FALSE'}`);
-  
-  if (cachedPath) {
-    const fullCachedPath = path.resolve(__dirname, '..', cachedPath);
-    console.log(`\nCached path: ${fullCachedPath}`);
-    console.log(`Cached path exists: ${fs.existsSync(fullCachedPath) ? 'TRUE' : 'FALSE'}`);
-    
-    const useCache = await question('Use cached path? (y/n/quit): ');
-    if (isQuit(useCache)) process.exit(0);
-    if (isYes(useCache)) return cachedPath;
-  }
+  console.log(`\nEnter path for ${description}`);
+  console.log(`Default: ${fullDefaultPath}`);
+  console.log(`Exists: ${fs.existsSync(fullDefaultPath) ? 'TRUE' : 'FALSE'}`);
   
   while (true) {
-    const input = await question(`Enter path for ${description} (or press Enter for default): `);
+    const input = await question('> ');
     if (isQuit(input)) process.exit(0);
     
     const pathToCheck = input.trim() || defaultPath;
     const fullPathToCheck = path.resolve(__dirname, '..', pathToCheck);
     
     if (fs.existsSync(fullPathToCheck)) {
-      console.log(`Using path: ${fullPathToCheck}`);
-      console.log(`Path exists: TRUE`);
       return pathToCheck;
     }
     

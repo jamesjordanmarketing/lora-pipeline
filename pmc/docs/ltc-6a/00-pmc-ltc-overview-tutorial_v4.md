@@ -113,12 +113,18 @@ The seed story generation process uses the script `00-generate-seed-story.js` an
 **Usage:**
 ```bash
 cd pmc/product/_tools
-node 00-generate-seed-story.js
+node 00-generate-seed-story.js "Project Name" project-abbreviation
+```
+
+**Examples:**
+```bash
+node 00-generate-seed-story.js "LoRA Training Pipeline" lora
+node 00-generate-seed-story.js "Project Memory Core Tracking" pmct
 ```
 
 **What to Do After Running:**
 - No AI execution needed - this script generates final documents directly
-- Verify both output files exist in `pmc/product/`
+- Verify both output files exist in `pmc/product/_mapping/[abbrev]/`
 - Review content for accuracy before proceeding to Step 01
 
 ---
@@ -719,7 +725,7 @@ graph TD
    cd pmc/product/_tools
    
    # Step 00: Foundation
-   node 00-generate-seed-story.js
+   node 00-generate-seed-story.js "Project Name" abbrev
    # No AI execution needed - generates documents directly
    
    # Step 01: Overview
@@ -882,31 +888,34 @@ All input markdown files should follow these standards:
 
 ## 8. Output Directory Structure
 
-All generated prompts are now saved to a unified location:
+All generated prompts are now saved to project-specific directories:
 
 ```
-pmc/product/
-├── _run-prompts/                                      # All generated prompts
-│   ├── 01-product-{abbrev}-overview-prompt-v1.md     # Step 01 output
-│   ├── 02-product-{abbrev}-user-stories-prompt-v1.md # Step 02a output
-│   ├── 02b-product-{abbrev}-user-journey-prompt-v1.md # Step 02b output
-│   ├── 3a-preprocess-functional-requirements-prompt_v1-output.md # Step 03 Phase 1
-│   ├── 3b-#1-functional-requirements-legacy-prompt_v1-output.md  # Step 03 Phase 2
-│   └── 3b-#2-functional-requirements-legacy-code-prompt_v1-output.md # Step 03 Phase 3 (optional)
-├── 00-{abbrev}-seed-narrative.md                      # Step 00 output
-├── 00-{abbrev}-seed-story.md                          # Step 00 output
-├── 01-{abbrev}-overview.md                            # Step 01 final (from AI)
-├── 02-{abbrev}-user-stories.md                        # Step 02a final (from AI)
-├── 02b-{abbrev}-user-journey.md                       # Step 02b final (from AI)
-├── 03-{abbrev}-functional-requirements.md             # Step 03 final (from AI)
-└── _mapping/fr-maps/                                  # Step 04 outputs
-    ├── prompts/
-    │   ├── 04a-FIGMA-wireframes-prompt-E01.md        # Step 04a prompts
-    │   ├── 04a-FIGMA-wireframes-prompt-E02.md
-    │   ├── 04-FR-wireframes-prompt-E01.md            # Step 04b prompts (optional)
-    │   └── 04-FR-wireframes-prompt-E02.md
-    ├── 04-{abbrev}-FIGMA-wireframes-output-E01.md    # Final Figma wireframes
-    └── 04-{abbrev}-FIGMA-wireframes-output-E02.md
+pmc/product/_mapping/
+└── {abbrev}/                                          # Project-specific directory
+    ├── _run-prompts/                                  # All generated prompts for this project
+    │   ├── 00-product-{abbrev}-seed-narrative-prompt-v1.md  # Step 00 narrative prompt
+    │   ├── 00-product-{abbrev}-seed-story-prompt-v1.md      # Step 00 story prompt
+    │   ├── 01-product-{abbrev}-overview-prompt-v1.md        # Step 01 output
+    │   ├── 02-product-{abbrev}-user-stories-prompt-v1.md    # Step 02a output
+    │   ├── 02b-product-{abbrev}-user-journey-prompt-v1.md   # Step 02b output
+    │   ├── 3a-preprocess-functional-requirements-prompt_v1-output.md # Step 03 Phase 1
+    │   ├── 3b-#1-functional-requirements-legacy-prompt_v1-output.md  # Step 03 Phase 2
+    │   └── 3b-#2-functional-requirements-legacy-code-prompt_v1-output.md # Step 03 Phase 3 (optional)
+    ├── 00-{abbrev}-seed-narrative.md                  # Step 00 output
+    ├── 00-{abbrev}-seed-story.md                      # Step 00 output
+    ├── 01-{abbrev}-overview.md                        # Step 01 final (from AI)
+    ├── 02-{abbrev}-user-stories.md                    # Step 02a final (from AI)
+    ├── 02b-{abbrev}-user-journey.md                   # Step 02b final (from AI)
+    ├── 03-{abbrev}-functional-requirements.md         # Step 03 final (from AI)
+    └── fr-maps/                                       # Step 04 outputs
+        ├── prompts/
+        │   ├── 04a-FIGMA-wireframes-prompt-E01.md    # Step 04a prompts
+        │   ├── 04a-FIGMA-wireframes-prompt-E02.md
+        │   ├── 04-FR-wireframes-prompt-E01.md        # Step 04b prompts (optional)
+        │   └── 04-FR-wireframes-prompt-E02.md
+        ├── 04-{abbrev}-FIGMA-wireframes-output-E01.md    # Final Figma wireframes
+        └── 04-{abbrev}-FIGMA-wireframes-output-E02.md
 ```
 
 ## 9. Future Enhancements
