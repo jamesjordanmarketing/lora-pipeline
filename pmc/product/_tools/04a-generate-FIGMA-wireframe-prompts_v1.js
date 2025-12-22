@@ -186,8 +186,8 @@ function generatePromptsForSection(sectionId, sectionContent, promptTemplate, pr
   }
 
   const combinedFilePath = path.join(promptsOutputDir, `04a-FIGMA-wireframes-prompt-${sectionId}.md`);
-  const frLocateFilePath = `pmc/product/_mapping/fr-maps/prompts/04a-FIGMA-wireframes-prompt-${sectionId}.md`;
-  const outputFilePath = `pmc/product/_mapping/fr-maps/04-${productAbbreviation}-FIGMA-wireframes-output-${sectionId}.md`;
+  const frLocateFilePath = `pmc/product/_mapping/${productAbbreviation}/_run-prompts/04a-FIGMA-wireframes-prompt-${sectionId}.md`;
+  const outputFilePath = `pmc/product/_mapping/${productAbbreviation}/04-${productAbbreviation}-FIGMA-wireframes-output-${sectionId}.md`;
 
   let combined = '';
   const separator = '\n\n';
@@ -226,11 +226,11 @@ function generatePromptsForSection(sectionId, sectionContent, promptTemplate, pr
 
 function generateFigmaWireframePromptsV1(projectName, projectAbbreviation) {
   const functionalRequirementsFileName = `03-${projectAbbreviation}-functional-requirements.md`;
-  const functionalRequirementsFilePath = resolveProjectPath(`product/${functionalRequirementsFileName}`);
+  const functionalRequirementsFilePath = resolveProjectPath(`product/_mapping/${projectAbbreviation}/${functionalRequirementsFileName}`);
   const promptTemplatePath = resolveProjectPath(`product/_prompt_engineering/04-FR-wireframes-FIGMA-prompt_v4.md`);
 
-  const outputDir = resolveProjectPath(`product/_mapping/fr-maps`);
-  const promptsOutputDir = path.join(outputDir, 'prompts');
+  const outputDir = resolveProjectPath(`product/_mapping/${projectAbbreviation}`);
+  const promptsOutputDir = path.join(outputDir, '_run-prompts');
 
   ensureDirectoryExists(outputDir);
   ensureDirectoryExists(promptsOutputDir);
@@ -278,8 +278,8 @@ function generateFigmaWireframePromptsV1(projectName, projectAbbreviation) {
       const sectionHeader = extractSectionHeader(sections[sectionId]);
       idx += `### ${sectionHeader}\n\n`;
       idx += `- **Requirements File**: [${sectionId} - ${sectionHeader}](./04-${projectAbbreviation}-FR-wireframes-${sectionId}.md)\n`;
-      idx += `- **Generator Prompt File**: [Generator Prompts for ${sectionId} (all FRs)](./prompts/04-FR-wireframes-prompt-${sectionId}.md)\n`;
-      idx += `- **Figma Wireframe Outputs**: ./04-${projectAbbreviation}-FR-wireframes-output-${sectionId}.md (appended by the generator agent)\n\n`;
+      idx += `- **Generator Prompt File**: [Generator Prompts for ${sectionId} (all FRs)](./_run-prompts/04a-FIGMA-wireframes-prompt-${sectionId}.md)\n`;
+      idx += `- **Figma Wireframe Outputs**: ./04-${projectAbbreviation}-FIGMA-wireframes-output-${sectionId}.md (appended by the generator agent)\n\n`;
     }
     return idx;
   })();

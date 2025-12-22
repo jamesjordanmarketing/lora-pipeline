@@ -5,9 +5,9 @@
 **Product Abbreviation:** pipeline
 
 **Source References:**
-- Seed Story: `pmc\product\00-pipeline-seed-story.md`
-- Overview Document: `pmc\product\01-pipeline-overview.md`
-- User Stories: `pmc\product\02-pipeline-user-stories.md`
+- Seed Story: `pmc\product\_mapping\pipeline\00-pipeline-seed-story.md`
+- Overview Document: `pmc\product\_mapping\pipeline\01-pipeline-overview.md`
+- User Stories: `pmc\product\_mapping\pipeline\02-pipeline-user-stories.md`
 
 
 ## 1. Training Job Configuration & Setup

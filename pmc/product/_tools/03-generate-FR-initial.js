@@ -24,8 +24,8 @@ const path = require('path');
 function generateFunctionalRequirements(projectName, projectAbbreviation) {
     projectName = projectName.replace(/-/g, ' ');
 
-    const usFilePath = path.join(__dirname, '..', `02-${projectAbbreviation}-user-stories.md`);
-    const frFilePath = path.join(__dirname, '..', `03-${projectAbbreviation}-functional-requirements.md`);
+    const usFilePath = path.join(__dirname, '..', '_mapping', projectAbbreviation, `02-${projectAbbreviation}-user-stories.md`);
+    const frFilePath = path.join(__dirname, '..', '_mapping', projectAbbreviation, `03-${projectAbbreviation}-functional-requirements.md`);
 
     try {
         if (!fs.existsSync(usFilePath)) {
@@ -72,9 +72,9 @@ function generateHeader(projectName, projectAbbreviation, date) {
 **Product Abbreviation:** ${projectAbbreviation}
 
 **Source References:**
-- Seed Story: \`pmc\\product\\00-${projectAbbreviation}-seed-story.md\`
-- Overview Document: \`pmc\\product\\01-${projectAbbreviation}-overview.md\`
-- User Stories: \`pmc\\product\\02-${projectAbbreviation}-user-stories.md\`\n\n`;
+- Seed Story: \`pmc\\product\\_mapping\\${projectAbbreviation}\\00-${projectAbbreviation}-seed-story.md\`
+- Overview Document: \`pmc\\product\\_mapping\\${projectAbbreviation}\\01-${projectAbbreviation}-overview.md\`
+- User Stories: \`pmc\\product\\_mapping\\${projectAbbreviation}\\02-${projectAbbreviation}-user-stories.md\`\n\n`;
 }
 
 function parseAndTransformContent(content) {

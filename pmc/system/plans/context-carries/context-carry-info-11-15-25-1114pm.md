@@ -1,543 +1,388 @@
-# Context Carryover: LoRA Training Pipeline - Wireframe Generation Complete
+# Context Carryover: PMC Script Path Standardization - Phase 1 Complete
 
 ## 📌 Active Development Focus
 
-**Primary Task**: Implement Frontend UI for LoRA Training Pipeline (Stages 1-6)
+**Primary Task**: Complete PMC (Project Memory Core) Script Path Standardization
 
-### Current Status: Wireframe Specifications Complete, Frontend Implementation Next
+### Current Status: Phase 1 Complete (Scripts 00-02b), Phase 2 Next (Scripts 03-04b)
 
-**What Was Completed** (December 18, 2025):
+**What Was Completed** (December 21, 2025):
 
-1. ✅ **Comprehensive Wireframe Prompt Generation for Stage 8 (E08)**
-   - Generated 5 complete Figma-ready wireframe prompts for Team Collaboration & Notifications
-   - FR8.1.1: Job Creator Attribution (4 pages, team coordination and accountability)
-   - FR8.1.2: Job Sharing & Collaboration (5 pages, shareable links with visibility controls)
-   - FR8.2.1: Training Completion Notifications (5 pages, email/Slack notifications)
-   - FR8.2.2: Job Notes and Experiment Documentation (5 pages, experiment tracking)
-   - FR8.3.1: Team Knowledge Base Integration (6 pages, future enhancement)
-   - Total: 1,413 lines, 25 detailed page specifications
-   - All prompts ready for Figma Make AI (self-contained, no external dependencies)
+## ✅ Phase 1: PMC Script Path Refactoring Complete
 
-2. ✅ **All Figma Wireframe Prompts Generated (Stages 1-8)**
-   - E01: Training Job Configuration & Setup (919 lines)
-   - E02: Training Job Execution & Monitoring (597 lines)  
-   - E03: Error Handling & Recovery (not counted in this phase)
-   - E04: Model Artifacts & Downloads (1,399 lines)
-   - E05: Training Comparison & Optimization (1,408 lines)
-   - E06: Model Quality Validation (2,294 lines)
-   - E07: Cost Management & Budget Control (1,026 lines, deferred for advanced build)
-   - E08: Team Collaboration & Notifications (1,413 lines, just completed)
-   - **Focus for Next Agent: E01-E06 only** (E07-E08 are advanced features)
+Successfully refactored four core PMC generation scripts to use the new project-specific directory structure (`_mapping/[abbrev]/`). This establishes operational consistency across the entire PMC document generation pipeline.
 
-3. ✅ **Functional Requirements Specifications Created**
-   - FR spec files document all acceptance criteria for each stage
-   - Each FR includes: User Story Acceptance Criteria + Functional Requirements Acceptance Criteria
-   - Comprehensive UI requirements: components, states, interactions, accessibility
-   - Mapped to User Stories and User Journey stages
-   - **Focus for Next Agent: FR-wireframes-E01 through E06 only**
+### Scripts Updated (Phase 1):
 
-**What's Next** (For This Agent):
+1. **00-generate-seed-story.js**
+   - ✅ Added command-line arguments: `"Project Name" project-abbreviation`
+   - ✅ Removed automatic reading from `seed-narrative-v1.md`
+   - ✅ Updated to output prompts to: `pmc/product/_mapping/[abbrev]/_run-prompts/`
+   - ✅ Updated to write final outputs to: `pmc/product/_mapping/[abbrev]/`
+   - ✅ Changed input paths to use `_mapping/[abbrev]/` structure
+   - ✅ Updated codebase review default to: `src/`
+   - ✅ Display full absolute paths (not relative)
+   - ✅ Removed cache system entirely
+   - ✅ Removed verbose logging (Original/Processed/Exists)
+   - ✅ Simplified to show only: `Default: [full absolute path]`
 
-The next agent will implement the frontend UI components based on the complete wireframe specifications and functional requirements. The agent must:
+2. **01-generate-overview.js**
+   - ✅ Already had command-line arguments (no change needed)
+   - ✅ Updated to output prompts to: `pmc/product/_mapping/[abbrev]/_run-prompts/`
+   - ✅ Updated input paths to reference `_mapping/[abbrev]/` for seed-story
+   - ✅ Changed codebase review default to: `src/`
+   - ✅ Display full absolute paths
+   - ✅ Removed cache system
+   - ✅ Removed verbose logging
+   - ✅ Simplified path display
 
-- **Internalize all FIGMA wireframe prompts** for E01-E06 to understand complete UI/UX requirements
-- **Internalize all FR specification documents** for E01-E06 to understand acceptance criteria
-- **Build React/Next.js components** that match wireframe specifications exactly
-- **Implement all UI states** (loading, error, success, empty, disabled, in-progress, etc.)
-- **Ensure accessibility compliance** (WCAG AA, keyboard navigation, screen readers)
-- **Connect to backend APIs** (Supabase queries, RunPod training orchestration)
-- **Test all user flows** described in wireframe interaction sections
+3. **02a-generate-user-story-spec.js**
+   - ✅ Already had command-line arguments (no change needed)
+   - ✅ Updated to output prompts to: `pmc/product/_mapping/[abbrev]/_run-prompts/`
+   - ✅ Updated input paths to reference `_mapping/[abbrev]/` for seed-story and overview
+   - ✅ Display full absolute paths
+   - ✅ Removed cache system
+   - ✅ Removed verbose logging
+   - ✅ Simplified path display
 
----
+4. **02b-generate-user-journey_v1.js**
+   - ✅ Already had command-line arguments (no change needed)
+   - ✅ Updated to output prompts to: `pmc/product/_mapping/[abbrev]/_run-prompts/`
+   - ✅ Updated USER_JOURNEY_CONFIG with all `_mapping/[abbrev]/` paths
+   - ✅ Display full absolute paths
+   - ✅ Removed cache system
+   - ✅ Removed verbose logging
+   - ✅ Simplified path display
 
-## 📂 Critical Files for Frontend Implementation
+### Configuration Files Updated:
 
-### Figma Wireframe Prompts (MUST INTERNALIZE - E01-E06 ONLY)
+5. **seed-story-config.json**
+   - ✅ Updated `RAW_DATA_PATH` to: `product/_mapping/{{project_abbreviation}}/seed-narrative-v1.md`
+   - ✅ Updated `SEED_NARRATIVE_PATH` to: `product/_mapping/{{project_abbreviation}}/00-{{project_abbreviation}}-seed-narrative.md`
+   - ✅ Updated `OUTPUT_PATH` entries to use `_mapping/{{project_abbreviation}}/`
 
-| File | Stage | Lines | Scope |
-|------|-------|-------|-------|
-| **`pmc/product/_mapping/fr-maps/04-pipeline-FIGMA-wireframes-output-E01.md`** | **Stage 1: Training Job Configuration & Setup** | 919 | Job creation, dataset selection, hyperparameter presets, GPU selection, cost estimation, configuration review |
-| **`pmc/product/_mapping/fr-maps/04-pipeline-FIGMA-wireframes-output-E02.md`** | **Stage 2: Training Job Execution & Monitoring** | 597 | Real-time progress tracking, loss curves, stage indicators, webhook event logs, job control (cancel), multi-job management |
-| **`pmc/product/_mapping/fr-maps/04-pipeline-FIGMA-wireframes-output-E04.md`** | **Stage 4: Model Artifacts & Downloads** | 1,399 | LoRA adapter downloads, adapter storage/versioning, training metrics export (CSV/JSON), training report PDF generation, deployment package creation |
-| **`pmc/product/_mapping/fr-maps/04-pipeline-FIGMA-wireframes-output-E05.md`** | **Stage 5: Training Comparison & Optimization** | 1,408 | Side-by-side training run comparison, overlaid loss curves, configuration performance analytics, training history, configuration templates library |
-| **`pmc/product/_mapping/fr-maps/04-pipeline-FIGMA-wireframes-output-E06.md`** | **Stage 6: Model Quality Validation** | 2,294 | Perplexity benchmarking, perplexity by category analysis, emotional intelligence validation, regression detection, catastrophic forgetting tests, brand voice consistency scoring |
+6. **prompts-config.json**
+   - ✅ Updated `SEED_STORY_PATH` to: `_mapping/{{project_abbreviation}}/00-{{project_abbreviation}}-seed-story.md`
+   - ✅ Updated `OVERVIEW_PATH` to: `_mapping/{{project_abbreviation}}/01-{{project_abbreviation}}-overview.md`
+   - ✅ Updated `OUTPUT_PATH` entries to use `_mapping/{{project_abbreviation}}/`
 
-**Deferred for Advanced Build** (DO NOT IMPLEMENT YET):
-- ~~E07: Cost Management & Budget Control~~ (1,026 lines) - Advanced feature
-- ~~E08: Team Collaboration & Notifications~~ (1,413 lines) - Advanced feature
+### Standardization Patterns Applied:
 
-### Functional Requirements Specifications (MUST INTERNALIZE - E01-E06 ONLY)
+All scripts now follow these consistent patterns:
 
-| File | Stage | Purpose |
-|------|-------|---------|
-| **`pmc/product/_mapping/fr-maps/04-pipeline-FR-wireframes-E01.md`** | **Stage 1: Training Job Configuration & Setup** | Complete acceptance criteria for job creation, dataset selection, hyperparameter configuration, GPU selection, cost estimation workflows |
-| **`pmc/product/_mapping/fr-maps/04-pipeline-FR-wireframes-E02.md`** | **Stage 2: Training Job Execution & Monitoring** | Acceptance criteria for real-time progress tracking, loss curves, stage indicators, event logs, job cancellation, queue management |
-| **`pmc/product/_mapping/fr-maps/04-pipeline-FR-wireframes-E03.md`** | **Stage 3: Error Handling & Recovery** | Acceptance criteria for OOM errors, dataset format errors, GPU provisioning errors, checkpoint recovery, retry mechanisms |
-| **`pmc/product/_mapping/fr-maps/04-pipeline-FR-wireframes-E04.md`** | **Stage 4: Model Artifacts & Downloads** | Acceptance criteria for adapter downloads, storage/versioning, metrics export, PDF reports, deployment packages |
-| **`pmc/product/_mapping/fr-maps/04-pipeline-FR-wireframes-E05.md`** | **Stage 5: Training Comparison & Optimization** | Acceptance criteria for job comparison, configuration analytics, training history, template library |
-| **`pmc/product/_mapping/fr-maps/04-pipeline-FR-wireframes-E06.md`** | **Stage 6: Model Quality Validation** | Acceptance criteria for perplexity benchmarks, EI validation, regression detection, catastrophic forgetting tests, brand voice scoring |
-
-**Deferred for Advanced Build** (DO NOT IMPLEMENT YET):
-- ~~FR-wireframes-E07: Cost Management & Budget Control~~ - Advanced feature
-- ~~FR-wireframes-E08: Team Collaboration & Notifications~~ - Advanced feature
-
-### Source Reference Documents
-
-| File | Purpose |
-|------|---------|
-| `pmc/product/01-pipeline-overview.md` | Product vision, business context, user pain points, success metrics |
-| `pmc/product/02-pipeline-user-stories.md` | 84 user stories across 8 categories with detailed acceptance criteria |
-| `pmc/product/03-pipeline-functional-requirements.md` | Functional requirements mapped to user stories with technical acceptance criteria |
-| `pmc/product/02b-pipeline-user-journey.md` | User journey stages, emotional requirements, progressive disclosure, success indicators |
-
----
-
-## 🎯 Wireframe Structure & Organization
-
-### How Figma Prompt Documents Are Structured
-
-Each FIGMA wireframe output file (E01-E06) contains multiple FR prompts, each delineated by explicit markers:
-
-```markdown
-=== BEGIN PROMPT FR: FR1.1.1 ===
-[Complete Figma-ready prompt for this FR]
-=== END PROMPT FR: FR1.1.1 ===
-
-=== BEGIN PROMPT FR: FR1.1.2 ===
-[Complete Figma-ready prompt for this FR]
-=== END PROMPT FR: FR1.1.2 ===
+**1. Directory Structure:**
+```
+pmc/product/_mapping/[project-abbrev]/
+├── _run-prompts/                          # Generated prompts (all steps)
+│   ├── 00-product-[abbrev]-seed-narrative-prompt-v1.md
+│   ├── 00-product-[abbrev]-seed-story-prompt-v1.md
+│   ├── 01-product-[abbrev]-overview-prompt-v1.md
+│   ├── 02-product-[abbrev]-user-stories-prompt-v1.md
+│   └── 02b-product-[abbrev]-user-journey-prompt-v1.md
+├── seed-narrative-v1.md                   # Raw input (Step 00)
+├── 00-[abbrev]-seed-narrative.md          # Step 00 output
+├── 00-[abbrev]-seed-story.md              # Step 00 output
+├── 01-[abbrev]-overview.md                # Step 01 output (from AI)
+├── 02-[abbrev]-user-stories.md            # Step 02a output (from AI)
+└── 02b-[abbrev]-user-journey.md           # Step 02b output (from AI)
 ```
 
-### Each FR Prompt Includes (Comprehensive Specification):
+**2. Path Display Format:**
+- Before: `pmc/product/01-abbrev-overview.md` (relative)
+- After: `C:/Users/james/Master/BrightHub/BRun/lora-pipeline/pmc/product/_mapping/abbrev/01-abbrev-overview.md` (absolute)
 
-1. **Title** - FR number, stage name, feature name
-2. **Context Summary** - 2-4 sentences: scope, user value, constraints
-3. **Journey Integration** - User goals, key emotions, progressive disclosure levels, persona adaptations
-4. **Journey-Informed Design Elements** - User goals, emotional requirements, progressive disclosure specifics, success indicators
-5. **Wireframe Goals** - Bulleted goals mapped to this FR
-6. **Explicit UI Requirements** - Each acceptance criterion translated to concrete UI elements, components, states, interactions
-7. **Interactions and Flows** - Step-by-step user workflows (Primary, Secondary, Tertiary flows)
-8. **Visual Feedback** - Progress indicators, status chips, ETAs, logs, toasts, badges
-9. **Accessibility Guidance** - Focus management, ARIA labels, keyboard navigation, screen reader support, color contrast
-10. **Information Architecture** - Layout hierarchy, component grouping, page structure
-11. **Page Plan** - List of screens with names, purposes, components, states (≥3 pages per FR)
-12. **Annotations (Mandatory)** - Notes linking UI elements to acceptance criteria, mapping table format
-13. **Acceptance Criteria → UI Component Mapping** - Detailed table: Criterion → Source → Screen(s) → Component(s) → State(s) → Notes
-14. **Non-UI Acceptance Criteria** - Backend/system requirements with UI hints
-15. **Estimated Page Count** - Number and rationale tied to criteria coverage
+**3. User Prompt Simplification:**
+- Before:
+  ```
+  Requesting path for: SEED_STORY_PATH
+  Default path: pmc/product/00-abbrev-seed-story.md
+  Default path exists: TRUE
+  
+  Cached path: pmc/product/00-abbrev-seed-story.md
+  Cached path exists: TRUE
+  
+  Enter path for SEED_STORY_PATH
+  (Press Enter to use default, or type a new path)
+  Path > 
+  ```
+- After:
+  ```
+  Enter path for SEED_STORY_PATH
+  Default: C:/Users/james/Master/BrightHub/BRun/lora-pipeline/pmc/product/_mapping/abbrev/00-abbrev-seed-story.md
+  > 
+  ```
 
-### Key FR Sections Breakdown by Stage
+**4. Cache System Removal:**
+- Removed `loadPathCache()` functions
+- Removed `savePathCache()` functions
+- Removed all cache checking logic
+- Scripts always use hard-coded defaults from configuration files
 
-**Stage 1 (E01): Training Job Configuration & Setup**
-- FR1.1.1: Create Training Job from Training File
-- FR1.1.2: Select Hyperparameter Preset (Conservative/Balanced/Aggressive)
-- FR1.1.3: Select GPU Type with Cost Comparison (Spot vs On-Demand)
-- FR1.2.1: Real-Time Cost Estimation (dynamic updates)
-- FR1.2.2: Pre-Job Budget Validation (prevent overages)
-- FR1.3.1: Add Job Metadata & Documentation
-- FR1.3.2: Review Configuration Before Start (final confirmation)
-
-**Stage 2 (E02): Training Job Execution & Monitoring**
-- FR2.1.1: Live Training Progress Dashboard (loss curves, metrics, ETA)
-- FR2.1.2: Training Stage Indicators (Preprocessing → Model Loading → Training → Finalization)
-- FR2.1.3: Webhook Event Log (chronological event tracking)
-- FR2.2.1: Cancel Active Training Job (cost control)
-- FR2.2.2: Pause and Resume Training (future enhancement)
-- FR2.3.1: View All Training Jobs (list with filters)
-- FR2.3.2: Training Queue Management
-
-**Stage 3 (E03): Error Handling & Recovery**
-- FR3.1.1: Out of Memory Error Handling (actionable guidance)
-- FR3.1.2: Dataset Format Error Handling (specific error details)
-- FR3.1.3: GPU Provisioning Error Handling (auto-retry options)
-- FR3.2.1: Spot Instance Interruption Recovery (automatic checkpoint recovery)
-- FR3.2.2: Manual Checkpoint Resume
-- FR3.3.1: One-Click Retry with Same Configuration
-- FR3.3.2: Retry with Suggested Adjustments
-
-**Stage 4 (E04): Model Artifacts & Downloads**
-- FR4.1.1: Download Trained LoRA Adapters (ZIP with adapter files)
-- FR4.1.2: Adapter Storage and Versioning (Supabase Storage)
-- FR4.2.1: Export Training Metrics as CSV/JSON
-- FR4.2.2: Generate Training Report PDF (executive summary)
-- FR4.3.1: Create Complete Deployment Package (adapters + scripts + README)
-- FR4.3.2: API Inference Endpoint Template (future enhancement)
-
-**Stage 5 (E05): Training Comparison & Optimization**
-- FR5.1.1: Compare Multiple Training Runs (side-by-side, overlaid loss curves)
-- FR5.1.2: Configuration Performance Analytics (aggregate success rates)
-- FR5.2.1: Comprehensive Training History (filters, search, export)
-- FR5.2.2: Configuration Templates Library (save successful configs)
-
-**Stage 6 (E06): Model Quality Validation**
-- FR6.1.1: Calculate Perplexity Improvement (baseline vs trained)
-- FR6.1.2: Perplexity by Category Analysis (persona, emotional arc, topic)
-- FR6.2.1: Run Emotional Intelligence Benchmarks (50 test scenarios)
-- FR6.2.2: Emotional Intelligence Regression Detection
-- FR6.3.1: Financial Knowledge Retention Test (catastrophic forgetting)
-- FR6.3.2: Domain-Specific Knowledge Probes (custom test suites)
-- FR6.4.1: Elena Morales Voice Consistency Scoring (brand alignment)
-- FR6.4.2: Client Brand Customization (future enhancement)
+**5. Codebase Review Default:**
+- Changed from `../../product/_templates` or `../../` to `../../../src`
+- Now points to: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\src`
 
 ---
 
-## 🔬 Understanding FR Specifications (Critical for Implementation)
+## 🎯 What's Next: Phase 2 Script Updates
 
-### FR Specification File Structure
+The next agent will apply identical refactoring patterns to the remaining PMC generation scripts:
 
-Each `04-pipeline-FR-wireframes-E##.md` file contains:
+### Scripts to Update (Phase 2):
 
-```markdown
-## [Stage Number]. [Stage Name]
+1. **03-generate-FR-initial.js**
+   - Located at: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\03-generate-FR-initial.js`
+   - Purpose: Generates initial functional requirements from user stories and journey
+   - Changes needed:
+     - Update output directory to: `_mapping/[abbrev]/_run-prompts/`
+     - Update input paths to reference `_mapping/[abbrev]/` for overview, user-stories, user-journey
+     - Display full absolute paths
+     - Remove cache system
+     - Remove verbose logging
+     - Simplify path display to show only default
 
-- **FR#.#.#:** [Feature Name]
-  * Description: [Detailed feature description]
-  * Impact Weighting: [Business impact categories]
-  * Priority: High/Medium/Low
-  * User Stories: US#.#.#
-  * User Journey: UJ#.#.# (references to journey stages)
-  * Tasks: [T-#.#.#]
-  * User Story Acceptance Criteria:
-    - [Original user story criteria - high-level]
-  * Functional Requirements Acceptance Criteria:
-    - [Detailed technical implementation criteria]
-    - [Database requirements, API specifications, validation rules]
-    - [Performance requirements, error handling, edge cases]
+2. **03-generate-functional-requirements.js**
+   - Located at: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\03-generate-functional-requirements.js`
+   - Purpose: Orchestrates the two-phase FR generation process (preprocessing + enhancement)
+   - Changes needed:
+     - Update output directory to: `_mapping/[abbrev]/_run-prompts/`
+     - Update input paths to reference `_mapping/[abbrev]/` for overview, user-stories, user-journey
+     - Update OUTPUT_PATH in prompts to write to: `_mapping/[abbrev]/03-[abbrev]-functional-requirements.md`
+     - Display full absolute paths
+     - Remove cache system
+     - Remove verbose logging
+     - Simplify path display
+
+3. **04a-generate-FIGMA-wireframe-prompts_v1.js**
+   - Located at: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\04a-generate-FIGMA-wireframe-prompts_v1.js`
+   - Purpose: Generates Figma-ready wireframe prompts from functional requirements
+   - Changes needed:
+     - Update output directory to: `_mapping/[abbrev]/fr-maps/prompts/`
+     - Update input path to reference: `_mapping/[abbrev]/03-[abbrev]-functional-requirements.md`
+     - Update wireframe output location to: `_mapping/[abbrev]/fr-maps/`
+     - Display full absolute paths
+     - Remove cache system (if present)
+     - Remove verbose logging
+     - Simplify path display
+
+4. **04b-generate-FIGMA-wireframe-combined-prompt_v1.js**
+   - Located at: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\04b-generate-FIGMA-wireframe-combined-prompt_v1.js`
+   - Purpose: Generates combined wireframe prompt for task-oriented planning
+   - Changes needed:
+     - Update output directory to: `_mapping/[abbrev]/fr-maps/prompts/`
+     - Update input path to reference: `_mapping/[abbrev]/03-[abbrev]-functional-requirements.md`
+     - Update wireframe output location to: `_mapping/[abbrev]/fr-maps/`
+     - Display full absolute paths
+     - Remove cache system (if present)
+     - Remove verbose logging
+     - Simplify path display
+
+### Reference Implementation Examples:
+
+The next agent should study the Phase 1 scripts (00, 01, 02a, 02b) to understand the exact patterns to apply. Key files to examine:
+
+**Script Examples:**
+- `pmc/product/_tools/00-generate-seed-story.js` - Shows command-line args, simplified path display
+- `pmc/product/_tools/01-generate-overview.js` - Shows cache removal, simplified getValidFilePath
+- `pmc/product/_tools/02a-generate-user-story-spec.js` - Shows path processing updates
+- `pmc/product/_tools/02b-generate-user-journey_v1.js` - Shows USER_JOURNEY_CONFIG updates
+
+**Config Examples:**
+- `pmc/product/_tools/seed-story-config.json` - Shows _mapping path structure
+- `pmc/product/_tools/config/prompts-config.json` - Shows _mapping path structure
+
+---
+
+## 📂 Critical Files for Next Agent
+
+### Scripts to Internalize (Phase 1 - Reference Examples):
+
+| Script | Purpose | Key Patterns |
+|--------|---------|--------------|
+| `pmc/product/_tools/00-generate-seed-story.js` | Seed story generation | Command-line args, simplified prompts, absolute paths |
+| `pmc/product/_tools/01-generate-overview.js` | Overview generation | Cache removal, simplified getValidFilePath |
+| `pmc/product/_tools/02a-generate-user-story-spec.js` | User stories generation | Path processing, _mapping structure |
+| `pmc/product/_tools/02b-generate-user-journey_v1.js` | User journey generation | Config updates, path display |
+
+### Scripts to Update (Phase 2 - Work Items):
+
+| Script | Lines | Complexity | Priority |
+|--------|-------|------------|----------|
+| `pmc/product/_tools/03-generate-FR-initial.js` | ~400 | Medium | High |
+| `pmc/product/_tools/03-generate-functional-requirements.js` | ~600 | High | High |
+| `pmc/product/_tools/04a-generate-FIGMA-wireframe-prompts_v1.js` | ~500 | Medium | High |
+| `pmc/product/_tools/04b-generate-FIGMA-wireframe-combined-prompt_v1.js` | ~400 | Medium | Medium |
+
+### Configuration Files to Check:
+
+| File | Purpose | Update Needed? |
+|------|---------|----------------|
+| `pmc/product/_tools/seed-story-config.json` | Step 00 config | ✅ Already updated |
+| `pmc/product/_tools/config/prompts-config.json` | Steps 01-02 config | ✅ Already updated |
+| FR generation configs (if exist) | Step 03 config | ⚠️ Check and update |
+| Wireframe generation configs (if exist) | Step 04 config | ⚠️ Check and update |
+
+### Source Code to Internalize:
+
+**Application Codebase:**
+- **Directory**: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\src`
+- **Purpose**: Understand the application structure for accurate codebase review path defaults
+- **Focus Areas**:
+  - Service files (conversation-generation-service.ts, enrichment-pipeline-orchestrator.ts, training-file-service.ts)
+  - API routes (app/api/*)
+  - Database operations (lib/supabase/*)
+  - UI components (app/components/*)
+
+---
+
+## 🔍 Implementation Guidance for Next Agent
+
+### Step-by-Step Approach:
+
+**IMPORTANT: Do NOT start updating scripts yet. First, internalize all context.**
+
+#### Phase A: Context Internalization (DO THIS FIRST)
+
+1. **Read Phase 1 Scripts (Reference Examples)**
+   - Read `00-generate-seed-story.js` completely
+   - Read `01-generate-overview.js` completely
+   - Read `02a-generate-user-story-spec.js` completely
+   - Read `02b-generate-user-journey_v1.js` completely
+   - **Focus on**: savePromptToFile, getValidFilePath, path processing, config loading
+   - **Time estimate**: 2-3 hours
+
+2. **Read Phase 2 Scripts (Work Items)**
+   - Read `03-generate-FR-initial.js` completely
+   - Read `03-generate-functional-requirements.js` completely
+   - Read `04a-generate-FIGMA-wireframe-prompts_v1.js` completely
+   - Read `04b-generate-FIGMA-wireframe-combined-prompt_v1.js` completely
+   - **Focus on**: Current path handling, cache usage, output directories
+   - **Time estimate**: 3-4 hours
+
+3. **Read Configuration Files**
+   - Read `seed-story-config.json` (see _mapping pattern)
+   - Read `prompts-config.json` (see _mapping pattern)
+   - Look for FR/wireframe configs
+   - **Time estimate**: 30 minutes
+
+4. **Internalize Application Codebase**
+   - Browse `src/` directory structure
+   - Understand service layer architecture
+   - Understand API route organization
+   - Understand database schema usage
+   - **Time estimate**: 2-3 hours
+
+**Total Internalization Time: ~8-11 hours** (This is intentional and necessary)
+
+#### Phase B: Wait for Human Instructions
+
+**CRITICAL**: After completing Phase A (context internalization), **STOP and wait for explicit human instructions** before proceeding with any script modifications.
+
+Do NOT:
+- ❌ Start updating scripts
+- ❌ Make any file changes
+- ❌ Create new files
+- ❌ Modify configurations
+
+The human will provide specific instructions on:
+- Which script to start with
+- Any deviations from the Phase 1 pattern
+- Testing approach
+- Validation criteria
+
+---
+
+## 🎯 Refactoring Patterns to Apply (For Reference)
+
+When the human gives approval to proceed, apply these patterns:
+
+### Pattern 1: Update savePromptToFile Function
+
+**Before:**
+```javascript
+function savePromptToFile(prompt, filename, projectAbbrev) {
+  const outputDir = path.resolve(__dirname, '../_run-prompts');
+  // ...
+}
 ```
 
-### Key Differences: User Story vs Functional Requirements Criteria
-
-**User Story Acceptance Criteria** (High-Level, User-Focused):
-- Describes WHAT the user can do
-- Focuses on user experience and outcomes
-- Example: "Training files dropdown populated from `training_files` table showing file name, conversation count, total training pairs"
-
-**Functional Requirements Acceptance Criteria** (Technical, Implementation-Focused):
-- Describes HOW the system implements the feature
-- Includes database queries, API calls, validation logic, error handling
-- Example: "System queries `training_files` table and displays only files with status='active' and conversation_count >= 50. Dropdown component renders with search/filter capability (by name, conversation count range, quality score range). Each training file entry displays: name, conversation count, total training pairs, average quality score with visual indicator (✓ High Quality ≥4.0, ⚠ Review <4.0)."
-
-### Critical Implementation Notes
-
-1. **BOTH Sets of Criteria Must Be Satisfied**
-   - User Story Criteria = "What success looks like to the user"
-   - Functional Requirements Criteria = "How to technically achieve that success"
-
-2. **UI States Are Comprehensive**
-   - Every FR specifies multiple UI states: loading, error, success, empty, disabled, in-progress, hover, focus, active, invalid, warning
-   - Implementation MUST handle all specified states
-
-3. **Accessibility Is Mandatory**
-   - WCAG AA compliance required
-   - Keyboard navigation for all interactive elements (Tab, Enter, Esc, Arrow keys)
-   - ARIA labels, roles, and live regions
-   - Screen reader support with descriptive announcements
-   - Color contrast minimum 4.5:1
-   - Focus indicators visible
-
-4. **Performance Requirements**
-   - API responses: <2 seconds for data fetch
-   - UI updates: <500ms for interactions
-   - Real-time updates: 60-second polling interval (or WebSocket)
-   - Large file downloads: progress indicators required
-
-5. **Error Handling Is Specific**
-   - Each FR includes detailed error scenarios
-   - Error messages must be actionable (tell user what to do next)
-   - Examples: "Training file not found (if deleted)", "Insufficient conversations (if <50)", "Storage file missing (if file path invalid)"
-
----
-
-## 🎨 Frontend Implementation Guidance
-
-### Technology Stack (Existing Application)
-
-**Current Tech Stack** (Already Implemented):
-- **Framework**: Next.js 14 (App Router, TypeScript)
-- **UI Components**: Shadcn/UI + Tailwind CSS
-- **Database**: Supabase (PostgreSQL)
-- **Storage**: Supabase Storage (conversation-files, training-files buckets)
-- **AI**: Claude API (Anthropic) - `claude-sonnet-4-5-20250929`
-- **Deployment**: Vercel
-
-**New Components Needed for LoRA Training**:
-- Training job management pages (`/training-jobs/*`)
-- Real-time monitoring dashboards (with WebSocket or polling)
-- Cost estimation calculators (client-side)
-- Loss curve visualizations (Chart.js or Recharts)
-- File download handlers (ZIP, CSV, JSON, PDF generation)
-- Notification system (email via SendGrid, Slack via API)
-
-### Database Schema Requirements
-
-**New Tables Needed** (Backend Implementation):
-```sql
--- Training Jobs
-training_jobs (
-  id UUID PRIMARY KEY,
-  name VARCHAR(200),
-  training_file_id UUID REFERENCES training_files(id),
-  status VARCHAR(50), -- 'pending_configuration', 'queued', 'training', 'completed', 'failed', 'cancelled'
-  preset VARCHAR(50), -- 'conservative', 'balanced', 'aggressive'
-  gpu_type VARCHAR(50), -- 'spot', 'on-demand'
-  estimated_cost_min DECIMAL(10,2),
-  estimated_cost_max DECIMAL(10,2),
-  actual_cost DECIMAL(10,2),
-  estimated_duration_hours INT,
-  actual_duration_seconds INT,
-  final_training_loss DECIMAL(10,6),
-  final_validation_loss DECIMAL(10,6),
-  perplexity_improvement_percent DECIMAL(5,2),
-  created_by UUID,
-  created_at TIMESTAMP,
-  started_at TIMESTAMP,
-  completed_at TIMESTAMP,
-  notes TEXT
-);
-
--- Training Job Events (webhook logs)
-training_job_events (
-  id UUID PRIMARY KEY,
-  job_id UUID REFERENCES training_jobs(id),
-  event_type VARCHAR(50), -- 'status_change', 'metrics_update', 'warning', 'error'
-  event_message TEXT,
-  payload JSONB,
-  created_at TIMESTAMP
-);
-
--- Training Job Metrics (loss curves, learning rates)
-training_job_metrics (
-  id UUID PRIMARY KEY,
-  job_id UUID REFERENCES training_jobs(id),
-  step_number INT,
-  epoch INT,
-  training_loss DECIMAL(10,6),
-  validation_loss DECIMAL(10,6),
-  learning_rate DECIMAL(12,10),
-  gpu_utilization_percent DECIMAL(5,2),
-  perplexity DECIMAL(10,4),
-  timestamp TIMESTAMP
-);
-
--- Training Job Artifacts (model files)
-training_job_artifacts (
-  id UUID PRIMARY KEY,
-  job_id UUID REFERENCES training_jobs(id),
-  artifact_type VARCHAR(50), -- 'adapter_model', 'adapter_config', 'training_report_pdf', 'metrics_csv'
-  file_path VARCHAR(500), -- Supabase Storage path
-  file_size_bytes BIGINT,
-  download_count INT DEFAULT 0,
-  created_at TIMESTAMP
-);
-
--- Configuration Templates
-configuration_templates (
-  id UUID PRIMARY KEY,
-  name VARCHAR(200),
-  description TEXT,
-  preset VARCHAR(50),
-  hyperparameters JSONB,
-  gpu_type VARCHAR(50),
-  tags TEXT[],
-  created_by UUID,
-  usage_count INT DEFAULT 0,
-  success_rate DECIMAL(5,2),
-  created_at TIMESTAMP
-);
+**After:**
+```javascript
+function savePromptToFile(prompt, filename, projectAbbrev) {
+  const outputDir = path.resolve(__dirname, `../_mapping/${projectAbbrev}/_run-prompts`);
+  // ...
+}
 ```
 
-### API Endpoints Needed (Backend Implementation)
+### Pattern 2: Update Input Path Defaults
 
-**Training Jobs API** (`/api/training-jobs/*`):
-- `GET /api/training-jobs` - List all jobs with filters
-- `POST /api/training-jobs` - Create new job
-- `GET /api/training-jobs/:id` - Get job details
-- `PATCH /api/training-jobs/:id` - Update job (cancel, retry)
-- `DELETE /api/training-jobs/:id` - Delete job
-- `GET /api/training-jobs/:id/metrics` - Get loss curves and metrics
-- `GET /api/training-jobs/:id/events` - Get webhook event log
-- `POST /api/training-jobs/:id/artifacts/download` - Generate download link
+**Before:**
+```javascript
+"SEED_STORY_PATH": "00-{{project_abbreviation}}-seed-story.md"
+```
 
-**Configuration API** (`/api/configuration/*`):
-- `GET /api/configuration/presets` - Get hyperparameter presets
-- `POST /api/configuration/estimate-cost` - Calculate cost estimate
-- `GET /api/configuration/templates` - Get saved templates
-- `POST /api/configuration/templates` - Save new template
+**After:**
+```javascript
+"SEED_STORY_PATH": "_mapping/{{project_abbreviation}}/00-{{project_abbreviation}}-seed-story.md"
+```
 
-**Validation API** (`/api/validation/*`):
-- `POST /api/validation/perplexity` - Run perplexity benchmarks
-- `POST /api/validation/emotional-intelligence` - Run EI tests
-- `POST /api/validation/catastrophic-forgetting` - Run knowledge retention tests
-- `GET /api/validation/:job_id/results` - Get validation results
+### Pattern 3: Simplify getValidFilePath Display
 
-**Comparison API** (`/api/comparison/*`):
-- `POST /api/comparison/jobs` - Compare multiple jobs (accepts job IDs array)
-- `GET /api/comparison/analytics` - Get configuration performance analytics
+**Before:**
+```javascript
+console.log(`Requesting path for: ${description}`);
+console.log(`Default path: ${fullDefaultPath}`);
+console.log(`Default path exists: ${fs.existsSync(fullDefaultPath) ? 'TRUE' : 'FALSE'}`);
+// ... cache checking logic ...
+```
 
-### Component Implementation Strategy
+**After:**
+```javascript
+console.log(`\nEnter path for ${description}`);
+console.log(`Default: ${fullDefaultPath}`);
+// No cache, no verbose logging
+```
 
-**Phase 1: Core Job Management** (Start Here)
-1. Training jobs list page (`/training-jobs`)
-   - Table with filters, search, sorting
-   - Status badges, progress indicators
-   - Action buttons (view, cancel, retry)
-2. Job creation form (`/training-jobs/new`)
-   - Training file selector (dropdown with search)
-   - Hyperparameter preset selector (radio cards)
-   - GPU type selector (toggle with cost comparison)
-   - Cost estimation display (real-time updates)
-   - Configuration review modal
-3. Job details page (`/training-jobs/:id`)
-   - Overview section (status, progress, creator)
-   - Configuration section (hyperparameters, GPU)
-   - Real-time progress tracking (if active)
-   - Results section (if completed)
-   - Actions toolbar (download, export, cancel, retry)
+### Pattern 4: Remove Cache System
 
-**Phase 2: Real-Time Monitoring**
-4. Live progress dashboard (on job details page)
-   - Progress header card (%, ETA, elapsed time)
-   - Loss curve graph (Chart.js or Recharts)
-   - Current metrics table (loss, learning rate, GPU util)
-   - Cost tracker card (current spend, projected final)
-   - Training stage indicators (Preprocessing → Training → Finalization)
-   - Auto-refresh (polling every 60 seconds or WebSocket)
-5. Webhook event log (expandable section)
-   - Chronological event table
-   - Event type filtering
-   - Expandable JSON payload
-   - Search functionality
+**Remove these functions:**
+- `loadPathCache()`
+- `savePathCache()`
+- All cache checking logic in `getValidFilePath()`
 
-**Phase 3: Artifacts & Downloads**
-6. Adapter download functionality
-   - "Download Adapters" button
-   - ZIP generation (adapter_model.bin + adapter_config.json + README)
-   - Signed URL generation (24-hour expiration)
-   - Download progress indicator
-7. Metrics export
-   - CSV export (all metrics)
-   - JSON export (structured data)
-   - PDF report generation (executive summary)
-8. Deployment package
-   - Complete package ZIP (adapters + scripts + README + requirements.txt)
-   - Pre-configured inference scripts
+### Pattern 5: Update Codebase Review Default
 
-**Phase 4: Comparison & Optimization**
-9. Job comparison view (`/training-jobs/compare`)
-   - Multi-select job list
-   - Overlaid loss curves
-   - Metrics comparison table
-   - Configuration diff view
-   - Winner recommendation
-10. Training history (`/training-jobs/history`)
-    - Comprehensive filters (date, creator, status, preset, cost)
-    - Search by name, notes, tags
-    - Export as CSV
-11. Configuration templates library (`/training-jobs/templates`)
-    - Grid view of saved templates
-    - Template detail modal
-    - "Start from Template" functionality
+**Before:**
+```javascript
+const defaultPath = path.resolve(__dirname, '../../product', '_templates');
+```
 
-**Phase 5: Quality Validation**
-12. Validation results page (`/training-jobs/:id/validation`)
-    - Perplexity improvement display
-    - Perplexity by category breakdown
-    - Emotional intelligence scores
-    - Regression detection alerts
-    - Catastrophic forgetting test results
-    - Brand voice consistency scores
-13. Before/after comparison
-    - Side-by-side response examples
-    - Quality improvement metrics
-    - Export as PDF report
+**After:**
+```javascript
+const defaultPath = path.resolve(__dirname, '../../../src');
+```
 
----
+### Pattern 6: Display Full Absolute Paths
 
-## 🚀 Next Agent Implementation Plan
+**Before:**
+```javascript
+function toProjectPath(absolutePath) {
+  const normalized = absolutePath.replace(/\\/g, '/');
+  const projectRoot = 'pmc/';
+  if (normalized.includes(projectRoot)) {
+    return normalized.substring(normalized.indexOf(projectRoot));
+  }
+  return normalized;
+}
+```
 
-### Step 1: Internalize Documentation (CRITICAL FIRST STEP)
-
-**MUST READ IN THIS ORDER:**
-
-1. **Read All FIGMA Wireframe Output Files (E01-E06)**
-   - Start with E01 (Training Job Configuration)
-   - Read EVERY FR prompt within each file
-   - Understand: UI requirements, interactions, states, accessibility, page plans
-   - Time estimate: 3-4 hours to thoroughly internalize
-
-2. **Read All FR Specification Files (E01-E06)**
-   - Cross-reference with FIGMA prompts
-   - Focus on: User Story Acceptance Criteria + Functional Requirements Acceptance Criteria
-   - Understand: Database requirements, API specifications, validation rules
-   - Time estimate: 2-3 hours
-
-3. **Read Source Reference Documents**
-   - `01-pipeline-overview.md` - Product vision, business context
-   - `02-pipeline-user-stories.md` - 84 user stories (focus on Stages 1-6)
-   - `02b-pipeline-user-journey.md` - User journey stages, emotional requirements
-   - Time estimate: 2 hours
-
-**Total Reading Time: ~7-9 hours** (This is intentional and necessary)
-
-### Step 2: Database Schema Setup
-
-1. Create database migration file for new tables:
-   - `training_jobs`
-   - `training_job_events`
-   - `training_job_metrics`
-   - `training_job_artifacts`
-   - `configuration_templates`
-2. Run migration using SAOL (Supabase Agent Ops Library)
-3. Verify schema using `agentIntrospectSchema`
-4. Seed initial data:
-   - Hyperparameter presets (Conservative, Balanced, Aggressive)
-   - GPU pricing (spot: $2.49/hr, on-demand: $7.99/hr)
-
-### Step 3: API Endpoint Implementation
-
-1. Implement training jobs CRUD endpoints
-2. Implement cost estimation endpoint (client-side calculations + server validation)
-3. Implement metrics polling endpoint (for real-time updates)
-4. Implement artifact generation endpoints (ZIP, CSV, JSON, PDF)
-5. Test all endpoints using SAOL for database operations
-
-### Step 4: Frontend Component Development (Phase 1)
-
-1. Create page: `/training-jobs` (list view)
-2. Create page: `/training-jobs/new` (job creation form)
-3. Create page: `/training-jobs/:id` (job details)
-4. Implement all UI states: loading, error, success, empty
-5. Implement accessibility: keyboard navigation, ARIA labels, screen reader support
-6. Test all user flows from FIGMA wireframes
-
-### Step 5: Real-Time Monitoring (Phase 2)
-
-1. Implement live progress dashboard (polling every 60 seconds)
-2. Implement loss curve visualization (Chart.js or Recharts)
-3. Implement real-time cost tracking
-4. Implement training stage indicators
-5. Implement webhook event log
-6. Test auto-refresh and connection handling
-
-### Step 6: Validation & Iteration
-
-1. Cross-check implementation against ALL acceptance criteria
-2. Test all UI states (loading, error, success, empty, etc.)
-3. Test accessibility with keyboard navigation and screen reader
-4. Test responsive design (desktop, tablet, mobile)
-5. Document any deviations from specifications
-
-### Success Criteria
-
-**Implementation is complete when:**
-- ✅ All FIGMA wireframe pages (E01-E06) are implemented as functional UI
-- ✅ All User Story Acceptance Criteria (E01-E06) are satisfied
-- ✅ All Functional Requirements Acceptance Criteria (E01-E06) are satisfied
-- ✅ All UI states are handled (loading, error, success, empty, disabled, etc.)
-- ✅ Accessibility requirements met (WCAG AA, keyboard navigation, screen readers)
-- ✅ Real-time updates working (loss curves, progress, cost tracking)
-- ✅ File downloads working (adapters, metrics, reports, deployment packages)
-- ✅ All user flows testable end-to-end
+**After:**
+```javascript
+function toProjectPath(absolutePath) {
+  const normalized = absolutePath.replace(/\\/g, '/');
+  return normalized; // Return full absolute path
+}
+```
 
 ---
 
@@ -709,7 +554,7 @@ Dashboard View → Download (Raw or Enriched) → Combine Multiple JSON files in
 
 ---
 
-**Last Updated**: December 18, 2025  
-**Session Focus**: Wireframe Generation Complete (Stages 1-8), Frontend Implementation Next (Stages 1-6)  
-**Current State**: All FIGMA prompts generated and ready, FR specifications complete, database schema designed, API endpoints specified  
-**Document Version**: oo (Wireframe completion handoff to frontend implementation)
+**Last Updated**: December 21, 2025  
+**Session Focus**: PMC Script Path Standardization - Phase 1 Complete  
+**Current State**: Scripts 00-02b refactored and tested, Scripts 03-04b ready for Phase 2  
+**Document Version**: pp (PMC Path Standardization - Phase 1 Complete)

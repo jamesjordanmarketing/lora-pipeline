@@ -17,6 +17,10 @@ You are tasked with creating comprehensive user stories {{LoRA Pipeline}}. These
 - **Example:** `pmc/product/_examples/02-aplio-mod-1-user-stories.md`
   - Provides a reference for structure, depth, and quality expectations.
 
+- **Current Status:** `C:/Users/james/Master/BrightHub/BRun/lora-pipeline/pmc`
+  - The entire current codebase is here and has been worked on toward this project's goal. 
+  - Read all the files in all the folders & subfolders to determine the current state.
+
 
 ## Core Requirements
 

@@ -174,7 +174,7 @@ function generateCombinedPromptForSection(
     projectRoot,
     'product',
     '_mapping',
-    'fr-maps',
+    productAbbreviation,
     `04-${productAbbreviation}-FIGMA-wireframes-output-${sectionId}.md`
   );
   
@@ -182,7 +182,7 @@ function generateCombinedPromptForSection(
     projectRoot,
     'product',
     '_mapping',
-    'fr-maps',
+    productAbbreviation,
     `04-${productAbbreviation}-FR-wireframes-${sectionId}.md`
   );
 
@@ -192,7 +192,6 @@ function generateCombinedPromptForSection(
     'product',
     '_mapping',
     productAbbreviation,
-    'figma-combined',
     `04b-FIGMA-combined-prompt-${sectionId}-output.md`
   );
 
@@ -200,24 +199,32 @@ function generateCombinedPromptForSection(
   const overviewFilePath = path.join(
     projectRoot,
     'product',
+    '_mapping',
+    productAbbreviation,
     `01-${productAbbreviation}-overview.md`
   );
   
   const userStoriesFilePath = path.join(
     projectRoot,
     'product',
+    '_mapping',
+    productAbbreviation,
     `02-${productAbbreviation}-user-stories.md`
   );
   
   const userJourneyFilePath = path.join(
     projectRoot,
     'product',
+    '_mapping',
+    productAbbreviation,
     `02b-${productAbbreviation}-user-journey.md`
   );
   
   const functionalRequirementsFilePath = path.join(
     projectRoot,
     'product',
+    '_mapping',
+    productAbbreviation,
     `03-${productAbbreviation}-functional-requirements.md`
   );
 
@@ -227,7 +234,6 @@ function generateCombinedPromptForSection(
     'product',
     '_mapping',
     productAbbreviation,
-    'figma-combined',
     `04b-FIGMA-combined-${sectionId}-WORKSHEET.md`
   );
 
@@ -259,13 +265,13 @@ function generateCombinedPromptForSection(
     analysisFilePath,
   });
 
-  // Write customized prompt to product-specific figma-combined directory
+  // Write customized prompt to product-specific _run-prompts directory
   const combinedPromptsDir = path.join(
     projectRoot,
     'product',
     '_mapping',
     productAbbreviation,
-    'figma-combined'
+    '_run-prompts'
   );
   
   ensureDirectoryExists(combinedPromptsDir);
@@ -310,13 +316,13 @@ This prompt will guide you to:
 
 function generateFigmaCombinedPromptsV1(projectName, projectAbbreviation) {
   const functionalRequirementsFileName = `03-${projectAbbreviation}-functional-requirements.md`;
-  const functionalRequirementsFilePath = resolveProjectPath(`product/${functionalRequirementsFileName}`);
+  const functionalRequirementsFilePath = resolveProjectPath(`product/_mapping/${projectAbbreviation}/${functionalRequirementsFileName}`);
   const promptTemplatePath = resolveProjectPath(
     'product/_prompt_engineering/04b-FR-wireframes-FIGMA-combined-prompts_v1.md'
   );
 
-  const outputDir = resolveProjectPath('product/_mapping/fr-maps');
-  const promptsOutputDir = path.join(outputDir, 'prompts');
+  const outputDir = resolveProjectPath(`product/_mapping/${projectAbbreviation}`);
+  const promptsOutputDir = path.join(outputDir, '_run-prompts');
 
   ensureDirectoryExists(outputDir);
   ensureDirectoryExists(promptsOutputDir);
@@ -370,8 +376,7 @@ function generateFigmaCombinedPromptsV1(projectName, projectAbbreviation) {
   const combinedPromptsIndexDir = path.join(
     resolveProjectPath('product'),
     '_mapping',
-    projectAbbreviation,
-    'figma-combined'
+    projectAbbreviation
   );
   ensureDirectoryExists(combinedPromptsIndexDir);
   
@@ -392,8 +397,8 @@ function generateFigmaCombinedPromptsV1(projectName, projectAbbreviation) {
       const sectionHeader = extractSectionHeader(sections[sectionId]);
       const { number: stageNumber, title: stageTitle } = getSectionNumberAndTitle(sectionHeader);
       idx += `### ${sectionId}: ${stageTitle}\n\n`;
-      idx += `- **Customized Prompt File**: [04b-FIGMA-combined-prompt-${sectionId}.md](./04b-FIGMA-combined-prompt-${sectionId}.md)\n`;
-      idx += `- **Will Read From**: \`product/_mapping/fr-maps/04-${projectAbbreviation}-FIGMA-wireframes-output-${sectionId}.md\`\n`;
+      idx += `- **Customized Prompt File**: [04b-FIGMA-combined-prompt-${sectionId}.md](./_run-prompts/04b-FIGMA-combined-prompt-${sectionId}.md)\n`;
+      idx += `- **Will Read From**: \`product/_mapping/${projectAbbreviation}/04-${projectAbbreviation}-FIGMA-wireframes-output-${sectionId}.md\`\n`;
       idx += `- **Will Write To**: \`04b-FIGMA-combined-prompt-${sectionId}-output.md\` (in this directory)\n`;
       idx += `- **Status**: ${fs.existsSync(path.join(outputDir, `04-${projectAbbreviation}-FIGMA-wireframes-output-${sectionId}.md`)) ? '✓ Input file exists' : '⚠ Input file missing - run 04a script first'}\n\n`;
     }
@@ -405,11 +410,11 @@ function generateFigmaCombinedPromptsV1(projectName, projectAbbreviation) {
   console.log('\n=== Summary ===');
   console.log(`Generated: ${generatedCount} customized combined prompts`);
   console.log(`Skipped: ${skippedCount} sections (missing input files)`);
-  console.log(`\nPrompts location: product/_mapping/${projectAbbreviation}/figma-combined/`);
+  console.log(`\nPrompts location: product/_mapping/${projectAbbreviation}/_run-prompts/`);
   console.log('\nNext steps:');
-  console.log(`1. Open a customized prompt from: product/_mapping/${projectAbbreviation}/figma-combined/`);
+  console.log(`1. Open a customized prompt from: product/_mapping/${projectAbbreviation}/_run-prompts/`);
   console.log('2. Give it to an AI agent to execute');
-  console.log('3. The AI will create the final combined FIGMA prompt with "-output" suffix in the same directory');
+  console.log('3. The AI will create the final combined FIGMA prompt with "-output" suffix in the _mapping/${projectAbbreviation}/ directory');
   console.log('\nSuccessfully generated all customized combined prompts.');
 }
 

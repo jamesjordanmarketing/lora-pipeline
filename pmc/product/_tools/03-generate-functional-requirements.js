@@ -73,11 +73,6 @@ function ensureDirectoryExists(dirPath) {
   }
 }
 
-// Get cache filename based on project abbreviation
-function getCacheFilename(projectAbbrev) {
-  return path.join('cache', `03-${projectAbbrev}-paths-cache.json`);
-}
-
 // Normalize path with improved handling
 function normalizePath(inputPath, defaultDir) {
   try {
@@ -148,32 +143,6 @@ function toLLMPath(absolutePath) {
   }
 }
 
-// Load cached paths
-function loadPathCache(projectAbbrev) {
-  try {
-    const cachePath = resolveScriptPath(getCacheFilename(projectAbbrev));
-    ensureDirectoryExists(path.dirname(cachePath));
-    
-    if (fs.existsSync(cachePath)) {
-      return JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
-    }
-  } catch (error) {
-    console.warn('Could not load path cache:', error.message);
-  }
-  return null;
-}
-
-// Save paths to cache
-function savePathCache(projectAbbrev, paths) {
-  try {
-    const cachePath = resolveScriptPath(getCacheFilename(projectAbbrev));
-    ensureDirectoryExists(path.dirname(cachePath));
-    fs.writeFileSync(cachePath, JSON.stringify(paths, null, 2));
-  } catch (error) {
-    console.error('Error saving path cache:', error);
-  }
-}
-
 // Display header with step information
 function displayHeader(productName, productAbbrev, step) {
   console.log('\n=== Functional Requirements Generation ===');
@@ -189,11 +158,10 @@ const isQuit = input => /^(q|quit)$/i.test(input);
 
 // Get valid file path with status display
 async function getValidFilePath(description, defaultPath, projectAbbrev) {
-  const fullDefaultPath = path.resolve(__dirname, '..', defaultPath);
+  const fullDefaultPath = path.resolve(__dirname, '..', defaultPath).replace(/\\/g, '/');
   
   console.log(`\nEnter path for ${description}`);
   console.log(`Default: ${fullDefaultPath}`);
-  console.log(`Exists: ${fs.existsSync(fullDefaultPath) ? 'TRUE' : 'FALSE'}`);
   
   while (true) {
     const input = await question('> ');
@@ -226,30 +194,30 @@ async function getReferencePaths(projectAbbrev, step) {
   if (step === 'preprocess') {
     paths.functionalRequirements = await getValidFilePath(
       'Initial Functional Requirements',
-      `03-${projectAbbrev}-functional-requirements.md`,
+      `_mapping/${projectAbbrev}/03-${projectAbbrev}-functional-requirements.md`,
       projectAbbrev
     );
   } else {
     paths.functionalRequirements = await getValidFilePath(
       'Functional Requirements',
-      `03-${projectAbbrev}-functional-requirements.md`,
+      `_mapping/${projectAbbrev}/03-${projectAbbrev}-functional-requirements.md`,
       projectAbbrev
     );
   }
 
   paths.overview = await getValidFilePath(
     'Project Overview',
-    `01-${projectAbbrev}-overview.md`,
+    `_mapping/${projectAbbrev}/01-${projectAbbrev}-overview.md`,
     projectAbbrev
   );
   paths.userStories = await getValidFilePath(
     'User Stories',
-    `02-${projectAbbrev}-user-stories.md`,
+    `_mapping/${projectAbbrev}/02-${projectAbbrev}-user-stories.md`,
     projectAbbrev
   );
   paths.userJourney = await getValidFilePath(
     'User Journey',
-    `02b-${projectAbbrev}-user-journey.md`,
+    `_mapping/${projectAbbrev}/02b-${projectAbbrev}-user-journey.md`,
     projectAbbrev
   );
 
@@ -258,7 +226,7 @@ async function getReferencePaths(projectAbbrev, step) {
   if (step !== 'preprocess') {
     paths.example = await getValidFilePath(
       'Reference Example',
-      `../product/_examples/03-${projectAbbrev}-functional-requirements.md`,
+      `_examples/03-${projectAbbrev}-functional-requirements.md`,
       projectAbbrev
     );
 
@@ -269,16 +237,11 @@ async function getReferencePaths(projectAbbrev, step) {
     if (enableCodebase) {
       paths.codebase = await getValidFilePath(
         'Codebase Review',
-        '../../aplio-legacy',
+        '../../../src',
         projectAbbrev
       );
     }
   }
-  
-  const cacheKey = `${step}-paths`;
-  const cache = loadPathCache(projectAbbrev) || {};
-  cache[cacheKey] = paths;
-  savePathCache(projectAbbrev, cache);
   
   return {
     paths,
@@ -290,7 +253,7 @@ async function getReferencePaths(projectAbbrev, step) {
 function writePromptToFile(prompt, templatePath, projectAbbrev) {
   try {
     // Create output directory if it doesn't exist
-    const outputDir = path.resolve(__dirname, '..', '_run-prompts');
+    const outputDir = path.resolve(__dirname, '..', '_mapping', projectAbbrev, '_run-prompts');
     ensureDirectoryExists(outputDir);
     
     // Get the filename from the template path
@@ -328,7 +291,7 @@ async function generatePrompt(pathsData, step, projectAbbrev, templatePath) {
       '{OVERVIEW_PATH}': toLLMPath(paths.overview),
       '{USER_STORIES_PATH}': toLLMPath(paths.userStories),
       '{USER_JOURNEY_PATH}': toLLMPath(paths.userJourney),
-      '{CHANGE_LOG_PATH}': toLLMPath(`pmc/product/_tools/cache/${projectAbbrev}-fr-changes.log`)
+      '{CHANGE_LOG_PATH}': toLLMPath(`pmc/product/_mapping/${projectAbbrev}/_tools/cache/${projectAbbrev}-fr-changes.log`)
     };
 
     if (step !== 'preprocess') {
@@ -455,7 +418,7 @@ async function main() {
     }
 
     // Create output directory at startup
-    const outputDir = path.resolve(__dirname, '..', '_run-prompts');
+    const outputDir = path.resolve(__dirname, '..', '_mapping', projectAbbrev, '_run-prompts');
     ensureDirectoryExists(outputDir);
     console.log(`Prompt outputs will be saved to: ${outputDir}`);
 
