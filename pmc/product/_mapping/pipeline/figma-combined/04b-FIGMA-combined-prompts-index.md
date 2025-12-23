@@ -1,6 +1,6 @@
 # LoRA Pipeline — Combined FIGMA Wireframe Prompts Index
 
-**Generated:** 2025-12-19T23:24:31.663Z
+**Generated:** 2025-12-22T04:48:14.211Z
 
 This index contains links to stage-customized prompts that generate combined FIGMA wireframes.
 

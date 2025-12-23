@@ -1,6 +1,6 @@
 # E06 — Combined Wireframe Generator Prompt (v1)
 
-**Generated:** 2025-12-19  
+**Generated:** 2025-12-22  
 **Stage:** Stage 6 — Model Quality Validation  
 **Product:** LoRA Pipeline  
 **Section ID:** E06
@@ -17,7 +17,7 @@ This prompt will guide you to:
 5. Write the final combined FIGMA prompt to: 04b-FIGMA-combined-prompt-E06-output.md
 
 **CRITICAL OUTPUT FILE:** The final combined Figma prompt MUST be written to:
-`C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\figma-combined\04b-FIGMA-combined-prompt-E06-output.md`
+`C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\_mapping\pipeline\figma-combined\04b-FIGMA-combined-prompt-E06-output.md`
 
 ---
 
@@ -39,19 +39,19 @@ This prompt will guide you to:
 - **Project Name:** LoRA Pipeline
 
 **File Paths:**
-- **Input Wireframe Output File:** C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\fr-maps\04-pipeline-FIGMA-wireframes-output-E06.md
-- **Source FR Specification File:** C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\fr-maps\04-pipeline-FR-wireframes-E06.md
-- **FINAL Combined FIGMA Output File (WHERE TO WRITE):** C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\figma-combined\04b-FIGMA-combined-prompt-E06-output.md
+- **Input Wireframe Output File:** C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\_mapping\fr-maps\04-pipeline-FIGMA-wireframes-output-E06.md
+- **Source FR Specification File:** C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\_mapping\fr-maps\04-pipeline-FR-wireframes-E06.md
+- **FINAL Combined FIGMA Output File (WHERE TO WRITE):** C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\_mapping\pipeline\figma-combined\04b-FIGMA-combined-prompt-E06-output.md
   - **CRITICAL:** Write the final combined Figma prompt to this file
 
 **Reference Documents:**
-- **Product Overview:** C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\01-pipeline-overview.md
-- **User Stories:** C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\02-pipeline-user-stories.md
-- **User Journey:** C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\02b-pipeline-user-journey.md
-- **Functional Requirements:** C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\03-pipeline-functional-requirements.md
+- **Product Overview:** C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\01-pipeline-overview.md
+- **User Stories:** C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\02-pipeline-user-stories.md
+- **User Journey:** C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\02b-pipeline-user-journey.md
+- **Functional Requirements:** C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\03-pipeline-functional-requirements.md
 
 **Analysis Worksheet:**
-- **Analysis Documentation File:** C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\figma-combined\04b-FIGMA-combined-E06-WORKSHEET.md
+- **Analysis Documentation File:** C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\_mapping\pipeline\figma-combined\04b-FIGMA-combined-E06-WORKSHEET.md
   - `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\[product abbreviation]\figma-combined\04b-FIGMA-combined-E[##]-WORKSHEET.md`
 
 ---
@@ -78,7 +78,7 @@ Write ONE cohesive Figma Make AI prompt that encompasses all essential functiona
 
 ### Step 1.1: Extract All FR Prompts
 
-Read the input wireframe output file at: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\fr-maps\04-pipeline-FIGMA-wireframes-output-E06.md`
+Read the input wireframe output file at: `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\_mapping\fr-maps\04-pipeline-FIGMA-wireframes-output-E06.md`
 
 For each prompt section marked by:
 ```
@@ -550,26 +550,26 @@ Document the streamlined feature set:
 
 ### CRITICAL: Write Final Output to Specified File
 
-**YOU MUST WRITE THE FINAL COMBINED FIGMA PROMPT TO:** `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\figma-combined\04b-FIGMA-combined-prompt-E06-output.md`
+**YOU MUST WRITE THE FINAL COMBINED FIGMA PROMPT TO:** `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\_mapping\pipeline\figma-combined\04b-FIGMA-combined-prompt-E06-output.md`
 
 This is the file path where the final, ready-to-use Figma Make AI prompt should be written. Do NOT write to any other location.
 
 ### Final Output Format
 
-Write the following content to: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\figma-combined\04b-FIGMA-combined-prompt-E06-output.md`
+Write the following content to: `C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\_mapping\pipeline\figma-combined\04b-FIGMA-combined-prompt-E06-output.md`
 
 ```markdown
 # LoRA Pipeline - Stage 6 Combined Figma Wireframe Prompt
 **Version:** 1.0  
-**Date:** 2025-12-19  
+**Date:** 2025-12-22  
 **Stage:** Stage 6 — Model Quality Validation  
 **Section ID:** E06  
 **Optimization:** Proof-of-Concept (POC) - Essential features only
 
 **Generated From:**
-- Input File: C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\fr-maps\04-pipeline-FIGMA-wireframes-output-E06.md
-- FR Specifications: C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\fr-maps\04-pipeline-FR-wireframes-E06.md
-- Analysis: C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\figma-combined\04b-FIGMA-combined-E06-WORKSHEET.md
+- Input File: C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\_mapping\fr-maps\04-pipeline-FIGMA-wireframes-output-E06.md
+- FR Specifications: C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\_mapping\fr-maps\04-pipeline-FR-wireframes-E06.md
+- Analysis: C:\Users\james\Master\BrightHub\brun\lora-pipeline\pmc\product\_mapping\pipeline\figma-combined\04b-FIGMA-combined-E06-WORKSHEET.md
 
 ---
 
