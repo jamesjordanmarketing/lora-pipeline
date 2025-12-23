@@ -5,7 +5,7 @@
  *
  * Purpose:
  *  - Generate a progressive structured specification prompt from any unstructured input
- *  - Uses the template: 04c-build-structured-with-wirframe-spec_v1.md
+ *  - Uses the template: 04c-build-structured-with-wireframe-spec_v1.md
  *  - Interactive script that validates paths and generates ready-to-use prompts
  *
  * Usage:
@@ -147,11 +147,11 @@ async function getValidPath(promptText, defaultPath, shouldExist = true) {
 
 // Load the template
 function loadTemplate() {
-  const templatePath = path.resolve(__dirname, '../_prompt_engineering/04c-build-structured-with-wirframe-spec_v1.md');
+  const templatePath = path.resolve(__dirname, '../_prompt_engineering/04c-build-structured-with-wireframe-spec_v1.md');
   
   if (!fs.existsSync(templatePath)) {
     console.error(`❌ Template not found: ${templatePath}`);
-    console.error('Please ensure 04c-build-structured-with-wirframe-spec_v1.md exists in pmc/product/_prompt_engineering/');
+    console.error('Please ensure 04c-build-structured-with-wireframe-spec_v1.md exists in pmc/product/_prompt_engineering/');
     process.exit(1);
   }
   

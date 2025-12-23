@@ -30,7 +30,7 @@ This file contains the complete technical specification in an unstructured forma
 3. Understand the complete scope before creating structure
 
 ### Output Destination
-**File Path**: ``pmc/product/_mapping/pipeline/04c-pipeline-structured-from-wireframe_v1.md``
+**File Path**: ``pmc/product/_mapping/pipeline/04c-pipeline-structured-from-wireframe_v1-test.md``
 
 ---
 
