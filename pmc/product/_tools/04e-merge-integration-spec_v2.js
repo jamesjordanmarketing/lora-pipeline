@@ -1,544 +1,352 @@
-#!/usr/bin/env node
-
 /**
- * Integration Spec Merger (v2)
+ * Integration Prompt Generator (v2)
  * 
- * Purpose: Merge structured specification with integration knowledge to produce
- *          an integrated extension specification.
+ * Purpose: Generate a custom integration prompt for a specific project by combining
+ *          the generic meta-prompt template with project-specific file paths.
  * 
- * Interactive script with default paths based on product abbreviation.
+ * Inputs:
+ *   - Generic meta-prompt template (04d-integrate-existing-codebase_v2.md)
+ *   - Project-specific paths (structured spec, codebase, output directory)
+ * 
+ * Output:
+ *   - Custom integration prompt ready to execute
+ *   - This prompt, when executed by an AI, will generate three documents:
+ *     1. Infrastructure Inventory
+ *     2. Extension Strategy
+ *     3. Implementation Guide
  * 
  * Usage:
- *   From pmc/product/_tools/, run:
- *     node 04e-merge-integration-spec_v2.js "Project Name" product-abbreviation
- * 
- * Examples:
- *     node 04e-merge-integration-spec_v2.js "LoRA Pipeline" pipeline
- *     node 04e-merge-integration-spec_v2.js "Bright Module Orchestrator" bmo
+ *   node 04e-merge-integration-spec_v2.js \
+ *     --template "path/to/04d-integrate-existing-codebase_v2.md" \
+ *     --spec "path/to/04c-pipeline-structured-from-wireframe_v1.md" \
+ *     --codebase "path/to/src/" \
+ *     --output-dir "path/to/output/" \
+ *     --prompt-output "path/to/04e-custom-integration-prompt_v1.md"
  */
 
 const fs = require('fs');
 const path = require('path');
-const readline = require('readline');
 
-// Create readline interface for user interaction
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
+// ============================================================================
+// UTILITY FUNCTIONS
+// ============================================================================
 
-// Promisify readline question
-function question(query) {
-  return new Promise(resolve => rl.question(query, resolve));
+/**
+ * Parse command line arguments
+ */
+function parseArgs() {
+  const args = process.argv.slice(2);
+  const parsed = {};
+  
+  for (let i = 0; i < args.length; i += 2) {
+    const key = args[i].replace(/^--/, '');
+    const value = args[i + 1];
+    parsed[key] = value;
+  }
+  
+  return parsed;
 }
 
-// Convert path to display format (full absolute path)
-function toDisplayPath(absolutePath) {
-  const normalized = absolutePath.replace(/\\/g, '/');
-  return normalized;
-}
-
-// Validate that a file exists
-function validatePath(filePath, shouldExist = true) {
-  const exists = fs.existsSync(filePath);
-  
-  if (shouldExist && !exists) {
-    return { valid: false, message: `File does not exist: ${toDisplayPath(filePath)}` };
-  }
-  
-  if (!shouldExist && exists) {
-    return { 
-      valid: true, 
-      warning: `Warning: File already exists and will be overwritten: ${toDisplayPath(filePath)}` 
-    };
-  }
-  
-  return { valid: true };
-}
-
-// Resolve various path formats to absolute paths
-function resolvePath(inputPath) {
-  // Handle absolute Windows paths
-  if (inputPath.match(/^[A-Za-z]:\\/)) {
-    return path.normalize(inputPath);
-  }
-  
-  // Handle relative paths
-  if (inputPath.startsWith('../') || inputPath.startsWith('./')) {
-    return path.resolve(__dirname, inputPath);
-  }
-  
-  // Handle paths relative to project root
-  if (inputPath.startsWith('pmc/')) {
-    return path.resolve(__dirname, '../..', inputPath);
-  }
-  
-  // Default: treat as relative to current directory
-  return path.resolve(process.cwd(), inputPath);
-}
-
-// Get a valid file path from user
-async function getValidPath(promptText, defaultPath, shouldExist = true) {
-  while (true) {
-    const resolvedDefault = resolvePath(defaultPath);
-    const validation = validatePath(resolvedDefault, shouldExist);
-    
-    console.log(`\n${promptText}`);
-    console.log(`Default: ${toDisplayPath(resolvedDefault)}`);
-    
-    if (validation.warning) {
-      console.log(`⚠️  ${validation.warning}`);
-    }
-    
-    const input = await question('> ');
-    
-    // Use default if empty input
-    if (!input.trim()) {
-      if (validation.valid) {
-        return resolvedDefault;
-      } else {
-        console.log(`❌ ${validation.message}`);
-        continue;
-      }
-    }
-    
-    // Validate user input
-    const resolvedInput = resolvePath(input.trim());
-    const inputValidation = validatePath(resolvedInput, shouldExist);
-    
-    if (inputValidation.valid) {
-      if (inputValidation.warning) {
-        console.log(`⚠️  ${inputValidation.warning}`);
-        const confirm = await question('Continue? (y/n): ');
-        if (confirm.toLowerCase() !== 'y') {
-          continue;
-        }
-      }
-      return resolvedInput;
-    } else {
-      console.log(`❌ ${inputValidation.message}`);
-    }
-  }
-}
-
-// Read file content
+/**
+ * Read file content
+ */
 function readFile(filePath) {
   try {
-    return fs.readFileSync(filePath, 'utf-8');
+    const absolutePath = path.resolve(filePath);
+    if (!fs.existsSync(absolutePath)) {
+      throw new Error(`File not found: ${absolutePath}`);
+    }
+    return fs.readFileSync(absolutePath, 'utf-8');
   } catch (error) {
     console.error(`Error reading file ${filePath}:`, error.message);
     process.exit(1);
   }
 }
 
-// Write file content
+/**
+ * Write file content
+ */
 function writeFile(filePath, content) {
   try {
-    const dir = path.dirname(filePath);
+    const absolutePath = path.resolve(filePath);
+    const dir = path.dirname(absolutePath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
-      console.log(`📁 Created directory: ${toDisplayPath(dir)}`);
     }
-    fs.writeFileSync(filePath, content, 'utf-8');
-    console.log(`✅ Written: ${toDisplayPath(filePath)}`);
+    fs.writeFileSync(absolutePath, content, 'utf-8');
+    console.log(`✅ Written: ${absolutePath}`);
   } catch (error) {
     console.error(`Error writing file ${filePath}:`, error.message);
     process.exit(1);
   }
 }
 
-// ============================================================================
-// TRANSFORMATION LOGIC (from v1)
-// ============================================================================
-
-const CONFIG = {
-  substitutions: {
-    'Prisma': 'Supabase Client (direct queries)',
-    'NextAuth.js': 'Supabase Auth',
-    'NextAuth': 'Supabase Auth',
-    'AWS S3': 'Supabase Storage',
-    'S3': 'Supabase Storage',
-    'BullMQ': 'Supabase Edge Functions + Cron',
-    'Redis': 'Supabase Edge Functions + Cron',
-    'SWR': 'React Query',
-    'Server-Sent Events': 'React Query polling',
-    'SSE': 'React Query polling',
-  },
-};
-
-function extractSections(specContent) {
-  const sections = [];
-  const sectionRegex = /## SECTION (\d+):\s*(.+?)(?=\n## SECTION \d+:|$)/gs;
-  
-  let match;
-  while ((match = sectionRegex.exec(specContent)) !== null) {
-    const sectionNumber = parseInt(match[1]);
-    const fullContent = match[0];
-    const titleMatch = fullContent.match(/## SECTION \d+:\s*(.+)/);
-    const title = titleMatch ? titleMatch[1].trim() : 'Unknown';
-    
-    sections.push({
-      number: sectionNumber,
-      title: title,
-      content: fullContent,
-      originalContent: fullContent,
-    });
-  }
-  
-  return sections;
+/**
+ * Resolve path to absolute and normalize
+ */
+function resolvePath(inputPath) {
+  return path.resolve(inputPath).replace(/\\/g, '/');
 }
 
-function extractFeatures(sectionContent) {
-  const features = [];
-  const featureRegex = /#### (FR-\d+\.\d+(?:\.\d+)?):(.+?)(?=\n#### FR-|\n### |$)/gs;
-  
-  let match;
-  while ((match = featureRegex.exec(sectionContent)) !== null) {
-    features.push({
-      id: match[1],
-      content: match[0],
-    });
+/**
+ * Get project name from spec filename or path
+ */
+function extractProjectName(specPath) {
+  const basename = path.basename(specPath, '.md');
+  // Extract meaningful name from filename like "04c-pipeline-structured-from-wireframe_v1"
+  const match = basename.match(/04c-(.+?)(?:_v\d+)?$/);
+  if (match) {
+    // Convert kebab-case to Title Case
+    return match[1]
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
   }
-  
-  return features;
+  return 'New Module';
 }
 
-function transformSection(section, inventory, strategy, guide, projectName) {
-  // For Section 1, provide comprehensive foundation notes
-  if (section.number === 1) {
-    return `## SECTION 1: Foundation & Authentication - INTEGRATED
-
-**Project**: ${projectName}
-**Extension Status**: ✅ Most infrastructure ALREADY EXISTS - only adding module-specific tables
-
-**What Already Exists** (from existing codebase):
-- ✅ Next.js 14 App Router with TypeScript
-- ✅ Supabase Auth with cookie-based sessions
-- ✅ Supabase PostgreSQL database with direct client
-- ✅ Supabase Storage with on-demand signed URLs
-- ✅ shadcn/ui components (47+ components available)
-- ✅ React Query for state management
-- ✅ Dashboard layout and protected routes
-
-**What We're Adding** (${projectName} specific):
-- New database tables for module functionality
-- New storage buckets (if needed)
-- New type definitions
-
-**Infrastructure Patterns to USE**:
-- Authentication: Use \`requireAuth()\` from \`@/lib/supabase-server\`
-- Database: Use \`createServerSupabaseClient()\` for queries
-- Storage: Use \`createServerSupabaseAdminClient()\` for signed URLs
-- Components: Import from \`@/components/ui/\`
-- API Routes: Follow existing response format \`{ success, data }\` or \`{ error, details }\`
-
----
-
-${section.content}
-
----
-
-`;
-  }
-  
-  // For other sections, add integration markers
-  const originalInfra = identifyOriginalInfrastructure(section.content);
-  const actualInfra = originalInfra.map(item => CONFIG.substitutions[item] || item);
-  
-  let transformed = `## SECTION ${section.number}: ${section.title} - INTEGRATED
-
-**Project**: ${projectName}
-**Extension Status**: ✅ Transformed to use existing infrastructure  
-**Original Infrastructure**: ${originalInfra.join(', ') || 'None specified'}  
-**Actual Infrastructure**: ${actualInfra.join(', ') || 'Using existing patterns'}
-
----
-
-${section.content}
-
----
-
-`;
-  
-  return transformed;
-}
-
-function identifyOriginalInfrastructure(content) {
-  const mentioned = new Set();
-  
-  for (const [key, value] of Object.entries(CONFIG.substitutions)) {
-    const regex = new RegExp(`\\b${key}\\b`, 'gi');
-    if (regex.test(content)) {
-      mentioned.add(key);
-    }
-  }
-  
-  return Array.from(mentioned);
-}
-
-function generateHeader(projectName) {
+/**
+ * Generate metadata section for the custom prompt
+ */
+function generateMetadata(specPath, codebasePath, outputDir) {
   const date = new Date().toISOString().split('T')[0];
+  const projectName = extractProjectName(specPath);
   
-  return `# ${projectName} - Integrated Extension Specification
+  return `# Codebase Extension Analysis - ${projectName}
 
-**Version:** 1.0  
-**Date:** ${date}  
-**Generated by:** 04e-merge-integration-spec_v2.js
+**Generated:** ${date}
+**Template:** 04d-integrate-existing-codebase_v2.md
+**Purpose:** Generate extension documentation for implementing ${projectName} as a new module
 
 ---
 
-## INTEGRATION SUMMARY
+## PROJECT-SPECIFIC PATHS
 
-This specification describes how to implement the ${projectName} as an EXTENSION to the existing BrightHub application.
+**Structured Specification:**
+\`${resolvePath(specPath)}\`
 
-**Approach**: EXTENSION (not separate application)
+**Existing Codebase:**
+\`${resolvePath(codebasePath)}\`
 
-**Infrastructure Decisions**:
-- ✅ Use existing Supabase Auth (not NextAuth)
-- ✅ Use existing Supabase PostgreSQL (not Prisma)
-- ✅ Use existing Supabase Storage (not S3)
-- ✅ Use existing shadcn/ui components
-- ✅ Use existing React Query (not SWR)
-- ✅ Use Edge Functions + Cron (not BullMQ + Redis)
-
-**What We're Adding**:
-- New database tables for ${projectName}
-- New storage buckets (if needed)
-- New API routes
-- New pages
-- New components
-- New hooks
-- Edge Functions (if needed)
-
-**What We're NOT Creating**:
-- ❌ New authentication system
-- ❌ New database client
-- ❌ New storage client
-- ❌ Job queue infrastructure
-- ❌ Component library
+**Output Directory:**
+\`${resolvePath(outputDir)}\`
 
 ---
 
 `;
 }
 
-function generateFooter() {
+/**
+ * Replace placeholders in template with actual values
+ */
+function replacePlaceholders(template, specPath, codebasePath, outputDir) {
+  const resolvedSpecPath = resolvePath(specPath);
+  const resolvedCodebasePath = resolvePath(codebasePath);
+  const resolvedOutputDir = resolvePath(outputDir);
+  
+  // Replace all placeholder patterns
+  let customPrompt = template;
+  
+  // Replace placeholders with actual paths
+  customPrompt = customPrompt.replace(/\{\{STRUCTURED_SPEC_PATH\}\}/g, resolvedSpecPath);
+  customPrompt = customPrompt.replace(/\{\{CODEBASE_PATH\}\}/g, resolvedCodebasePath);
+  customPrompt = customPrompt.replace(/\{\{OUTPUT_PATH\}\}/g, resolvedOutputDir);
+  
+  return customPrompt;
+}
+
+/**
+ * Add execution instructions to the custom prompt
+ */
+function addExecutionInstructions(outputDir) {
   return `
----
-
-## APPENDIX: Integration Reference
-
-### Infrastructure Inventory Cross-Reference
-
-For detailed patterns and exact code examples, refer to:
-- **Section 1 (Auth)**: Infrastructure Inventory - Authentication patterns with requireAuth()
-- **Section 2 (Database)**: Infrastructure Inventory - Supabase Client query patterns
-- **Section 3 (Storage)**: Infrastructure Inventory - On-demand signed URL generation
-- **Section 4 (API)**: Infrastructure Inventory - API route templates and response formats
-- **Section 5 (Components)**: Infrastructure Inventory - shadcn/ui component usage
-- **Section 6 (State)**: Infrastructure Inventory - React Query hook patterns
 
 ---
 
-**Document Status**: ✅ READY FOR SEGMENTATION  
-**Next Step**: Run segmentation script (04f-segment-integrated-spec_v2.js)
+## EXECUTION INSTRUCTIONS
+
+When you execute this prompt, you will generate THREE documents in the output directory:
+
+1. **\`04d-infrastructure-inventory_v1.md\`**
+   - Complete inventory of existing codebase infrastructure
+   - What exists and is available to use
+   - Expected size: ~2,000-3,000 lines
+
+2. **\`04d-extension-strategy_v1.md\`**
+   - Features extracted from spec (ignoring tech choices)
+   - How new module uses existing infrastructure
+   - What new things need to be created
+   - Expected size: ~1,500-2,500 lines
+
+3. **\`04d-implementation-guide_v1.md\`**
+   - Exact step-by-step implementation instructions
+   - Code examples using existing patterns
+   - Implementation checklist
+   - Expected size: ~2,000-4,000 lines
+
+**Total Expected Output:** ~5,500-9,500 lines of comprehensive extension documentation
+
+---
+
+## HOW TO PROCEED
+
+1. **Read the Structured Specification** to understand WHAT FEATURES need to be built
+2. **Analyze the Existing Codebase** to understand WHAT INFRASTRUCTURE exists
+3. **Generate the THREE documents** following the templates and guidelines in this prompt
+4. **Ensure EXTENSION framing** throughout - this is NOT integration, it's adding a module
+5. **Focus on REUSE** - maximize use of existing infrastructure
+
+**Remember:** The spec describes FEATURES. The codebase provides INFRASTRUCTURE. Your job is to document HOW TO IMPLEMENT THE FEATURES USING THE INFRASTRUCTURE.
+
+---
+
+**Ready to begin? Start with Phase 1: Infrastructure Inventory.**
+
 `;
 }
 
+/**
+ * Validate required files exist
+ */
+function validateInputs(templatePath, specPath, codebasePath) {
+  const errors = [];
+  
+  // Check template
+  const resolvedTemplatePath = path.resolve(templatePath);
+  if (!fs.existsSync(resolvedTemplatePath)) {
+    errors.push(`Template not found: ${resolvedTemplatePath}`);
+  }
+  
+  // Check spec
+  const resolvedSpecPath = path.resolve(specPath);
+  if (!fs.existsSync(resolvedSpecPath)) {
+    errors.push(`Structured spec not found: ${resolvedSpecPath}`);
+  }
+  
+  // Check codebase directory
+  const resolvedCodebasePath = path.resolve(codebasePath);
+  if (!fs.existsSync(resolvedCodebasePath)) {
+    errors.push(`Codebase directory not found: ${resolvedCodebasePath}`);
+  } else if (!fs.statSync(resolvedCodebasePath).isDirectory()) {
+    errors.push(`Codebase path is not a directory: ${resolvedCodebasePath}`);
+  }
+  
+  return errors;
+}
+
 // ============================================================================
-// MAIN EXECUTION
+// MAIN FUNCTION
 // ============================================================================
 
-async function main() {
-  try {
-    // Check for required command-line arguments
-    const args = process.argv.slice(2);
-    if (args.length !== 2) {
-      console.error('Usage: node 04e-merge-integration-spec_v2.js "Project Name" product-abbreviation');
-      console.error('Example:');
-      console.error('  node 04e-merge-integration-spec_v2.js "LoRA Pipeline" pipeline');
-      process.exit(1);
-    }
-    
-    const [projectName, productAbbreviation] = args;
-    
-    console.log('\n╔════════════════════════════════════════════════════════════╗');
-    console.log('║         Integration Spec Merger (Interactive v2)          ║');
-    console.log('╚════════════════════════════════════════════════════════════╝\n');
-    console.log(`Project: ${projectName} (${productAbbreviation})\n`);
-    
-    // Step 1: Get structured spec path
-    console.log('Step 1: Locate Structured Specification');
-    console.log('─────────────────────────────────────────');
-    
-    const defaultSpecPath = path.resolve(
-      __dirname, 
-      '..', 
-      '_mapping', 
-      productAbbreviation, 
-      `04c-${productAbbreviation}-structured-from-wireframe_v1.md`
-    );
-    
-    const specPath = await getValidPath(
-      'Enter path to structured specification:',
-      defaultSpecPath,
-      true
-    );
-    
-    console.log(`✓ Using structured spec: ${toDisplayPath(specPath)}`);
-    
-    // Step 2: Get infrastructure inventory path
-    console.log('\n\nStep 2: Locate Infrastructure Inventory');
-    console.log('────────────────────────────────────────');
-    
-    const defaultInventoryPath = path.resolve(
-      __dirname,
-      '..',
-      '_mapping',
-      productAbbreviation,
-      '_run-prompts',
-      `04d-${productAbbreviation}-infrastructure-inventory_v1.md`
-    );
-    
-    const inventoryPath = await getValidPath(
-      'Enter path to infrastructure inventory:',
-      defaultInventoryPath,
-      true
-    );
-    
-    console.log(`✓ Using inventory: ${toDisplayPath(inventoryPath)}`);
-    
-    // Step 3: Get extension strategy path
-    console.log('\n\nStep 3: Locate Extension Strategy');
-    console.log('──────────────────────────────────');
-    
-    const defaultStrategyPath = path.resolve(
-      __dirname,
-      '..',
-      '_mapping',
-      productAbbreviation,
-      '_run-prompts',
-      `04d-${productAbbreviation}-extension-strategy_v1.md`
-    );
-    
-    const strategyPath = await getValidPath(
-      'Enter path to extension strategy:',
-      defaultStrategyPath,
-      true
-    );
-    
-    console.log(`✓ Using strategy: ${toDisplayPath(strategyPath)}`);
-    
-    // Step 4: Get implementation guide path
-    console.log('\n\nStep 4: Locate Implementation Guide');
-    console.log('────────────────────────────────────');
-    
-    const defaultGuidePath = path.resolve(
-      __dirname,
-      '..',
-      '_mapping',
-      productAbbreviation,
-      '_run-prompts',
-      `04d-${productAbbreviation}-implementation-guide_v1.md`
-    );
-    
-    const guidePath = await getValidPath(
-      'Enter path to implementation guide:',
-      defaultGuidePath,
-      true
-    );
-    
-    console.log(`✓ Using guide: ${toDisplayPath(guidePath)}`);
-    
-    // Step 5: Get output path
-    console.log('\n\nStep 5: Choose Output Location');
-    console.log('───────────────────────────────');
-    
-    const defaultOutputPath = path.resolve(
-      __dirname,
-      '..',
-      '_mapping',
-      productAbbreviation,
-      `04e-${productAbbreviation}-integrated-extension-spec_v1.md`
-    );
-    
-    const outputPath = await getValidPath(
-      'Enter path for integrated extension spec output:',
-      defaultOutputPath,
-      false
-    );
-    
-    console.log(`✓ Output will be saved to: ${toDisplayPath(outputPath)}`);
-    
-    // Step 6: Process files
-    console.log('\n\nStep 6: Process and Merge');
-    console.log('─────────────────────────');
-    
-    console.log('📂 Reading input files...');
-    const specContent = readFile(specPath);
-    const inventoryContent = readFile(inventoryPath);
-    const strategyContent = readFile(strategyPath);
-    const guideContent = readFile(guidePath);
-    
-    console.log('🔍 Extracting sections from structured spec...');
-    const sections = extractSections(specContent);
-    console.log(`✓ Found ${sections.length} sections`);
-    
-    console.log('🔄 Transforming sections with integration knowledge...');
-    const transformedSections = sections.map((section, index) => {
-      console.log(`   Processing Section ${section.number}: ${section.title}`);
-      return transformSection(section, inventoryContent, strategyContent, guideContent, projectName);
-    });
-    console.log('✓ All sections transformed');
-    
-    console.log('📝 Generating integrated specification...');
-    let integratedSpec = generateHeader(projectName);
-    
-    for (const transformedSection of transformedSections) {
-      integratedSpec += transformedSection;
-    }
-    
-    integratedSpec += generateFooter();
-    
-    console.log('💾 Writing output file...');
-    writeFile(outputPath, integratedSpec);
-    
-    // Summary
-    console.log('\n\n╔════════════════════════════════════════════════════════════╗');
-    console.log('║                    ✅ MERGE COMPLETE!                       ║');
-    console.log('╚════════════════════════════════════════════════════════════╝\n');
-    
-    console.log('📋 Summary:');
-    console.log('─────────');
-    console.log(`Project:                ${projectName} (${productAbbreviation})`);
-    console.log(`Sections Processed:     ${sections.length}`);
-    console.log(`Output File:            ${toDisplayPath(outputPath)}`);
-    console.log(`File Size:              ${(integratedSpec.length / 1024).toFixed(2)} KB`);
-    
-    console.log('\n\n📖 Next Steps:');
-    console.log('─────────────');
-    console.log('1. Review the integrated specification to ensure:');
-    console.log('   - Infrastructure transformations are correct');
-    console.log('   - All sections reference existing patterns');
-    console.log('   - Integration notes are comprehensive');
-    console.log('');
-    console.log('2. Run the segmentation script to generate execution prompts:');
-    console.log(`   node 04f-segment-integrated-spec_v2.js "${projectName}" ${productAbbreviation}`);
-    console.log('');
-    console.log('3. Execute prompts progressively to implement the module');
-    console.log('');
-    
-  } catch (error) {
-    console.error('\n❌ Error:', error.message);
-    if (error.stack) {
-      console.error('\nStack trace:');
-      console.error(error.stack);
-    }
+function main() {
+  console.log('🚀 Integration Prompt Generator v2\n');
+  
+  // Parse arguments
+  const args = parseArgs();
+  
+  // Validate required arguments
+  if (!args.template || !args.spec || !args.codebase || !args['output-dir'] || !args['prompt-output']) {
+    console.error('❌ Missing required arguments\n');
+    console.error('Usage: node 04e-merge-integration-spec_v2.js \\');
+    console.error('    --template "path/to/04d-integrate-existing-codebase_v2.md" \\');
+    console.error('    --spec "path/to/04c-pipeline-structured-from-wireframe_v1.md" \\');
+    console.error('    --codebase "path/to/src/" \\');
+    console.error('    --output-dir "path/to/output/" \\');
+    console.error('    --prompt-output "path/to/04e-custom-integration-prompt_v1.md"\n');
+    console.error('Arguments:');
+    console.error('  --template      Path to generic meta-prompt template (v2)');
+    console.error('  --spec          Path to structured specification');
+    console.error('  --codebase      Path to existing codebase directory');
+    console.error('  --output-dir    Path to output directory for generated documents');
+    console.error('  --prompt-output Path to save the custom integration prompt\n');
     process.exit(1);
-  } finally {
-    rl.close();
+  }
+  
+  // Validate inputs
+  console.log('🔍 Validating input files...\n');
+  const errors = validateInputs(args.template, args.spec, args.codebase);
+  
+  if (errors.length > 0) {
+    console.error('❌ Validation errors:\n');
+    errors.forEach(error => console.error(`   - ${error}`));
+    console.error('');
+    process.exit(1);
+  }
+  
+  console.log('✅ All input files validated\n');
+  
+  // Read template
+  console.log('📂 Reading generic meta-prompt template...\n');
+  const template = readFile(args.template);
+  console.log(`✅ Template: ${path.resolve(args.template)}`);
+  console.log(`   Size: ${(template.length / 1024).toFixed(2)} KB\n`);
+  
+  // Generate metadata
+  console.log('🔧 Generating project-specific metadata...\n');
+  const metadata = generateMetadata(args.spec, args.codebase, args['output-dir']);
+  console.log('✅ Metadata generated\n');
+  
+  // Replace placeholders
+  console.log('🔄 Replacing placeholders with project paths...\n');
+  const customPrompt = replacePlaceholders(template, args.spec, args.codebase, args['output-dir']);
+  console.log('✅ Placeholders replaced:\n');
+  console.log(`   {{STRUCTURED_SPEC_PATH}} → ${resolvePath(args.spec)}`);
+  console.log(`   {{CODEBASE_PATH}}        → ${resolvePath(args.codebase)}`);
+  console.log(`   {{OUTPUT_PATH}}          → ${resolvePath(args['output-dir'])}\n`);
+  
+  // Add execution instructions
+  console.log('📝 Adding execution instructions...\n');
+  const executionInstructions = addExecutionInstructions(args['output-dir']);
+  console.log('✅ Instructions added\n');
+  
+  // Combine all parts
+  console.log('🔨 Assembling custom integration prompt...\n');
+  const finalPrompt = metadata + customPrompt + executionInstructions;
+  console.log('✅ Custom prompt assembled\n');
+  console.log(`   Total size: ${(finalPrompt.length / 1024).toFixed(2)} KB\n`);
+  
+  // Write output
+  console.log('💾 Writing custom integration prompt...\n');
+  writeFile(args['prompt-output'], finalPrompt);
+  
+  // Summary
+  console.log('\n✅ PROMPT GENERATION COMPLETE!\n');
+  console.log('📊 Summary:');
+  console.log(`   - Template used: ${path.basename(args.template)}`);
+  console.log(`   - Spec: ${path.basename(args.spec)}`);
+  console.log(`   - Codebase: ${path.basename(args.codebase)}`);
+  console.log(`   - Output prompt: ${path.resolve(args['prompt-output'])}`);
+  console.log(`   - Prompt size: ${(finalPrompt.length / 1024).toFixed(2)} KB\n`);
+  
+  console.log('🎯 Next steps:\n');
+  console.log('   1. Review the generated prompt:');
+  console.log(`      ${path.resolve(args['prompt-output'])}\n`);
+  console.log('   2. Execute the prompt using an AI assistant to generate:');
+  console.log(`      - ${path.resolve(args['output-dir'])}/04d-infrastructure-inventory_v1.md`);
+  console.log(`      - ${path.resolve(args['output-dir'])}/04d-extension-strategy_v1.md`);
+  console.log(`      - ${path.resolve(args['output-dir'])}/04d-implementation-guide_v1.md\n`);
+  console.log('   3. Once you have those three documents, run the segmentation script:');
+  console.log(`      node 04f-segment-integrated-spec_v1.js --input "..." --output-dir "..."\n`);
+}
+
+// ============================================================================
+// ENTRY POINT
+// ============================================================================
+
+if (require.main === module) {
+  try {
+    main();
+  } catch (error) {
+    console.error('\n❌ ERROR:', error.message);
+    console.error(error.stack);
+    process.exit(1);
   }
 }
 
-// Run the script
-main();
+module.exports = { 
+  replacePlaceholders, 
+  generateMetadata, 
+  addExecutionInstructions,
+  extractProjectName,
+  resolvePath
+};

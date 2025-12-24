@@ -29,9 +29,7 @@ You are NOT recommending building a separate application.
 - The structured spec describes FEATURES (what to build)
 - The structured spec's infrastructure choices (Prisma, NextAuth, S3, etc.) are IRRELEVANT
 - Your job is to implement the spec's FEATURES using the EXISTING codebase's infrastructure
-- If spec says "Prisma" but codebase uses Supabase → use Supabase for new features
-- If spec says "NextAuth" but codebase uses Supabase Auth → use Supabase Auth for new features
-- If spec says "S3" but codebase uses Supabase Storage → use Supabase Storage for new features
+- The core technologies of the existing codebase are to be built on top of. They always take priority over the structured spec, unless the structured spec has some functionality that cannot be achieved using the current technologies in the existing codebase
 
 **NEVER recommend building separately.** The new module WILL be added to the existing codebase.
 
