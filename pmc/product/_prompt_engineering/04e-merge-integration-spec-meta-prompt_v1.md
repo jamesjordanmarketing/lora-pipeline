@@ -1,77 +1,134 @@
 # Integration Merge Meta-Prompt
 
-**Version**: 1.0  
-**Date**: December 23, 2025  
-**Purpose**: Transform structured specification into integrated extension specification by replacing generic infrastructure references with existing codebase patterns
+**Version:** 1.0  
+**Date:** December 23, 2025  
+**Purpose:** Transform structured specification into integrated extension specification by replacing generic infrastructure with existing codebase patterns
 
 ---
 
-## OBJECTIVE
+## CRITICAL FRAMING
 
-You are an AI agent tasked with merging a structured specification with integration knowledge to produce an **Integrated Extension Specification**. 
+You are transforming a **structured specification** (which describes FEATURES using generic infrastructure) into an **integrated extension specification** (which describes the SAME FEATURES using the EXISTING codebase's infrastructure).
 
-**What you will do**:
-1. Read the structured specification (defines WHAT to build)
-2. Read three integration documents (define HOW to build using existing infrastructure)
-3. Transform each section of the spec by replacing generic infrastructure with existing codebase patterns
-4. Output a new specification where all infrastructure choices match the existing codebase
+**What you are doing:**
+- Extracting FEATURES from the structured spec (WHAT to build)
+- Replacing generic infrastructure references (Prisma, NextAuth, S3, BullMQ) with existing codebase patterns (Supabase)
+- Producing a spec that is ready for progressive segmentation into execution prompts
 
-**What you will NOT do**:
-- Do NOT change the features or requirements
-- Do NOT remove functionality
-- Do NOT add new features not in the original spec
-- Do NOT skip sections
+**What you are NOT doing:**
+- Comparing two applications for compatibility
+- Deciding whether to use existing infrastructure (decision is MADE - always use existing)
+- Creating new infrastructure setup instructions
 
 ---
 
 ## INPUT FILES
 
-You will receive four input files:
-
 ### Input 1: Structured Specification
-**Purpose**: Defines WHAT to build (features, requirements, user flows)  
-**Contains**: 7 sections with detailed feature requirements  
-**Infrastructure Used**: Generic (Prisma, NextAuth, S3, BullMQ) - IGNORE THESE  
-**What to Extract**: Feature descriptions, acceptance criteria, user flows, data models
+**File**: `{{STRUCTURED_SPEC_PATH}}`
+
+This file contains 7 sections of feature requirements organized as:
+- Section 1: Foundation & Authentication
+- Section 2: Dataset Management
+- Section 3: Training Configuration
+- Section 4: Training Execution & Monitoring
+- Section 5: Model Artifacts & Delivery
+- Section 6: Cost Tracking & Notifications
+- Section 7: Complete System Integration
+
+**How to Read:**
+- Extract the FEATURES from each section (data models, APIs, UI pages, workflows)
+- IGNORE the infrastructure setup instructions (Prisma schema, NextAuth config, S3 setup, BullMQ workers)
+- Focus on WHAT the user does, WHAT data is stored, WHAT APIs are needed
 
 ### Input 2: Infrastructure Inventory
-**Purpose**: Documents what EXISTS in the codebase to USE  
-**Contains**: Authentication patterns, database patterns, storage patterns, API templates, component library  
-**What to Extract**: Exact code patterns, function names, file paths, usage examples
+**File**: `{{INFRASTRUCTURE_INVENTORY_PATH}}`
+
+This file documents what EXISTS in the codebase for you to USE:
+- Authentication patterns (Supabase Auth with `requireAuth()`)
+- Database patterns (Supabase Client with direct queries)
+- Storage patterns (Supabase Storage with on-demand signed URLs)
+- API patterns (Next.js API routes with consistent response format)
+- Component patterns (shadcn/ui components)
+- State management patterns (React Query with custom hooks)
+
+**How to Use:**
+- For every infrastructure need in the structured spec, find the corresponding pattern from this inventory
+- Copy the exact pattern (code, imports, structure)
+- Replace spec's infrastructure with inventory's patterns
 
 ### Input 3: Extension Strategy
-**Purpose**: Maps each feature area to existing infrastructure  
-**Contains**: Feature-to-infrastructure mapping, what to create vs what to use  
-**What to Extract**: Infrastructure decisions, alternatives chosen, integration approach
+**File**: `{{EXTENSION_STRATEGY_PATH}}`
+
+This file maps each feature area to existing infrastructure:
+- Lists all features extracted from the spec
+- Defines which existing infrastructure each feature uses
+- Specifies what NEW to create (tables, APIs, pages, components)
+- Specifies what NOT to create (existing infrastructure)
+
+**How to Use:**
+- Use this as a cross-reference to ensure you're mapping features correctly
+- Check that your transformations align with the decisions in this strategy
 
 ### Input 4: Implementation Guide
-**Purpose**: Provides exact implementation patterns  
-**Contains**: Phase-by-phase instructions, complete code examples, migration templates  
-**What to Extract**: Exact code to use, table schemas, API route patterns, component patterns
+**File**: `{{IMPLEMENTATION_GUIDE_PATH}}`
+
+This file provides exact code patterns for:
+- Database migrations (SQL with RLS policies)
+- Type definitions (TypeScript interfaces)
+- API routes (complete implementations)
+- Components (complete implementations)
+- Pages (complete implementations)
+
+**How to Use:**
+- Reference these patterns when transforming code examples in the spec
+- Ensure consistency with the exact patterns shown here
 
 ---
 
 ## TRANSFORMATION RULES
 
-Apply these rules systematically to transform each section:
+### Rule 1: Section Header Transformation
 
-### Rule 1: Database Schema Transformation
+**Original (from spec):**
+```markdown
+## SECTION [N]: [Section Name]
+```
 
-**FROM (Structured Spec - Generic)**:
+**Transformed (in integrated spec):**
+```markdown
+## SECTION [N]: [Section Name] - INTEGRATED
+
+**Extension Status**: ✅ Transformed to use existing infrastructure  
+**Original Infrastructure**: [List what spec used]  
+**Actual Infrastructure**: [List what we're using from codebase]
+```
+
+---
+
+### Rule 2: Database Schema Transformation
+
+**Original (from spec):**
 ```prisma
 model Dataset {
   id          String        @id @default(cuid())
   userId      String
   user        User          @relation(...)
   name        String
-  status      DatasetStatus
+  status      String
   createdAt   DateTime      @default(now())
 }
 ```
 
-**TO (Integrated Spec - Supabase)**:
+**Transformed (in integrated spec):**
+```markdown
+**Database Schema (INTEGRATED):**
+
+Instead of Prisma, use **Supabase Client** with direct SQL migration:
+
+**Migration File**: `supabase/migrations/YYYYMMDD_create_datasets_table.sql`
+
 ```sql
--- Migration: supabase/migrations/YYYYMMDD_create_datasets.sql
 CREATE TABLE datasets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -81,365 +138,429 @@ CREATE TABLE datasets (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_datasets_user_id ON datasets(user_id);
-CREATE INDEX idx_datasets_status ON datasets(status);
-
--- RLS Policy
+-- RLS Policies
 ALTER TABLE datasets ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view own datasets"
   ON datasets FOR SELECT
   USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create own datasets"
+  ON datasets FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE INDEX idx_datasets_user_id ON datasets(user_id);
+CREATE INDEX idx_datasets_status ON datasets(status);
 ```
 
-**Key Changes**:
-- Prisma model → SQL migration
-- `@id @default(cuid())` → `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
-- `userId` → `user_id` (snake_case)
-- Add RLS policies for security
-- Add indexes for performance
-- Add `updated_at` with trigger
+**TypeScript Interface:**
+
+```typescript
+// File: src/lib/types/lora-training.ts
+export interface Dataset {
+  id: string;
+  user_id: string;
+  name: string;
+  status: 'uploading' | 'validating' | 'ready' | 'error';
+  created_at: string;
+  updated_at: string;
+}
+```
+```
 
 ---
 
-### Rule 2: Authentication Transformation
+### Rule 3: Authentication Transformation
 
-**FROM (Structured Spec - NextAuth)**:
+**Original (from spec):**
 ```typescript
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  
-  if (!session?.user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
   const userId = session.user.id;
-  // ... proceed with authenticated request
+  // ... rest of logic
 }
 ```
 
-**TO (Integrated Spec - Supabase Auth)**:
+**Transformed (in integrated spec):**
+```markdown
+**Authentication (INTEGRATED):**
+
+Instead of NextAuth, use **Supabase Auth** with existing patterns:
+
 ```typescript
+import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/supabase-server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 export async function GET(request: NextRequest) {
-  // Authentication using existing pattern
+  // Use existing auth pattern
   const { user, response } = await requireAuth(request);
-  if (response) return response; // Returns 401 if not authenticated
+  if (response) return response; // 401 if not authenticated
   
-  // user.id is now available
   const userId = user.id;
-  // ... proceed with authenticated request
+  // ... rest of logic
 }
 ```
 
-**Key Changes**:
-- `getServerSession()` → `requireAuth()`
-- `authOptions` → not needed (handled internally)
-- `session.user.id` → `user.id`
-- Cleaner error handling (response returned directly)
+**Pattern Source**: Infrastructure Inventory Section 1 - Authentication
+```
 
 ---
 
-### Rule 3: Storage Transformation
+### Rule 4: Storage Transformation
 
-**FROM (Structured Spec - S3 SDK)**:
+**Original (from spec):**
 ```typescript
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const s3Client = new S3Client({ region: process.env.AWS_REGION });
+const s3 = new S3Client({ region: process.env.AWS_REGION });
 
-// Generate presigned upload URL
+// Generate presigned URL
 const command = new PutObjectCommand({
-  Bucket: process.env.S3_BUCKET,
-  Key: `datasets/${userId}/${datasetId}/file.jsonl`,
+  Bucket: 'datasets-bucket',
+  Key: `${userId}/${datasetId}/${fileName}`,
+  ContentType: 'application/json',
 });
 
-const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
 ```
 
-**TO (Integrated Spec - Supabase Storage)**:
+**Transformed (in integrated spec):**
+```markdown
+**Storage (INTEGRATED):**
+
+Instead of AWS S3, use **Supabase Storage** with existing patterns:
+
 ```typescript
 import { createServerSupabaseAdminClient } from '@/lib/supabase-server';
 
-// Generate presigned upload URL
-const supabase = createServerSupabaseAdminClient();
-
-const storagePath = `datasets/${userId}/${datasetId}/file.jsonl`;
-
-const { data, error } = await supabase
-  .storage
-  .from('lora-datasets') // Bucket name
-  .createSignedUploadUrl(storagePath);
-
-if (error) {
-  return NextResponse.json({ error: 'Failed to generate upload URL' }, { status: 500 });
+export async function POST(request: NextRequest) {
+  const { user, response } = await requireAuth(request);
+  if (response) return response;
+  
+  const supabase = createServerSupabaseAdminClient();
+  
+  // Generate storage path
+  const storagePath = `${user.id}/${datasetId}/${fileName}`;
+  
+  // Create presigned upload URL
+  const { data: uploadData, error: uploadError } = await supabase
+    .storage
+    .from('lora-datasets') // Bucket name
+    .createSignedUploadUrl(storagePath);
+  
+  if (uploadError) {
+    return NextResponse.json(
+      { error: 'Failed to generate upload URL', details: uploadError.message },
+      { status: 500 }
+    );
+  }
+  
+  return NextResponse.json({
+    success: true,
+    data: {
+      uploadUrl: uploadData.signedUrl,
+      storagePath: storagePath,
+    }
+  });
 }
-
-const uploadUrl = data.signedUrl;
 ```
 
-**Key Changes**:
-- S3 SDK → Supabase Storage client
-- `S3Client` → `createServerSupabaseAdminClient()`
-- `PutObjectCommand` → `.storage.from(bucket).createSignedUploadUrl()`
-- Bucket from env → Bucket name as string
-- Error handling via `{ data, error }` pattern
+**Pattern Source**: Infrastructure Inventory Section 3 - Storage
+
+**Storage Best Practices**:
+- Never store URLs in database - store only `storage_path`
+- Generate signed URLs on-demand via API routes
+- Use admin client for signing operations
+- Set appropriate expiry (3600 seconds = 1 hour)
+```
 
 ---
 
-### Rule 4: Database Query Transformation
+### Rule 5: API Route Transformation
 
-**FROM (Structured Spec - Prisma)**:
+**Original (from spec):**
 ```typescript
-import { prisma } from "@/lib/db";
-
-// Query datasets
-const datasets = await prisma.dataset.findMany({
-  where: {
-    userId: user.id,
-    status: "ready",
-    deletedAt: null,
-  },
-  orderBy: {
-    createdAt: "desc",
-  },
-  take: 25,
-  skip: (page - 1) * 25,
-});
-
-// Count total
-const total = await prisma.dataset.count({
-  where: { userId: user.id, deletedAt: null },
-});
+// Generic API route structure
+export async function GET(request: NextRequest) {
+  // Auth check
+  // Database query
+  // Return response
+}
 ```
 
-**TO (Integrated Spec - Supabase Client)**:
+**Transformed (in integrated spec):**
+```markdown
+**API Route (INTEGRATED):**
+
+Use exact pattern from Infrastructure Inventory Section 4:
+
+**File**: `src/app/api/datasets/route.ts`
+
 ```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/supabase-server';
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 
-const supabase = await createServerSupabaseClient();
+/**
+ * GET /api/datasets - List user's datasets
+ */
+export async function GET(request: NextRequest) {
+  try {
+    // Authentication (existing pattern)
+    const { user, response } = await requireAuth(request);
+    if (response) return response;
+    
+    // Query parameters
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    
+    // Database query (existing pattern)
+    const supabase = await createServerSupabaseClient();
+    let query = supabase
+      .from('datasets')
+      .select('*', { count: 'exact' })
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    if (status) {
+      query = query.eq('status', status);
+    }
+    
+    const { data, error, count } = await query;
+    
+    if (error) {
+      console.error('Database error:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch datasets', details: error.message },
+        { status: 500 }
+      );
+    }
+    
+    // Response format (existing pattern)
+    return NextResponse.json({
+      success: true,
+      data: {
+        datasets: data,
+        total: count || 0,
+      }
+    });
+    
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
+```
 
-// Query datasets
-const { data: datasets, error } = await supabase
-  .from('datasets')
-  .select('*')
-  .eq('user_id', user.id)
-  .eq('status', 'ready')
-  .is('deleted_at', null)
-  .order('created_at', { ascending: false })
-  .range((page - 1) * 25, page * 25 - 1);
+**Pattern Source**: Infrastructure Inventory Section 4 - API Architecture
+```
 
-if (error) {
-  return NextResponse.json({ error: 'Database error' }, { status: 500 });
+---
+
+### Rule 6: Component Transformation
+
+**Original (from spec):**
+```tsx
+// Generic component structure
+import { Button } from '@/components/ui/button';
+
+export function DatasetCard() {
+  return <div>...</div>;
+}
+```
+
+**Transformed (in integrated spec):**
+```markdown
+**Component (INTEGRATED):**
+
+Use exact patterns from Infrastructure Inventory Section 5:
+
+**File**: `src/components/datasets/DatasetCard.tsx`
+
+```typescript
+'use client';
+
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import type { Dataset } from '@/lib/types/lora-training';
+
+interface DatasetCardProps {
+  dataset: Dataset;
+  onSelect?: (dataset: Dataset) => void;
 }
 
-// Count total (separate query)
-const { count, error: countError } = await supabase
-  .from('datasets')
-  .select('*', { count: 'exact', head: true })
-  .eq('user_id', user.id)
-  .is('deleted_at', null);
-```
-
-**Key Changes**:
-- `prisma.dataset.findMany()` → `supabase.from('datasets').select()`
-- `where: { userId }` → `.eq('user_id', userId)`
-- `orderBy: { createdAt: "desc" }` → `.order('created_at', { ascending: false })`
-- `take/skip` → `.range(start, end)`
-- Separate count query
-- Error handling via `{ data, error }` pattern
-
----
-
-### Rule 5: API Response Format Transformation
-
-**FROM (Structured Spec - Generic)**:
-```typescript
-// Success
-return NextResponse.json({
-  success: true,
-  data: { datasets },
-});
-
-// Error
-return NextResponse.json({
-  success: false,
-  error: { code: "NOT_FOUND", message: "Dataset not found" },
-}, { status: 404 });
-```
-
-**TO (Integrated Spec - Existing Pattern)**:
-```typescript
-// Success (same pattern - keep as is)
-return NextResponse.json({
-  success: true,
-  data: { datasets },
-});
-
-// Error (simplified - match existing codebase)
-return NextResponse.json({
-  error: "Dataset not found",
-  details: "No dataset found with the provided ID",
-}, { status: 404 });
-```
-
-**Key Changes**:
-- Success response: Keep `{ success: true, data }` pattern
-- Error response: Simplify to `{ error, details }` (match existing codebase)
-- Remove nested error objects
-
----
-
-### Rule 6: Component Import Transformation
-
-**FROM (Structured Spec - Generic shadcn/ui)**:
-```typescript
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
-```
-
-**TO (Integrated Spec - Existing Components)**:
-```typescript
-// Same imports - existing codebase already has these components
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
-
-// Note: All shadcn/ui components are already available in the codebase
-// See Infrastructure Inventory for complete list of 47+ available components
-```
-
-**Key Changes**:
-- No changes needed for component imports
-- Add comment noting components already exist
-- Reference Infrastructure Inventory for full list
-
----
-
-### Rule 7: State Management Transformation
-
-**FROM (Structured Spec - SWR)**:
-```typescript
-import useSWR from "swr";
-
-const fetcher = (url: string) => fetch(url).then(r => r.json());
-
-export function useDatasets() {
-  const { data, error, isLoading, mutate } = useSWR(
-    '/api/datasets',
-    fetcher,
-    { refreshInterval: 30000 }
+export function DatasetCard({ dataset, onSelect }: DatasetCardProps) {
+  return (
+    <Card className="hover:shadow-md transition-shadow cursor-pointer">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg">{dataset.name}</CardTitle>
+          <Badge>{dataset.status}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Button 
+          onClick={() => onSelect?.(dataset)}
+          variant="outline"
+          className="w-full"
+        >
+          View Details
+        </Button>
+      </CardContent>
+    </Card>
   );
-  
-  return { datasets: data?.data, error, isLoading, mutate };
 }
 ```
 
-**TO (Integrated Spec - React Query)**:
+**Pattern Source**: Infrastructure Inventory Section 5 - Component Library
+
+**Available Components**: All 47+ shadcn/ui components from `/components/ui/`
+```
+
+---
+
+### Rule 7: Data Fetching Transformation
+
+**Original (from spec):**
 ```typescript
-import { useQuery } from '@tanstack/react-query';
+import useSWR from 'swr';
 
 export function useDatasets() {
+  const { data, error } = useSWR('/api/datasets', fetcher);
+  return { data, error };
+}
+```
+
+**Transformed (in integrated spec):**
+```markdown
+**Data Fetching (INTEGRATED):**
+
+Instead of SWR, use **React Query** with existing patterns:
+
+**File**: `src/hooks/use-datasets.ts`
+
+```typescript
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Dataset } from '@/lib/types/lora-training';
+
+export function useDatasets(filters?: { status?: string }) {
   return useQuery({
-    queryKey: ['datasets'],
+    queryKey: ['datasets', filters],
     queryFn: async () => {
-      const response = await fetch('/api/datasets');
+      const params = new URLSearchParams();
+      if (filters?.status) params.set('status', filters.status);
+      
+      const response = await fetch(`/api/datasets?${params.toString()}`);
       if (!response.ok) throw new Error('Failed to fetch datasets');
-      const json = await response.json();
-      return json.data;
+      return response.json();
     },
-    staleTime: 60000, // 60 seconds (existing codebase default)
-    retry: 1,
+    staleTime: 60 * 1000, // 60 seconds (existing config)
   });
 }
 
-// Usage in component:
-const { data: datasets, error, isLoading } = useDatasets();
+export function useCreateDataset() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateDatasetInput) => {
+      const response = await fetch('/api/datasets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create dataset');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['datasets'] });
+    },
+  });
+}
 ```
 
-**Key Changes**:
-- `useSWR` → `useQuery` from React Query
-- `refreshInterval` → `staleTime` (different semantics)
-- `mutate` → use `useMutation` for mutations (separate hook)
-- Match existing codebase configuration (60s stale time, 1 retry)
+**Pattern Source**: Infrastructure Inventory Section 6 - State & Data Fetching
+```
 
 ---
 
 ### Rule 8: Background Processing Transformation
 
-**FROM (Structured Spec - BullMQ + Redis)**:
+**Original (from spec):**
 ```typescript
-import { Queue, Worker } from "bullmq";
-import Redis from "ioredis";
+// BullMQ worker setup
+import { Worker } from 'bullmq';
 
-const connection = new Redis(process.env.REDIS_URL);
-
-const validationQueue = new Queue("dataset-validation", { connection });
-
-// Add job to queue
-await validationQueue.add("validate", { datasetId });
-
-// Worker
-const worker = new Worker("dataset-validation", async (job) => {
-  const { datasetId } = job.data;
-  // ... validation logic
-}, { connection });
+const worker = new Worker('dataset-validation', async (job) => {
+  // Validation logic
+});
 ```
 
-**TO (Integrated Spec - Supabase Edge Functions)**:
-```typescript
-// Instead of BullMQ, use Supabase Edge Function triggered by database event
-// or cron schedule
+**Transformed (in integrated spec):**
+```markdown
+**Background Processing (INTEGRATED):**
 
-// File: supabase/functions/validate-dataset/index.ts
+Instead of BullMQ + Redis, use **Supabase Edge Functions** with Cron:
+
+**File**: `supabase/functions/validate-datasets/index.ts`
+
+```typescript
 import { createClient } from '@supabase/supabase-js';
 
 Deno.serve(async (req) => {
-  const { datasetId } = await req.json();
-  
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   );
   
-  // Fetch dataset
-  const { data: dataset } = await supabase
+  // Fetch datasets pending validation
+  const { data: datasets } = await supabase
     .from('datasets')
     .select('*')
-    .eq('id', datasetId)
-    .single();
+    .eq('status', 'uploaded');
   
-  // ... validation logic
-  
-  // Update dataset with results
-  await supabase
-    .from('datasets')
-    .update({
-      status: 'ready',
-      validated_at: new Date().toISOString(),
-      training_ready: true,
-    })
-    .eq('id', datasetId);
+  for (const dataset of datasets) {
+    // Perform validation
+    const validationResult = await validateDataset(dataset);
+    
+    // Update dataset
+    await supabase
+      .from('datasets')
+      .update({
+        status: validationResult.isValid ? 'ready' : 'error',
+        validation_errors: validationResult.errors,
+        total_training_pairs: validationResult.stats?.total_pairs,
+        validated_at: new Date().toISOString(),
+      })
+      .eq('id', dataset.id);
+  }
   
   return new Response('OK');
 });
-
-// Trigger: Call this Edge Function from API route after upload
-// OR: Set up database trigger to call function when status changes
 ```
 
-**Key Changes**:
-- BullMQ + Redis → Supabase Edge Functions
-- Queue system → Direct function invocation or database triggers
-- Worker → Deno-based Edge Function
-- Simpler architecture, no Redis dependency
+**Deployment**: Via Supabase CLI (`supabase functions deploy validate-datasets`)
+
+**Cron Trigger**: Configure in Supabase Dashboard  
+- Function: `validate-datasets`
+- Schedule: `*/5 * * * *` (every 5 minutes)
+
+**Reason for Change**: BullMQ + Redis adds infrastructure complexity. Supabase Edge Functions + Cron provides equivalent functionality with less overhead.
+
+**Pattern Source**: Extension Strategy Section - Background Processing
+```
 
 ---
 
@@ -450,335 +571,298 @@ For each section in the structured spec, produce an integrated section with this
 ```markdown
 ## SECTION [N]: [Section Name] - INTEGRATED
 
-### Overview
-[Copy section purpose and user value from original spec - unchanged]
+**Extension Status**: ✅ Transformed to use existing infrastructure  
+**Original Infrastructure**: [List technologies from spec]  
+**Actual Infrastructure**: [List what we're using from codebase]
+
+---
+
+### Overview (from original spec)
+
+[Copy the section purpose and user value unchanged]
+
+---
 
 ### Dependencies
 
-**Codebase Infrastructure Used**:
-- Authentication: Supabase Auth via `requireAuth()` from `/lib/supabase-server.ts`
-- Database: Supabase PostgreSQL via `createServerSupabaseClient()` from `/lib/supabase-server.ts`
-- Storage: Supabase Storage via `createServerSupabaseAdminClient()` from `/lib/supabase-server.ts`
-- Components: shadcn/ui components from `/components/ui/*` (47+ components available)
-- State Management: React Query from `@tanstack/react-query`
+**Codebase Prerequisites** (MUST exist before this section):
+- [List existing infrastructure this section USES]
+- [Reference to specific files/functions from Infrastructure Inventory]
 
 **Previous Section Prerequisites**:
-[List what from previous sections this section needs]
+- [List what from previous sections this section needs]
 
-### Features & Requirements
+---
+
+### Features & Requirements (INTEGRATED)
 
 #### FR-[N].[M]: [Feature Name]
 
-**Type**: [Original type]
+**Type**: [Original type from spec]
 
-**Description**: [Original description - unchanged]
+**Description**: [Original description from spec]
 
-**Implementation (INTEGRATED)**:
+**Implementation Strategy**: EXTENSION (using existing infrastructure)
 
-**Database Schema**:
-```sql
--- Migration: supabase/migrations/YYYYMMDD_[name].sql
-[Transformed SQL using Supabase patterns]
-```
+---
 
-**API Route**:
-```typescript
-// File: src/app/api/[route]/route.ts
-[Transformed TypeScript using existing patterns from Infrastructure Inventory]
-```
+**Database Changes (INTEGRATED)**:
 
-**React Hook**:
-```typescript
-// File: src/hooks/use-[feature].ts
-[Transformed hook using React Query]
-```
+[Apply Rule 2: Database Schema Transformation]
 
-**UI Component**:
-```typescript
-// File: src/app/(dashboard)/[page]/page.tsx
-[Transformed component using existing shadcn/ui components]
-```
+---
 
-**Acceptance Criteria**:
-[Copy from original spec - unchanged]
+**API Routes (INTEGRATED)**:
+
+[Apply Rule 5: API Route Transformation]
+
+---
+
+**Components (INTEGRATED)**:
+
+[Apply Rule 6: Component Transformation]
+
+---
+
+**Data Fetching (INTEGRATED)**:
+
+[Apply Rule 7: Data Fetching Transformation]
+
+---
+
+**Acceptance Criteria** (from spec):
+
+[Copy acceptance criteria from spec, adjust for infrastructure changes]
+
+---
+
+**Verification Steps**:
+
+1. ✅ Database: Migration applied, tables exist, RLS policies active
+2. ✅ API: Endpoints respond correctly, authentication works
+3. ✅ Components: UI renders correctly, uses shadcn/ui components
+4. ✅ Integration: Feature works end-to-end with existing infrastructure
 
 ---
 
 [Repeat for each FR in section]
 
-### Testing Strategy
-[Copy from original spec, update test examples to use Supabase patterns]
+---
 
-### Development Tasks
-[Copy from original spec, update task descriptions to reference Supabase tools]
+### Section Summary
+
+**What Was Added**:
+- [List new tables]
+- [List new API routes]
+- [List new components]
+- [List new pages]
+- [List new hooks]
+
+**What Was Reused**:
+- [List existing infrastructure used]
+
+**Integration Points**:
+- [How this section connects to existing codebase]
 
 ---
 
-## END OF SECTION [N]
-
-**Section Summary**:
-[Summarize what was integrated in this section]
-
-**Available for Next Section**:
-[List what this section provides for subsequent sections]
-
----
-
-[Repeat for all 7 sections]
 ```
 
 ---
 
 ## VALIDATION CHECKLIST
 
-After transformation, verify each section:
+After transformation, verify for EACH section:
 
-- [ ] ✅ No Prisma references remain (replaced with Supabase Client)
-- [ ] ✅ No NextAuth references remain (replaced with Supabase Auth)
-- [ ] ✅ No S3 SDK references remain (replaced with Supabase Storage)
-- [ ] ✅ No BullMQ/Redis references remain (replaced with Edge Functions or removed)
-- [ ] ✅ No SWR references remain (replaced with React Query)
+### Infrastructure Validation
+- [ ] ✅ No Prisma references remain (use Supabase Client)
+- [ ] ✅ No NextAuth references remain (use Supabase Auth)
+- [ ] ✅ No direct S3 SDK references remain (use Supabase Storage)
+- [ ] ✅ No BullMQ/Redis references remain (use Edge Functions)
+- [ ] ✅ No SWR references remain (use React Query)
+
+### Pattern Consistency Validation
 - [ ] ✅ All database operations use Supabase query builder
-- [ ] ✅ All auth operations use `requireAuth()` or `useAuth()`
-- [ ] ✅ All storage operations use Supabase Storage with signed URLs
+- [ ] ✅ All auth uses `requireAuth()` pattern
+- [ ] ✅ All storage uses on-demand signed URLs
 - [ ] ✅ All API routes follow existing response format
-- [ ] ✅ All components use existing shadcn/ui imports
-- [ ] ✅ All migrations use Supabase SQL syntax with RLS policies
-- [ ] ✅ All type definitions use TypeScript interfaces (not Prisma types)
-- [ ] ✅ Feature descriptions unchanged from original spec
-- [ ] ✅ Acceptance criteria unchanged from original spec
-- [ ] ✅ User value propositions unchanged from original spec
+- [ ] ✅ All components import from `/components/ui/`
+- [ ] ✅ All hooks use React Query patterns
+
+### Documentation Validation
+- [ ] ✅ Each FR references Infrastructure Inventory section
+- [ ] ✅ Pattern sources are cited
+- [ ] ✅ Exact code patterns match inventory
+- [ ] ✅ Dependencies are explicit and accurate
 
 ---
 
-## SECTION-BY-SECTION GUIDANCE
+## SECTION PROCESSING ORDER
 
-### Section 1: Foundation & Authentication
+Process sections sequentially (dependencies matter):
 
-**Action**: SKIP most of this section - authentication already exists
+1. **Section 1: Foundation & Authentication**
+   - Transform to use existing Supabase Auth (SKIP most of it - already exists)
+   - Transform database schema to Supabase migrations
+   - Keep only NEW tables needed for LoRA training
 
-**What to Keep**:
-- Database schema definitions (transform to SQL migrations)
-- Any NEW tables needed for LoRA training features
+2. **Section 2: Dataset Management**
+   - Depends on Section 1 (auth, base schema)
+   - Transform storage to Supabase Storage
+   - Transform validation workers to Edge Functions
 
-**What to Skip**:
-- NextAuth setup (already have Supabase Auth)
-- User model (already exists in auth.users)
-- Login/signup pages (already exist)
-- Session management (already exists)
-- Middleware configuration (already exists)
+3. **Section 3: Training Configuration**
+   - Depends on Section 1 (auth) and Section 2 (datasets)
+   - Transform configuration storage to JSONB columns
 
-**Output for Section 1**:
+4. **Section 4: Training Execution & Monitoring**
+   - Depends on Sections 1-3
+   - Transform BullMQ to Edge Functions + Cron
+   - Transform SSE to React Query polling
+
+5. **Section 5: Model Artifacts & Delivery**
+   - Depends on Section 4 (job completion)
+   - Transform S3 artifacts to Supabase Storage
+
+6. **Section 6: Cost Tracking & Notifications**
+   - Depends on all previous sections
+   - Transform to simple database inserts
+
+7. **Section 7: Complete System Integration**
+   - Depends on all previous sections
+   - Validate all transformations are consistent
+
+---
+
+## SPECIAL HANDLING
+
+### Section 1 Special Case
+Section 1 of the spec is "Foundation & Authentication" which sets up NextAuth, Prisma, and base infrastructure. Since our codebase ALREADY HAS all of this (Supabase Auth, Supabase DB), you should:
+
+**SKIP** most of Section 1 infrastructure setup
+
+**KEEP** from Section 1:
+- New database tables specific to LoRA training (datasets, training_jobs, etc.)
+- Dashboard page structure (if different from existing)
+- Any LoRA-specific models not in existing codebase
+
+**TRANSFORM** Section 1 to:
 ```markdown
 ## SECTION 1: Foundation & Authentication - INTEGRATED
 
-### Overview
-This section establishes database schema for LoRA training features. Authentication infrastructure already exists in the codebase using Supabase Auth.
+**Extension Status**: ✅ Most infrastructure ALREADY EXISTS - only adding LoRA-specific tables
 
-### Dependencies
-**Existing Infrastructure** (no changes needed):
-- Authentication: Supabase Auth (cookie-based sessions)
-- User Management: auth.users table
-- Session Handling: Automatic via middleware
-- Protected Routes: Automatic via (dashboard) layout
+**What Already Exists**:
+- ✅ Next.js 14 App Router with TypeScript
+- ✅ Supabase Auth with protected routes
+- ✅ Supabase PostgreSQL database
+- ✅ Supabase Storage
+- ✅ shadcn/ui components
+- ✅ Dashboard layout and routing
 
-### New Database Tables
+**What We're Adding** (LoRA Training specific):
+- New database tables: datasets, training_jobs, metrics_points, model_artifacts, cost_records, notifications
+- New storage buckets: lora-datasets, lora-models
 
-[Only include NEW tables for LoRA training - transform to SQL]
-
-### END OF SECTION 1
-```
-
----
-
-### Section 2: Dataset Management
-
-**Action**: FULLY TRANSFORM this section
-
-**Key Transformations**:
-- Prisma Dataset model → SQL CREATE TABLE with RLS
-- S3 presigned URLs → Supabase Storage signed URLs
-- BullMQ validation worker → Edge Function
-- SWR hooks → React Query hooks
-- API routes → Use `requireAuth()` pattern
-
-**Focus Areas**:
-- Dataset upload flow (presigned URL generation)
-- Dataset validation (Edge Function instead of worker)
-- Dataset CRUD APIs (Supabase query builder)
-- Dataset list page (React Query + existing components)
-
----
-
-### Section 3: Training Configuration
-
-**Action**: FULLY TRANSFORM this section
-
-**Key Transformations**:
-- TrainingJob model → SQL CREATE TABLE
-- Cost estimation API → Standard API route with Supabase
-- Configuration page → Use existing form components
-- React Query for real-time cost updates
-
-**Focus Areas**:
-- Hyperparameter preset system (client-side logic)
-- GPU configuration (client-side logic)
-- Cost estimation calculator (API route + React Query)
-- Training job creation (API route with Supabase insert)
-
----
-
-### Section 4: Training Execution & Monitoring
-
-**Action**: FULLY TRANSFORM this section
-
-**Key Transformations**:
-- BullMQ job queue → Edge Function with cron trigger
-- SSE streaming → React Query polling (simpler)
-- MetricsPoint inserts → Supabase inserts from Edge Function
-- Real-time updates → React Query refetchInterval
-
-**Focus Areas**:
-- Job submission to GPU cluster (API route)
-- Status polling (Edge Function triggered by cron)
-- Metrics storage (Supabase inserts)
-- Real-time UI updates (React Query polling every 5 seconds)
-
----
-
-### Section 5: Model Artifacts & Delivery
-
-**Action**: FULLY TRANSFORM this section
-
-**Key Transformations**:
-- ModelArtifact model → SQL CREATE TABLE
-- S3 artifact storage → Supabase Storage
-- Download URLs → Supabase signed URLs
-- Quality metrics calculation (server-side logic)
-
-**Focus Areas**:
-- Artifact storage after training completion
-- Quality metrics calculation from training history
-- Download URL generation (on-demand signed URLs)
-- Model detail page (React Query + existing components)
-
----
-
-### Section 6: Cost Tracking & Notifications
-
-**Action**: FULLY TRANSFORM this section
-
-**Key Transformations**:
-- CostRecord model → SQL CREATE TABLE
-- Notification model → SQL CREATE TABLE
-- Cost tracking (Supabase inserts during training)
-- Budget alerts (check in Edge Function)
-
-**Focus Areas**:
-- Real-time cost tracking during training
-- Cost breakdown queries (Supabase aggregations)
-- Notification creation (Supabase inserts)
-- Notification display (React Query + existing components)
-
----
-
-### Section 7: Complete System Integration
-
-**Action**: UPDATE with Supabase-specific integration points
-
-**Key Transformations**:
-- Update integration matrix to reference Supabase components
-- Update testing strategy to use Supabase test utilities
-- Update deployment checklist for Supabase (no Redis, no BullMQ)
-
----
-
-## CRITICAL REMINDERS
-
-1. **DO NOT change features** - Only change HOW they're implemented, not WHAT is implemented
-2. **DO NOT remove functionality** - Find Supabase equivalents for all features
-3. **DO NOT add new features** - Only transform what's in the original spec
-4. **DO reference exact files** - Use file paths from Infrastructure Inventory
-5. **DO use exact patterns** - Copy code patterns from Infrastructure Inventory and Implementation Guide
-6. **DO maintain progressive structure** - Each section builds on previous sections
-7. **DO preserve acceptance criteria** - Copy unchanged from original spec
-8. **DO preserve user value** - Copy unchanged from original spec
-
----
-
-## OUTPUT FILE
-
-**Filename**: `04e-integrated-extension-spec_v1.md`
-
-**Structure**:
-```markdown
-# BrightRun LoRA Training Platform - Integrated Extension Specification
-
-**Version:** 1.0 (Integrated)
-**Source Document:** `04c-pipeline-structured-from-wireframe_v1.md`
-**Integration Date:** [Current Date]
-**Framework:** Next.js 14 (App Router) with TypeScript
-**Infrastructure:** Supabase (Auth, PostgreSQL, Storage)
-**Status:** Ready for Segmentation
-
----
-
-## EXECUTIVE SUMMARY
-
-[Copy from original spec, update tech stack section to reflect Supabase]
-
----
-
-## TABLE OF CONTENTS
-
-[Same as original spec]
-
----
-
-## SECTION 1: Foundation & Authentication - INTEGRATED
-
-[Transformed section 1]
-
----
-
-## SECTION 2: Dataset Management - INTEGRATED
-
-[Transformed section 2]
-
----
-
-[... Continue for all 7 sections ...]
-
----
-
-## APPENDICES
-
-[Update appendices with Supabase-specific information]
-
----
-
-**Document Status**: INTEGRATED - Ready for Segmentation
-**Next Step**: Run segmentation script to generate execution prompts
+[Then provide only the NEW table migrations]
 ```
 
 ---
 
 ## BEGIN TRANSFORMATION
 
-You are now ready to begin the transformation process. Follow these steps:
+Process each section of the structured specification sequentially:
 
-1. Read all four input files completely
-2. For each section in the structured spec:
-   a. Extract feature requirements
-   b. Apply transformation rules
-   c. Reference Infrastructure Inventory for exact patterns
-   d. Reference Extension Strategy for infrastructure decisions
-   e. Reference Implementation Guide for code examples
-   f. Output integrated section
-3. Validate each section against checklist
-4. Output complete integrated specification
+1. Read Section [N] from structured spec
+2. Identify all features and requirements
+3. For each infrastructure component mentioned, find the replacement pattern from Infrastructure Inventory
+4. Apply transformation rules (Rules 1-8)
+5. Generate integrated section following Output Structure
+6. Run Validation Checklist
+7. Move to next section
 
-**Start with Section 1 and proceed sequentially through Section 7.**
+**Output File**: `04e-integrated-extension-spec_v1.md`
 
-Good luck! 🚀
+**Structure**:
+```markdown
+# BrightRun LoRA Training Platform - Integrated Extension Specification
+
+**Version:** 1.0  
+**Date:** [Current Date]  
+**Source:** 04c-pipeline-structured-from-wireframe_v1.md  
+**Integration Basis:** Infrastructure Inventory v1, Extension Strategy v1, Implementation Guide v1
+
+---
+
+## INTEGRATION SUMMARY
+
+This specification describes how to implement the BrightRun LoRA Training Platform as an EXTENSION to the existing BrightHub application.
+
+**Approach**: EXTENSION (not separate application)
+
+**Infrastructure Decisions**:
+- ✅ Use existing Supabase Auth (not NextAuth)
+- ✅ Use existing Supabase PostgreSQL (not Prisma)
+- ✅ Use existing Supabase Storage (not S3)
+- ✅ Use existing shadcn/ui components
+- ✅ Use existing React Query (not SWR)
+- ✅ Use Edge Functions + Cron (not BullMQ + Redis)
+
+**What We're Adding**:
+- 7 new database tables
+- 2 new storage buckets
+- ~25 new API routes
+- ~8-10 new pages
+- ~25-30 new components
+- ~15 new hooks
+- 2 Edge Functions
+
+**What We're NOT Creating**:
+- ❌ New authentication system
+- ❌ New database client
+- ❌ New storage client
+- ❌ Job queue infrastructure
+- ❌ Component library
+
+---
+
+[SECTION 1: Foundation & Authentication - INTEGRATED]
+
+[SECTION 2: Dataset Management - INTEGRATED]
+
+[SECTION 3: Training Configuration - INTEGRATED]
+
+[SECTION 4: Training Execution & Monitoring - INTEGRATED]
+
+[SECTION 5: Model Artifacts & Delivery - INTEGRATED]
+
+[SECTION 6: Cost Tracking & Notifications - INTEGRATED]
+
+[SECTION 7: Complete System Integration - INTEGRATED]
+
+---
+
+## APPENDIX: Integration Reference
+
+### Infrastructure Inventory Cross-Reference
+[Quick reference to key patterns from inventory]
+
+### Extension Strategy Alignment
+[Confirmation that all transformations align with strategy]
+
+### Implementation Guide Patterns
+[Index of exact patterns used]
+
+---
+
+**Document Status**: READY FOR SEGMENTATION  
+**Next Step**: Run segmentation script (04f-segment-integrated-spec_v1.js)
+```
+
+---
+
+**Meta-Prompt Version**: 1.0  
+**Date**: December 23, 2025  
+**Status**: Ready for Execution  
+**Input File Paths**: To be provided at runtime
 

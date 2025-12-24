@@ -12,21 +12,22 @@ The solution for how to merge integration knowledge with the structured specific
 
 ## ✅ What Was Accomplished in This Session (December 23, 2025)
 
-### 1. Fixed Integration Meta-Prompt v1 → v2
+### 1. Fixed Integration Meta-Prompt v0 → v1
 
-**Problem Identified**: The v1 integration meta-prompt (`04d-integrate-existing-codebase_v1.md`) had a fundamental framing defect:
+**Problem Identified**: The v0 integration meta-prompt (`04d-integrate-existing-codebase_v0.md`) had a fundamental framing defect:
 - It treated "integration" as comparing two independent applications for compatibility
 - When run, it produced analysis saying "INTEGRATION NOT VIABLE - build separately"
 - But the actual intent was: **build a new module that sits alongside existing code with direct access to objects, artifacts, and interfaces**
+- `04d-integrate-existing-codebase_v0.md`has been renamed to `04d-integrate-existing-codebase_v1-deprecated.md` and is no longer relevant.
 
-**Solution Implemented**: Created v2 meta-prompt with "extension-first" framing
+**Solution Implemented**: Created v1 meta-prompt with "extension-first" framing
 
 **Output File Created**:
-- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_prompt_engineering\04d-integrate-existing-codebase_v2.md`
+- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_prompt_engineering\04d-integrate-existing-codebase_v1.md`
 
-**Key Changes (v1 → v2)**:
+**Key Changes (v0 → v1)**:
 
-| Aspect | v1 (Defective) | v2 (Fixed) |
+| Aspect | v0 (Defective) | v1 (Fixed) |
 |--------|----------------|------------|
 | **Title** | "Codebase Integration Analysis" | "Module Extension Blueprint" |
 | **Goal** | Compare two apps for compatibility | Add features to existing app |
@@ -125,8 +126,8 @@ You MUST read and internalize ALL of the following files before receiving any im
    - **Contains**: Merge meta-prompt template, segmentation script template, execution prompt template, progressive dependency model
    - **Time**: 1-2 hours
 
-2. **The v2 Integration Meta-Prompt (Reference)**
-   - **File**: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_prompt_engineering\04d-integrate-existing-codebase_v2.md`
+2. **The v1 Integration Meta-Prompt (Reference)**
+   - **File**: `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_prompt_engineering\04d-integrate-existing-codebase_v1.md`
    - **Purpose**: Understand the "extension-first" framing that produces correct integration analysis
    - **Time**: 1-2 hours
 
@@ -200,7 +201,7 @@ You MUST read and internalize ALL of the following files before receiving any im
 | File | Purpose | Status |
 |------|---------|--------|
 | `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\workfiles\spec-integration-segmentation-solution_v1.md` | Two-stage solution architecture | ✅ Created |
-| `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_prompt_engineering\04d-integrate-existing-codebase_v2.md` | Fixed extension-first meta-prompt | ✅ Created |
+| `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_prompt_engineering\04d-integrate-existing-codebase_v1.md` | Fixed extension-first meta-prompt | ✅ Created |
 
 ### Existing Documents (From Previous Sessions)
 
@@ -232,7 +233,7 @@ You MUST read and internalize ALL of the following files before receiving any im
 
 ### What Changed This Session
 
-1. **Created**: `04d-integrate-existing-codebase_v2.md` - Fixed integration meta-prompt with extension-first framing
+1. **Created**: `04d-integrate-existing-codebase_v1.md` - Fixed integration meta-prompt with extension-first framing
 2. **Created**: `spec-integration-segmentation-solution_v1.md` - Complete solution architecture
 3. **Updated**: `tasks/todo.md` - Task tracking
 
