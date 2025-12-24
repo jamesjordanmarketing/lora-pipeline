@@ -69,113 +69,126 @@ The pipeline will generate:
 
 ---
 
-## STAGE 0: GENERATE CUSTOM INTEGRATION PROMPT (NEW in v2)
+## STAGE 0: GENERATE INTEGRATION PROMPT (NEW in v2)
 
 ### Purpose
-Generate a custom integration prompt from the generic meta-prompt template by replacing placeholders with project-specific paths.
+Generate a custom integration prompt from the generic meta-prompt template using interactive prompts with sensible defaults.
 
-### Input Files
+### Input Files (Required to exist)
 - Generic meta-prompt template: `04d-integrate-existing-codebase_v2.md`
-- Structured spec (04c)
-- Existing codebase path
+- Infrastructure Inventory: `04d-[product-abbrev]-infrastructure-inventory_v1.md`
+- Extension Strategy: `04d-[product-abbrev]-extension-strategy_v1.md`
+- Implementation Guide: `04d-[product-abbrev]-implementation-guide_v1.md`
 
 ### Output File
-- `04e-custom-integration-prompt_v1.md` - Ready-to-execute prompt for AI
+- `04e-[product-abbrev]-merge-integration-prompt_v1.md` - Ready-to-execute prompt for AI
 
-### Command
+### Usage
 
 ```bash
 cd "C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools"
 
-node 04e-merge-integration-spec_v2.js \
-  --template "../_prompt_engineering/04d-integrate-existing-codebase_v2.md" \
-  --spec "../_mapping/pipeline/04c-pipeline-structured-from-wireframe_v1.md" \
-  --codebase "../../../src" \
-  --output-dir "../_mapping/pipeline/_run-prompts" \
-  --prompt-output "../_mapping/pipeline/04e-custom-integration-prompt_v1.md"
+node 04e-merge-integration-spec_v2.js "Project Name" product-abbreviation
+
+# Example for LoRA Pipeline:
+node 04e-merge-integration-spec_v2.js "LoRA Pipeline" pipeline
 ```
+
+### Interactive Prompts
+
+The script will interactively prompt for:
+
+1. **Infrastructure Inventory path**
+   - Default: `pmc/product/_mapping/[abbrev]/_run-prompts/04d-[abbrev]-infrastructure-inventory_v1.md`
+   - Press Enter to accept, or type custom path
+
+2. **Extension Strategy path**
+   - Default: `pmc/product/_mapping/[abbrev]/_run-prompts/04d-[abbrev]-extension-strategy_v1.md`
+   - Press Enter to accept, or type custom path
+
+3. **Implementation Guide path**
+   - Default: `pmc/product/_mapping/[abbrev]/_run-prompts/04d-[abbrev]-implementation-guide_v1.md`
+   - Press Enter to accept, or type custom path
+
+4. **Output path**
+   - Default: `pmc/product/_mapping/[abbrev]/_run-prompts/04e-[abbrev]-integrated-extension-spec_v1.md`
+   - Press Enter to accept, or type custom path
 
 ### Expected Output
 
 ```
-🚀 Integration Prompt Generator v2
+╔════════════════════════════════════════════════════════════╗
+║      Integration Extension Specification Generator         ║
+╚════════════════════════════════════════════════════════════╝
 
-🔍 Validating input files...
-✅ All input files validated
+Project: LoRA Pipeline (pipeline)
 
-📂 Reading generic meta-prompt template...
-✅ Template: .../04d-integrate-existing-codebase_v2.md
-   Size: 43.95 KB
+Step 1: Locate Infrastructure Inventory
+────────────────────────────────────────
+Enter path to Infrastructure Inventory document:
+Default: C:/.../04d-pipeline-infrastructure-inventory_v1.md
+> [Press Enter]
+✓ Using inventory: ...
 
-🔧 Generating project-specific metadata...
-✅ Metadata generated
+[Similar for Steps 2-4]
 
-🔄 Replacing placeholders with project paths...
-✅ Placeholders replaced:
-   {{STRUCTURED_SPEC_PATH}} → .../04c-pipeline-structured-from-wireframe_v1.md
-   {{CODEBASE_PATH}}        → .../src
-   {{OUTPUT_PATH}}          → .../_run-prompts
+Step 5: Generate Integration Prompt
+────────────────────────────────────
+Prompt will be saved to: .../04e-pipeline-merge-integration-prompt_v1.md
+Loading template...
+Generating metadata...
+Adding execution instructions...
+Assembling prompt...
+Saving prompt...
 
-📝 Adding execution instructions...
-✅ Instructions added
+✅ Prompt saved to: .../04e-pipeline-merge-integration-prompt_v1.md
 
-🔨 Assembling custom integration prompt...
-✅ Custom prompt assembled
-   Total size: 46.26 KB
-
-💾 Writing custom integration prompt...
-✅ Written: .../04e-custom-integration-prompt_v1.md
-
-✅ PROMPT GENERATION COMPLETE!
+╔════════════════════════════════════════════════════════════╗
+║                    ✅ PROMPT GENERATED                      ║
+╚════════════════════════════════════════════════════════════╝
 ```
 
 ### Next Step
-Execute the generated prompt (04e-custom-integration-prompt_v1.md) with an AI assistant to generate the three required documents:
-1. `04d-infrastructure-inventory_v1.md`
-2. `04d-extension-strategy_v1.md`
-3. `04d-implementation-guide_v1.md`
+Execute the generated prompt with an AI assistant to generate the integrated extension specification
 
 ---
 
-## STAGE 1: EXECUTE INTEGRATION ANALYSIS (Manual AI Execution)
+## STAGE 1: EXECUTE INTEGRATION MERGE (Manual AI Execution)
 
 ### Purpose
-Use the custom integration prompt to analyze the codebase and generate three extension documents.
+Use the generated prompt to merge the three 04d documents into a single integrated extension specification.
 
 ### Input
-- Custom integration prompt: `04e-custom-integration-prompt_v1.md`
-- Access to the codebase directory specified in the prompt
+- Integration prompt: `04e-[product-abbrev]-merge-integration-prompt_v1.md`
+- Infrastructure Inventory (04d)
+- Extension Strategy (04d)
+- Implementation Guide (04d)
 
-### Output Files
-- `04d-infrastructure-inventory_v1.md` - What exists in codebase to USE (~2,000-3,000 lines)
-- `04d-extension-strategy_v1.md` - How features map to existing infrastructure (~1,500-2,500 lines)
-- `04d-implementation-guide_v1.md` - Exact code patterns to follow (~2,000-4,000 lines)
+### Output File
+- `04e-[product-abbrev]-integrated-extension-spec_v1.md` - Unified specification (~3,000-5,000 lines)
 
 ### Process
 
-1. **Open the custom prompt**: Read `04e-custom-integration-prompt_v1.md`
+1. **Open the integration prompt**: Read `04e-[product-abbrev]-merge-integration-prompt_v1.md`
 2. **Execute with AI**: Provide the prompt to an AI assistant (Claude, ChatGPT, etc.)
-3. **Review outputs**: Ensure all three documents are generated
-4. **Save to output directory**: Place files in the specified `_run-prompts` directory
+3. **AI merges documents**: AI combines all three 04d documents into one comprehensive spec
+4. **Save output**: Save AI's response to the specified output path
 
 ### Validation
 
 After AI execution, verify:
 
-1. **All three files exist**:
-   - `04d-infrastructure-inventory_v1.md`
-   - `04d-extension-strategy_v1.md`
-   - `04d-implementation-guide_v1.md`
+1. **Output file exists**:
+   - `04e-[product-abbrev]-integrated-extension-spec_v1.md`
 
-2. **File sizes are reasonable**:
-   - Infrastructure Inventory: ~50-100 KB
-   - Extension Strategy: ~40-80 KB
-   - Implementation Guide: ~60-120 KB
+2. **File size is reasonable**:
+   - Integrated Spec: ~100-200 KB (3,000-5,000 lines)
 
 3. **Content quality**:
-   - Infrastructure Inventory documents EXISTING patterns
-   - Extension Strategy focuses on REUSE (not integration)
-   - Implementation Guide provides EXACT code examples
+   - All infrastructure substitutions applied
+   - Extension framing maintained
+   - Implementation patterns are specific and exact
+   - Ready for segmentation
 
 ---
 

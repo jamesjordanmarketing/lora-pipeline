@@ -1,102 +1,194 @@
-/**
- * Integration Prompt Generator (v2)
- * 
- * Purpose: Generate a custom integration prompt for a specific project by combining
- *          the generic meta-prompt template with project-specific file paths.
- * 
- * Inputs:
- *   - Generic meta-prompt template (04d-integrate-existing-codebase_v2.md)
- *   - Project-specific paths (structured spec, codebase, output directory)
- * 
- * Output:
- *   - Custom integration prompt ready to execute
- *   - This prompt, when executed by an AI, will generate three documents:
- *     1. Infrastructure Inventory
- *     2. Extension Strategy
- *     3. Implementation Guide
- * 
+#!/usr/bin/env node
+
+/*
+ * 04e-merge-integration-spec_v2.js
+ *
+ * Purpose:
+ *  - Generate a custom integration prompt from the generic meta-prompt template
+ *  - Uses the template: 04d-integrate-existing-codebase_v2.md
+ *  - Interactive script that validates paths and generates ready-to-use prompts
+ *
  * Usage:
- *   node 04e-merge-integration-spec_v2.js \
- *     --template "path/to/04d-integrate-existing-codebase_v2.md" \
- *     --spec "path/to/04c-pipeline-structured-from-wireframe_v1.md" \
- *     --codebase "path/to/src/" \
- *     --output-dir "path/to/output/" \
- *     --prompt-output "path/to/04e-custom-integration-prompt_v1.md"
+ *  From pmc/product/_tools/, run:
+ *     node 04e-merge-integration-spec_v2.js "Project Name" product-abbreviation
+ *
+ * Examples:
+ *     node 04e-merge-integration-spec_v2.js "LoRA Pipeline" pipeline
+ *     node 04e-merge-integration-spec_v2.js "Bright Module Orchestrator" bmo
+ *
+ * The script will guide you through:
+ *  1. Locating the Infrastructure Inventory document
+ *  2. Locating the Extension Strategy document
+ *  3. Locating the Implementation Guide document
+ *  4. Choosing output location for integrated extension spec
+ *  5. Generating the customized integration prompt
+ *
+ * Notes:
+ *  - Expects three input files (04d documents) to exist
+ *  - Generates prompt in: pmc/product/_mapping/[abbrev]/_run-prompts/
+ *  - Final output: 04e-[abbrev]-integrated-extension-spec_v1.md
  */
 
 const fs = require('fs');
 const path = require('path');
+const readline = require('readline');
 
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
+// Create readline interface for user interaction
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
 
-/**
- * Parse command line arguments
- */
-function parseArgs() {
-  const args = process.argv.slice(2);
-  const parsed = {};
+// Promisify readline question
+function question(query) {
+  return new Promise(resolve => rl.question(query, resolve));
+}
+
+// Convert path to display format (full absolute path)
+function toDisplayPath(absolutePath) {
+  const normalized = absolutePath.replace(/\\/g, '/');
+  return normalized;
+}
+
+// Convert path to LLM-friendly format (workspace relative)
+function toLLMPath(absolutePath) {
+  const normalized = absolutePath.replace(/\\/g, '/');
   
-  for (let i = 0; i < args.length; i += 2) {
-    const key = args[i].replace(/^--/, '');
-    const value = args[i + 1];
-    parsed[key] = value;
+  // Find the lora-pipeline root and make relative to it
+  const projectRoot = 'lora-pipeline/';
+  if (normalized.includes(projectRoot)) {
+    return normalized.substring(normalized.indexOf(projectRoot) + projectRoot.length);
   }
   
-  return parsed;
+  return normalized;
 }
 
-/**
- * Read file content
- */
-function readFile(filePath) {
-  try {
-    const absolutePath = path.resolve(filePath);
-    if (!fs.existsSync(absolutePath)) {
-      throw new Error(`File not found: ${absolutePath}`);
-    }
-    return fs.readFileSync(absolutePath, 'utf-8');
-  } catch (error) {
-    console.error(`Error reading file ${filePath}:`, error.message);
-    process.exit(1);
+// Validate that a file exists
+function validatePath(filePath, shouldExist = true) {
+  const exists = fs.existsSync(filePath);
+  
+  if (shouldExist && !exists) {
+    return { valid: false, message: `File does not exist: ${toDisplayPath(filePath)}` };
   }
-}
-
-/**
- * Write file content
- */
-function writeFile(filePath, content) {
-  try {
-    const absolutePath = path.resolve(filePath);
-    const dir = path.dirname(absolutePath);
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(absolutePath, content, 'utf-8');
-    console.log(`✅ Written: ${absolutePath}`);
-  } catch (error) {
-    console.error(`Error writing file ${filePath}:`, error.message);
-    process.exit(1);
+  
+  if (!shouldExist && exists) {
+    return { 
+      valid: true, 
+      warning: `Warning: File already exists and will be overwritten: ${toDisplayPath(filePath)}` 
+    };
   }
+  
+  return { valid: true };
 }
 
-/**
- * Resolve path to absolute and normalize
- */
+// Resolve various path formats to absolute paths
 function resolvePath(inputPath) {
-  return path.resolve(inputPath).replace(/\\/g, '/');
+  // Handle absolute Windows paths
+  if (inputPath.match(/^[A-Za-z]:\\/)) {
+    return path.normalize(inputPath);
+  }
+  
+  // Handle relative paths
+  if (inputPath.startsWith('../') || inputPath.startsWith('./')) {
+    return path.resolve(__dirname, inputPath);
+  }
+  
+  // Handle paths relative to project root
+  if (inputPath.startsWith('pmc/')) {
+    return path.resolve(__dirname, '../..', inputPath);
+  }
+  
+  // Default: treat as relative to current directory
+  return path.resolve(process.cwd(), inputPath);
 }
 
-/**
- * Get project name from spec filename or path
- */
-function extractProjectName(specPath) {
-  const basename = path.basename(specPath, '.md');
-  // Extract meaningful name from filename like "04c-pipeline-structured-from-wireframe_v1"
-  const match = basename.match(/04c-(.+?)(?:_v\d+)?$/);
+// Get a valid file path from user
+async function getValidPath(promptText, defaultPath, shouldExist = true) {
+  while (true) {
+    const resolvedDefault = resolvePath(defaultPath);
+    const validation = validatePath(resolvedDefault, shouldExist);
+    
+    console.log(`\n${promptText}`);
+    console.log(`Default: ${toDisplayPath(resolvedDefault)}`);
+    
+    if (validation.warning) {
+      console.log(`⚠️  ${validation.warning}`);
+    }
+    
+    const input = await question('> ');
+    
+    // Use default if empty input
+    if (!input.trim()) {
+      if (validation.valid) {
+        return resolvedDefault;
+      } else {
+        console.log(`❌ ${validation.message}`);
+        continue;
+      }
+    }
+    
+    // Validate user input
+    const resolvedInput = resolvePath(input.trim());
+    const inputValidation = validatePath(resolvedInput, shouldExist);
+    
+    if (inputValidation.valid) {
+      if (inputValidation.warning) {
+        console.log(`⚠️  ${inputValidation.warning}`);
+        const confirm = await question('Continue? (y/n): ');
+        if (confirm.toLowerCase() !== 'y') {
+          continue;
+        }
+      }
+      return resolvedInput;
+    } else {
+      console.log(`❌ ${inputValidation.message}`);
+    }
+  }
+}
+
+// Load the template
+function loadTemplate() {
+  const templatePath = path.resolve(__dirname, '../_prompt_engineering/04d-integrate-existing-codebase_v2.md');
+  
+  if (!fs.existsSync(templatePath)) {
+    console.error(`❌ Template not found: ${templatePath}`);
+    console.error('Please ensure 04d-integrate-existing-codebase_v2.md exists in pmc/product/_prompt_engineering/');
+    process.exit(1);
+  }
+  
+  try {
+    return fs.readFileSync(templatePath, 'utf-8');
+  } catch (error) {
+    console.error('❌ Error reading template:', error.message);
+    process.exit(1);
+  }
+}
+
+// Save prompt to file
+function savePrompt(prompt, outputPath) {
+  const outputDir = path.dirname(outputPath);
+  
+  // Create directory if it doesn't exist
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+    console.log(`📁 Created directory: ${toDisplayPath(outputDir)}`);
+  }
+  
+  try {
+    fs.writeFileSync(outputPath, prompt, 'utf-8');
+    console.log(`\n✅ Prompt saved to: ${toDisplayPath(outputPath)}`);
+    return outputPath;
+  } catch (error) {
+    console.error(`❌ Error saving prompt: ${error.message}`);
+    process.exit(1);
+  }
+}
+
+// Extract project name from spec filename or path
+function extractProjectNameFromPath(inventoryPath) {
+  const basename = path.basename(inventoryPath, '.md');
+  const match = basename.match(/04d-(.+?)-infrastructure-inventory/);
   if (match) {
-    // Convert kebab-case to Title Case
     return match[1]
       .split('-')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -105,248 +197,256 @@ function extractProjectName(specPath) {
   return 'New Module';
 }
 
-/**
- * Generate metadata section for the custom prompt
- */
-function generateMetadata(specPath, codebasePath, outputDir) {
+// Generate metadata section
+function generateMetadata(projectName, inventoryPath, strategyPath, guidePath, outputPath) {
   const date = new Date().toISOString().split('T')[0];
-  const projectName = extractProjectName(specPath);
   
   return `# Codebase Extension Analysis - ${projectName}
 
 **Generated:** ${date}
 **Template:** 04d-integrate-existing-codebase_v2.md
-**Purpose:** Generate extension documentation for implementing ${projectName} as a new module
+**Purpose:** Generate integrated extension specification for ${projectName}
 
 ---
 
 ## PROJECT-SPECIFIC PATHS
 
-**Structured Specification:**
-\`${resolvePath(specPath)}\`
+**Infrastructure Inventory:**
+\`${toLLMPath(inventoryPath)}\`
 
-**Existing Codebase:**
-\`${resolvePath(codebasePath)}\`
+**Extension Strategy:**
+\`${toLLMPath(strategyPath)}\`
 
-**Output Directory:**
-\`${resolvePath(outputDir)}\`
+**Implementation Guide:**
+\`${toLLMPath(guidePath)}\`
+
+**Output Integrated Spec:**
+\`${toLLMPath(outputPath)}\`
+
+---
+
+## INTEGRATION TASK
+
+You are tasked with creating an integrated extension specification that merges the information from the three documents above into a single, comprehensive specification document.
+
+### Input Documents
+
+1. **Infrastructure Inventory**: Documents what EXISTS in the codebase
+2. **Extension Strategy**: Documents HOW to use existing infrastructure
+3. **Implementation Guide**: Provides EXACT code patterns and instructions
+
+### Your Task
+
+Create a unified document that:
+- Transforms generic structured spec features to use existing infrastructure
+- Replaces generic technology references with actual codebase patterns
+- Provides implementation-ready guidance
+- Maintains the extension mindset throughout
 
 ---
 
 `;
 }
 
-/**
- * Replace placeholders in template with actual values
- */
-function replacePlaceholders(template, specPath, codebasePath, outputDir) {
-  const resolvedSpecPath = resolvePath(specPath);
-  const resolvedCodebasePath = resolvePath(codebasePath);
-  const resolvedOutputDir = resolvePath(outputDir);
-  
-  // Replace all placeholder patterns
-  let customPrompt = template;
-  
-  // Replace placeholders with actual paths
-  customPrompt = customPrompt.replace(/\{\{STRUCTURED_SPEC_PATH\}\}/g, resolvedSpecPath);
-  customPrompt = customPrompt.replace(/\{\{CODEBASE_PATH\}\}/g, resolvedCodebasePath);
-  customPrompt = customPrompt.replace(/\{\{OUTPUT_PATH\}\}/g, resolvedOutputDir);
-  
-  return customPrompt;
-}
-
-/**
- * Add execution instructions to the custom prompt
- */
-function addExecutionInstructions(outputDir) {
+// Add execution instructions
+function addExecutionInstructions(outputPath) {
   return `
 
 ---
 
 ## EXECUTION INSTRUCTIONS
 
-When you execute this prompt, you will generate THREE documents in the output directory:
+When you execute this prompt, you will generate ONE document:
 
-1. **\`04d-infrastructure-inventory_v1.md\`**
-   - Complete inventory of existing codebase infrastructure
-   - What exists and is available to use
-   - Expected size: ~2,000-3,000 lines
-
-2. **\`04d-extension-strategy_v1.md\`**
-   - Features extracted from spec (ignoring tech choices)
-   - How new module uses existing infrastructure
-   - What new things need to be created
-   - Expected size: ~1,500-2,500 lines
-
-3. **\`04d-implementation-guide_v1.md\`**
-   - Exact step-by-step implementation instructions
-   - Code examples using existing patterns
-   - Implementation checklist
-   - Expected size: ~2,000-4,000 lines
-
-**Total Expected Output:** ~5,500-9,500 lines of comprehensive extension documentation
+**\`${path.basename(outputPath)}\`**
+- Integrated extension specification
+- All infrastructure substitutions applied
+- Ready for segmentation into execution prompts
+- Expected size: ~3,000-5,000 lines
 
 ---
 
 ## HOW TO PROCEED
 
-1. **Read the Structured Specification** to understand WHAT FEATURES need to be built
-2. **Analyze the Existing Codebase** to understand WHAT INFRASTRUCTURE exists
-3. **Generate the THREE documents** following the templates and guidelines in this prompt
-4. **Ensure EXTENSION framing** throughout - this is NOT integration, it's adding a module
-5. **Focus on REUSE** - maximize use of existing infrastructure
+1. **Read all three input documents** to understand the complete context
+2. **Apply the transformation rules** from the meta-prompt above
+3. **Generate the integrated spec** that merges all information
+4. **Ensure EXTENSION framing** throughout - this is about REUSE
+5. **Make it implementation-ready** with exact patterns from Implementation Guide
 
-**Remember:** The spec describes FEATURES. The codebase provides INFRASTRUCTURE. Your job is to document HOW TO IMPLEMENT THE FEATURES USING THE INFRASTRUCTURE.
+**Remember:** You're creating a single unified document that combines all the extension knowledge into an implementation-ready specification.
 
 ---
 
-**Ready to begin? Start with Phase 1: Infrastructure Inventory.**
+**Ready to begin? Start by reading the three input documents, then generate the integrated extension specification.**
 
 `;
 }
 
-/**
- * Validate required files exist
- */
-function validateInputs(templatePath, specPath, codebasePath) {
-  const errors = [];
-  
-  // Check template
-  const resolvedTemplatePath = path.resolve(templatePath);
-  if (!fs.existsSync(resolvedTemplatePath)) {
-    errors.push(`Template not found: ${resolvedTemplatePath}`);
-  }
-  
-  // Check spec
-  const resolvedSpecPath = path.resolve(specPath);
-  if (!fs.existsSync(resolvedSpecPath)) {
-    errors.push(`Structured spec not found: ${resolvedSpecPath}`);
-  }
-  
-  // Check codebase directory
-  const resolvedCodebasePath = path.resolve(codebasePath);
-  if (!fs.existsSync(resolvedCodebasePath)) {
-    errors.push(`Codebase directory not found: ${resolvedCodebasePath}`);
-  } else if (!fs.statSync(resolvedCodebasePath).isDirectory()) {
-    errors.push(`Codebase path is not a directory: ${resolvedCodebasePath}`);
-  }
-  
-  return errors;
-}
-
-// ============================================================================
-// MAIN FUNCTION
-// ============================================================================
-
-function main() {
-  console.log('🚀 Integration Prompt Generator v2\n');
-  
-  // Parse arguments
-  const args = parseArgs();
-  
-  // Validate required arguments
-  if (!args.template || !args.spec || !args.codebase || !args['output-dir'] || !args['prompt-output']) {
-    console.error('❌ Missing required arguments\n');
-    console.error('Usage: node 04e-merge-integration-spec_v2.js \\');
-    console.error('    --template "path/to/04d-integrate-existing-codebase_v2.md" \\');
-    console.error('    --spec "path/to/04c-pipeline-structured-from-wireframe_v1.md" \\');
-    console.error('    --codebase "path/to/src/" \\');
-    console.error('    --output-dir "path/to/output/" \\');
-    console.error('    --prompt-output "path/to/04e-custom-integration-prompt_v1.md"\n');
-    console.error('Arguments:');
-    console.error('  --template      Path to generic meta-prompt template (v2)');
-    console.error('  --spec          Path to structured specification');
-    console.error('  --codebase      Path to existing codebase directory');
-    console.error('  --output-dir    Path to output directory for generated documents');
-    console.error('  --prompt-output Path to save the custom integration prompt\n');
-    process.exit(1);
-  }
-  
-  // Validate inputs
-  console.log('🔍 Validating input files...\n');
-  const errors = validateInputs(args.template, args.spec, args.codebase);
-  
-  if (errors.length > 0) {
-    console.error('❌ Validation errors:\n');
-    errors.forEach(error => console.error(`   - ${error}`));
-    console.error('');
-    process.exit(1);
-  }
-  
-  console.log('✅ All input files validated\n');
-  
-  // Read template
-  console.log('📂 Reading generic meta-prompt template...\n');
-  const template = readFile(args.template);
-  console.log(`✅ Template: ${path.resolve(args.template)}`);
-  console.log(`   Size: ${(template.length / 1024).toFixed(2)} KB\n`);
-  
-  // Generate metadata
-  console.log('🔧 Generating project-specific metadata...\n');
-  const metadata = generateMetadata(args.spec, args.codebase, args['output-dir']);
-  console.log('✅ Metadata generated\n');
-  
-  // Replace placeholders
-  console.log('🔄 Replacing placeholders with project paths...\n');
-  const customPrompt = replacePlaceholders(template, args.spec, args.codebase, args['output-dir']);
-  console.log('✅ Placeholders replaced:\n');
-  console.log(`   {{STRUCTURED_SPEC_PATH}} → ${resolvePath(args.spec)}`);
-  console.log(`   {{CODEBASE_PATH}}        → ${resolvePath(args.codebase)}`);
-  console.log(`   {{OUTPUT_PATH}}          → ${resolvePath(args['output-dir'])}\n`);
-  
-  // Add execution instructions
-  console.log('📝 Adding execution instructions...\n');
-  const executionInstructions = addExecutionInstructions(args['output-dir']);
-  console.log('✅ Instructions added\n');
-  
-  // Combine all parts
-  console.log('🔨 Assembling custom integration prompt...\n');
-  const finalPrompt = metadata + customPrompt + executionInstructions;
-  console.log('✅ Custom prompt assembled\n');
-  console.log(`   Total size: ${(finalPrompt.length / 1024).toFixed(2)} KB\n`);
-  
-  // Write output
-  console.log('💾 Writing custom integration prompt...\n');
-  writeFile(args['prompt-output'], finalPrompt);
-  
-  // Summary
-  console.log('\n✅ PROMPT GENERATION COMPLETE!\n');
-  console.log('📊 Summary:');
-  console.log(`   - Template used: ${path.basename(args.template)}`);
-  console.log(`   - Spec: ${path.basename(args.spec)}`);
-  console.log(`   - Codebase: ${path.basename(args.codebase)}`);
-  console.log(`   - Output prompt: ${path.resolve(args['prompt-output'])}`);
-  console.log(`   - Prompt size: ${(finalPrompt.length / 1024).toFixed(2)} KB\n`);
-  
-  console.log('🎯 Next steps:\n');
-  console.log('   1. Review the generated prompt:');
-  console.log(`      ${path.resolve(args['prompt-output'])}\n`);
-  console.log('   2. Execute the prompt using an AI assistant to generate:');
-  console.log(`      - ${path.resolve(args['output-dir'])}/04d-infrastructure-inventory_v1.md`);
-  console.log(`      - ${path.resolve(args['output-dir'])}/04d-extension-strategy_v1.md`);
-  console.log(`      - ${path.resolve(args['output-dir'])}/04d-implementation-guide_v1.md\n`);
-  console.log('   3. Once you have those three documents, run the segmentation script:');
-  console.log(`      node 04f-segment-integrated-spec_v1.js --input "..." --output-dir "..."\n`);
-}
-
-// ============================================================================
-// ENTRY POINT
-// ============================================================================
-
-if (require.main === module) {
+// Main execution
+async function main() {
   try {
-    main();
+    // Check for required command-line arguments
+    const args = process.argv.slice(2);
+    if (args.length !== 2) {
+      console.error('Usage: node 04e-merge-integration-spec_v2.js "Project Name" product-abbreviation');
+      console.error('Example:');
+      console.error('  node 04e-merge-integration-spec_v2.js "LoRA Pipeline" pipeline');
+      process.exit(1);
+    }
+    
+    const [projectName, projectAbbreviation] = args;
+    
+    console.log('\n╔════════════════════════════════════════════════════════════╗');
+    console.log('║      Integration Extension Specification Generator         ║');
+    console.log('╚════════════════════════════════════════════════════════════╝\n');
+    console.log(`Project: ${projectName} (${projectAbbreviation})\n`);
+    
+    // Step 1: Get Infrastructure Inventory path
+    console.log('Step 1: Locate Infrastructure Inventory');
+    console.log('────────────────────────────────────────');
+    
+    const defaultInventoryPath = path.resolve(__dirname, '..', '_mapping', projectAbbreviation, '_run-prompts', `04d-${projectAbbreviation}-infrastructure-inventory_v1.md`);
+    const inventoryPath = await getValidPath(
+      'Enter path to Infrastructure Inventory document:',
+      defaultInventoryPath,
+      true // Must exist
+    );
+    
+    console.log(`✓ Using inventory: ${toDisplayPath(inventoryPath)}`);
+    
+    // Step 2: Get Extension Strategy path
+    console.log('\n\nStep 2: Locate Extension Strategy');
+    console.log('──────────────────────────────────');
+    
+    const defaultStrategyPath = path.resolve(__dirname, '..', '_mapping', projectAbbreviation, '_run-prompts', `04d-${projectAbbreviation}-extension-strategy_v1.md`);
+    const strategyPath = await getValidPath(
+      'Enter path to Extension Strategy document:',
+      defaultStrategyPath,
+      true // Must exist
+    );
+    
+    console.log(`✓ Using strategy: ${toDisplayPath(strategyPath)}`);
+    
+    // Step 3: Get Implementation Guide path
+    console.log('\n\nStep 3: Locate Implementation Guide');
+    console.log('────────────────────────────────────');
+    
+    const defaultGuidePath = path.resolve(__dirname, '..', '_mapping', projectAbbreviation, '_run-prompts', `04d-${projectAbbreviation}-implementation-guide_v1.md`);
+    const guidePath = await getValidPath(
+      'Enter path to Implementation Guide document:',
+      defaultGuidePath,
+      true // Must exist
+    );
+    
+    console.log(`✓ Using guide: ${toDisplayPath(guidePath)}`);
+    
+    // Step 4: Get output path
+    console.log('\n\nStep 4: Choose Output Location for Integrated Extension Spec');
+    console.log('──────────────────────────────────────────────────────────────');
+    
+    const defaultOutputPath = path.resolve(__dirname, '..', '_mapping', projectAbbreviation, '_run-prompts', `04e-${projectAbbreviation}-integrated-extension-spec_v1.md`);
+    
+    const outputPath = await getValidPath(
+      'Enter path where the integrated spec will be saved:',
+      defaultOutputPath,
+      false // Doesn't need to exist yet
+    );
+    
+    console.log(`✓ Integrated spec will be saved to: ${toDisplayPath(outputPath)}`);
+    
+    // Step 5: Generate prompt
+    console.log('\n\nStep 5: Generate Integration Prompt');
+    console.log('────────────────────────────────────');
+    
+    const promptOutputDir = path.resolve(__dirname, '..', '_mapping', projectAbbreviation, '_run-prompts');
+    const promptFilename = `04e-${projectAbbreviation}-merge-integration-prompt_v1.md`;
+    const promptOutputPath = path.join(promptOutputDir, promptFilename);
+    
+    console.log(`Prompt will be saved to: ${toDisplayPath(promptOutputPath)}`);
+    
+    // Step 6: Load template
+    console.log('\nLoading template...');
+    const template = loadTemplate();
+    
+    // Step 7: Generate metadata
+    console.log('Generating metadata...');
+    const metadata = generateMetadata(projectName, inventoryPath, strategyPath, guidePath, outputPath);
+    
+    // Step 8: Add execution instructions
+    console.log('Adding execution instructions...');
+    const executionInstructions = addExecutionInstructions(outputPath);
+    
+    // Step 9: Combine all parts
+    console.log('Assembling prompt...');
+    const prompt = metadata + template + executionInstructions;
+    
+    // Step 10: Save prompt
+    console.log('Saving prompt...');
+    savePrompt(prompt, promptOutputPath);
+    
+    // Step 11: Display summary and instructions
+    console.log('\n\n╔════════════════════════════════════════════════════════════╗');
+    console.log('║                    ✅ PROMPT GENERATED                      ║');
+    console.log('╚════════════════════════════════════════════════════════════╝\n');
+    
+    console.log('📋 Summary:');
+    console.log('─────────');
+    console.log(`Project:            ${projectName} (${projectAbbreviation})`);
+    console.log(`Infrastructure Inv: ${toDisplayPath(inventoryPath)}`);
+    console.log(`Extension Strategy: ${toDisplayPath(strategyPath)}`);
+    console.log(`Implementation Gd:  ${toDisplayPath(guidePath)}`);
+    console.log(`Output Destination: ${toDisplayPath(outputPath)}`);
+    console.log(`Generated Prompt:   ${toDisplayPath(promptOutputPath)}`);
+    
+    console.log('\n\n📖 Next Steps:');
+    console.log('─────────────');
+    console.log('1. Open the generated prompt file:');
+    console.log(`   ${toDisplayPath(promptOutputPath)}`);
+    console.log('');
+    console.log('2. Copy the ENTIRE contents of the prompt file');
+    console.log('');
+    console.log('3. Paste into Claude Sonnet 4.5 (or similar AI assistant)');
+    console.log('');
+    console.log('4. Claude will merge the three documents and create');
+    console.log('   an integrated extension specification');
+    console.log('');
+    console.log('5. Save Claude\'s output to:');
+    console.log(`   ${toDisplayPath(outputPath)}`);
+    console.log('');
+    console.log('6. Review the integrated spec to ensure:');
+    console.log('   - All infrastructure substitutions applied');
+    console.log('   - Extension framing maintained throughout');
+    console.log('   - Implementation patterns are exact');
+    console.log('   - Ready for segmentation');
+    console.log('');
+    console.log('7. After validation, run segmentation:');
+    console.log(`   node 04f-segment-integrated-spec_v1.js \\`);
+    console.log(`     --inventory "${inventoryPath}" \\`);
+    console.log(`     --strategy "${strategyPath}" \\`);
+    console.log(`     --guide "${guidePath}" \\`);
+    console.log(`     --output-dir "../_mapping/${projectAbbreviation}/_execution-prompts/"`);
+    console.log('');
+    
+    console.log('💡 Tips:');
+    console.log('────────');
+    console.log('- The three input documents MUST exist before running this script');
+    console.log('- The integrated spec will be comprehensive (~3,000-5,000 lines)');
+    console.log('- Claude maintains the extension mindset throughout');
+    console.log('- The result is ready for immediate segmentation');
+    console.log('');
+    
   } catch (error) {
-    console.error('\n❌ ERROR:', error.message);
-    console.error(error.stack);
+    console.error('\n❌ Error:', error.message);
+    if (error.stack) {
+      console.error('\nStack trace:');
+      console.error(error.stack);
+    }
     process.exit(1);
+  } finally {
+    rl.close();
   }
 }
 
-module.exports = { 
-  replacePlaceholders, 
-  generateMetadata, 
-  addExecutionInstructions,
-  extractProjectName,
-  resolvePath
-};
+// Run the script
+main();

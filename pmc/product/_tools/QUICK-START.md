@@ -7,22 +7,25 @@
 
 ## Three-Stage Pipeline Workflow
 
-### Stage 0: Generate Custom Integration Prompt
+### Stage 0: Generate Integration Prompt
 
 ```bash
 # Navigate to tools directory
 cd "C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools"
 
-# Generate custom prompt from template (~1-2 seconds)
-node 04e-merge-integration-spec_v2.js \
-  --template "../_prompt_engineering/04d-integrate-existing-codebase_v2.md" \
-  --spec "../_mapping/pipeline/04c-pipeline-structured-from-wireframe_v1.md" \
-  --codebase "../../../src" \
-  --output-dir "../_mapping/pipeline/_run-prompts" \
-  --prompt-output "../_mapping/pipeline/04e-custom-integration-prompt_v1.md"
+# Run interactive prompt generator
+node 04e-merge-integration-spec_v2.js "LoRA Pipeline" pipeline
+
+# The script will interactively prompt for:
+# 1. Infrastructure Inventory path (press Enter for default)
+# 2. Extension Strategy path (press Enter for default)
+# 3. Implementation Guide path (press Enter for default)
+# 4. Output location (press Enter for default)
 ```
 
-**Output:** `04e-custom-integration-prompt_v1.md` (ready-to-execute prompt)
+**Output:** `04e-pipeline-merge-integration-prompt_v1.md` (ready-to-execute prompt)
+
+**Note:** All prompts have sensible defaults. Just press Enter to accept each default path.
 
 ---
 
@@ -61,24 +64,21 @@ node 04f-segment-integrated-spec_v1.js \
 # Navigate to tools directory
 cd "C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools"
 
-# ===== STAGE 0: Generate Custom Prompt =====
-node 04e-merge-integration-spec_v2.js \
-  --template "../_prompt_engineering/04d-integrate-existing-codebase_v2.md" \
-  --spec "../_mapping/pipeline/04c-pipeline-structured-from-wireframe_v1.md" \
-  --codebase "../../../src" \
-  --output-dir "../_mapping/pipeline/_run-prompts" \
-  --prompt-output "../_mapping/pipeline/04e-custom-integration-prompt_v1.md"
+# ===== STAGE 0: Generate Integration Prompt =====
+node 04e-merge-integration-spec_v2.js "LoRA Pipeline" pipeline
+# Interactive prompts will appear - press Enter to accept defaults
 
 # ===== STAGE 1: Execute with AI (Manual) =====
-# 1. Open: ../pmc/product/_mapping/pipeline/04e-custom-integration-prompt_v1.md
-# 2. Execute with AI assistant
-# 3. Save three documents to _run-prompts/ directory
+# 1. Open: pmc/product/_mapping/pipeline/_run-prompts/04e-pipeline-merge-integration-prompt_v1.md
+# 2. Copy entire prompt and paste into Claude/ChatGPT
+# 3. AI will generate: 04e-pipeline-integrated-extension-spec_v1.md
+# 4. Save AI output to the specified location
 
 # ===== STAGE 2: Segment (After Stage 1 complete) =====
 node 04f-segment-integrated-spec_v1.js \
-  --inventory "../_mapping/pipeline/_run-prompts/04d-infrastructure-inventory_v1.md" \
-  --strategy "../_mapping/pipeline/_run-prompts/04d-extension-strategy_v1.md" \
-  --guide "../_mapping/pipeline/_run-prompts/04d-implementation-guide_v1.md" \
+  --inventory "../_mapping/pipeline/_run-prompts/04d-pipeline-infrastructure-inventory_v1.md" \
+  --strategy "../_mapping/pipeline/_run-prompts/04d-pipeline-extension-strategy_v1.md" \
+  --guide "../_mapping/pipeline/_run-prompts/04d-pipeline-implementation-guide_v1.md" \
   --output-dir "../_mapping/pipeline/_execution-prompts/"
 ```
 
@@ -97,12 +97,10 @@ Expected: `✅ VALIDATION PASSED - Ready to run pipeline!`
 ## Output Files
 
 **After Stage 0:**
-- `04e-custom-integration-prompt_v1.md` (~46 KB)
+- `04e-[product-abbrev]-merge-integration-prompt_v1.md` (~46 KB)
 
 **After Stage 1 (AI execution):**
-- `04d-infrastructure-inventory_v1.md` (~50-100 KB)
-- `04d-extension-strategy_v1.md` (~40-80 KB)
-- `04d-implementation-guide_v1.md` (~60-120 KB)
+- `04e-[product-abbrev]-integrated-extension-spec_v1.md` (~100-200 KB)
 
 **After Stage 2:**
 - `_execution-prompts/` directory
@@ -136,19 +134,20 @@ Expected: `✅ VALIDATION PASSED - Ready to run pipeline!`
 ## v2 vs v1 Changes
 
 **v2 Workflow:**
-- Stage 0: Generate custom prompt from template
-- Stage 1: AI analyzes codebase (manual execution)
+- Stage 0: Interactive prompt generator (`"Project Name" product-abbrev` args)
+- Stage 1: AI merges three 04d docs into integrated spec (manual execution)
 - Stage 2: Segment into execution prompts
 
 **v1 Workflow (deprecated):**
-- Stage 1: Hardcoded merge transformation
+- Stage 1: Hardcoded merge transformation with many command-line flags
 - Stage 2: Segment into execution prompts
 
 **Why v2?**
+- Interactive prompts with sensible defaults
 - Product/project agnostic meta-prompt
-- Flexible for different codebases
+- Same UX pattern as 04c script (consistent)
 - Better framing (EXTENSION, not integration)
-- More accurate codebase analysis
+- Cleaner usage: just two arguments
 
 ---
 
