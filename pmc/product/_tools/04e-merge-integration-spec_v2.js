@@ -5,7 +5,7 @@
  *
  * Purpose:
  *  - Generate a custom integration prompt from the generic meta-prompt template
- *  - Uses the template: 04d-integrate-existing-codebase_v2.md
+ *  - Uses the template: 04e-merge-integration-spec-meta-prompt_v1.md
  *  - Interactive script that validates paths and generates ready-to-use prompts
  *
  * Usage:
@@ -17,14 +17,15 @@
  *     node 04e-merge-integration-spec_v2.js "Bright Module Orchestrator" bmo
  *
  * The script will guide you through:
- *  1. Locating the Infrastructure Inventory document
- *  2. Locating the Extension Strategy document
- *  3. Locating the Implementation Guide document
- *  4. Choosing output location for integrated extension spec
- *  5. Generating the customized integration prompt
+ *  1. Locating the Structured Specification document
+ *  2. Locating the Infrastructure Inventory document
+ *  3. Locating the Extension Strategy document
+ *  4. Locating the Implementation Guide document
+ *  5. Choosing output location for integrated extension spec
+ *  6. Generating the customized integration prompt
  *
  * Notes:
- *  - Expects three input files (04d documents) to exist
+ *  - Expects four input files (04c structured spec + three 04d documents) to exist
  *  - Generates prompt in: pmc/product/_mapping/[abbrev]/_run-prompts/
  *  - Final output: 04e-[abbrev]-integrated-extension-spec_v1.md
  */
@@ -148,11 +149,11 @@ async function getValidPath(promptText, defaultPath, shouldExist = true) {
 
 // Load the template
 function loadTemplate() {
-  const templatePath = path.resolve(__dirname, '../_prompt_engineering/04d-integrate-existing-codebase_v2.md');
+  const templatePath = path.resolve(__dirname, '../_prompt_engineering/04e-merge-integration-spec-meta-prompt_v1.md');
   
   if (!fs.existsSync(templatePath)) {
     console.error(`❌ Template not found: ${templatePath}`);
-    console.error('Please ensure 04d-integrate-existing-codebase_v2.md exists in pmc/product/_prompt_engineering/');
+    console.error('Please ensure 04e-merge-integration-spec-meta-prompt_v1.md exists in pmc/product/_prompt_engineering/');
     process.exit(1);
   }
   
@@ -198,18 +199,21 @@ function extractProjectNameFromPath(inventoryPath) {
 }
 
 // Generate metadata section
-function generateMetadata(projectName, inventoryPath, strategyPath, guidePath, outputPath) {
+function generateMetadata(projectName, specPath, inventoryPath, strategyPath, guidePath, outputPath) {
   const date = new Date().toISOString().split('T')[0];
   
-  return `# Codebase Extension Analysis - ${projectName}
+  return `# Integration Merge Prompt - ${projectName}
 
 **Generated:** ${date}
-**Template:** 04d-integrate-existing-codebase_v2.md
-**Purpose:** Generate integrated extension specification for ${projectName}
+**Template:** 04e-merge-integration-spec-meta-prompt_v1.md
+**Purpose:** Transform structured specification into integrated extension specification
 
 ---
 
 ## PROJECT-SPECIFIC PATHS
+
+**Structured Specification:**
+\`${toLLMPath(specPath)}\`
 
 **Infrastructure Inventory:**
 \`${toLLMPath(inventoryPath)}\`
@@ -222,26 +226,6 @@ function generateMetadata(projectName, inventoryPath, strategyPath, guidePath, o
 
 **Output Integrated Spec:**
 \`${toLLMPath(outputPath)}\`
-
----
-
-## INTEGRATION TASK
-
-You are tasked with creating an integrated extension specification that merges the information from the three documents above into a single, comprehensive specification document.
-
-### Input Documents
-
-1. **Infrastructure Inventory**: Documents what EXISTS in the codebase
-2. **Extension Strategy**: Documents HOW to use existing infrastructure
-3. **Implementation Guide**: Provides EXACT code patterns and instructions
-
-### Your Task
-
-Create a unified document that:
-- Transforms generic structured spec features to use existing infrastructure
-- Replaces generic technology references with actual codebase patterns
-- Provides implementation-ready guidance
-- Maintains the extension mindset throughout
 
 ---
 
@@ -295,18 +279,31 @@ async function main() {
       process.exit(1);
     }
     
-    const [projectName, projectAbbreviation] = args;
+    const [projectName, productAbbreviation] = args;
     
     console.log('\n╔════════════════════════════════════════════════════════════╗');
     console.log('║      Integration Extension Specification Generator         ║');
     console.log('╚════════════════════════════════════════════════════════════╝\n');
-    console.log(`Project: ${projectName} (${projectAbbreviation})\n`);
+    console.log(`Project: ${projectName} (${productAbbreviation})\n`);
     
-    // Step 1: Get Infrastructure Inventory path
-    console.log('Step 1: Locate Infrastructure Inventory');
+    // Step 1: Get Structured Specification path
+    console.log('Step 1: Locate Structured Specification');
     console.log('────────────────────────────────────────');
     
-    const defaultInventoryPath = path.resolve(__dirname, '..', '_mapping', projectAbbreviation, '_run-prompts', `04d-${projectAbbreviation}-infrastructure-inventory_v1.md`);
+    const defaultSpecPath = path.resolve(__dirname, '..', '_mapping', productAbbreviation, `04c-${productAbbreviation}-structured-from-wireframe_v1.md`);
+    const specPath = await getValidPath(
+      'Enter path to Structured Specification document:',
+      defaultSpecPath,
+      true // Must exist
+    );
+    
+    console.log(`✓ Using structured spec: ${toDisplayPath(specPath)}`);
+    
+    // Step 2: Get Infrastructure Inventory path
+    console.log('\n\nStep 2: Locate Infrastructure Inventory');
+    console.log('────────────────────────────────────────');
+    
+    const defaultInventoryPath = path.resolve(__dirname, '..', '_mapping', productAbbreviation, '_run-prompts', `04d-${productAbbreviation}-infrastructure-inventory_v1.md`);
     const inventoryPath = await getValidPath(
       'Enter path to Infrastructure Inventory document:',
       defaultInventoryPath,
@@ -315,11 +312,11 @@ async function main() {
     
     console.log(`✓ Using inventory: ${toDisplayPath(inventoryPath)}`);
     
-    // Step 2: Get Extension Strategy path
-    console.log('\n\nStep 2: Locate Extension Strategy');
+    // Step 3: Get Extension Strategy path
+    console.log('\n\nStep 3: Locate Extension Strategy');
     console.log('──────────────────────────────────');
     
-    const defaultStrategyPath = path.resolve(__dirname, '..', '_mapping', projectAbbreviation, '_run-prompts', `04d-${projectAbbreviation}-extension-strategy_v1.md`);
+    const defaultStrategyPath = path.resolve(__dirname, '..', '_mapping', productAbbreviation, '_run-prompts', `04d-${productAbbreviation}-extension-strategy_v1.md`);
     const strategyPath = await getValidPath(
       'Enter path to Extension Strategy document:',
       defaultStrategyPath,
@@ -328,11 +325,11 @@ async function main() {
     
     console.log(`✓ Using strategy: ${toDisplayPath(strategyPath)}`);
     
-    // Step 3: Get Implementation Guide path
-    console.log('\n\nStep 3: Locate Implementation Guide');
+    // Step 4: Get Implementation Guide path
+    console.log('\n\nStep 4: Locate Implementation Guide');
     console.log('────────────────────────────────────');
     
-    const defaultGuidePath = path.resolve(__dirname, '..', '_mapping', projectAbbreviation, '_run-prompts', `04d-${projectAbbreviation}-implementation-guide_v1.md`);
+    const defaultGuidePath = path.resolve(__dirname, '..', '_mapping', productAbbreviation, '_run-prompts', `04d-${productAbbreviation}-implementation-guide_v1.md`);
     const guidePath = await getValidPath(
       'Enter path to Implementation Guide document:',
       defaultGuidePath,
@@ -341,11 +338,11 @@ async function main() {
     
     console.log(`✓ Using guide: ${toDisplayPath(guidePath)}`);
     
-    // Step 4: Get output path
-    console.log('\n\nStep 4: Choose Output Location for Integrated Extension Spec');
+    // Step 5: Get output path
+    console.log('\n\nStep 5: Choose Output Location for Integrated Extension Spec');
     console.log('──────────────────────────────────────────────────────────────');
     
-    const defaultOutputPath = path.resolve(__dirname, '..', '_mapping', projectAbbreviation, '_run-prompts', `04e-${projectAbbreviation}-integrated-extension-spec_v1.md`);
+    const defaultOutputPath = path.resolve(__dirname, '..', '_mapping', productAbbreviation, `04e-${productAbbreviation}-integrated-extension-spec_v1.md`);
     
     const outputPath = await getValidPath(
       'Enter path where the integrated spec will be saved:',
@@ -355,44 +352,52 @@ async function main() {
     
     console.log(`✓ Integrated spec will be saved to: ${toDisplayPath(outputPath)}`);
     
-    // Step 5: Generate prompt
-    console.log('\n\nStep 5: Generate Integration Prompt');
+    // Step 6: Generate prompt
+    console.log('\n\nStep 6: Generate Integration Prompt');
     console.log('────────────────────────────────────');
     
-    const promptOutputDir = path.resolve(__dirname, '..', '_mapping', projectAbbreviation, '_run-prompts');
-    const promptFilename = `04e-${projectAbbreviation}-merge-integration-prompt_v1.md`;
+    const promptOutputDir = path.resolve(__dirname, '..', '_mapping', productAbbreviation, '_run-prompts');
+    const promptFilename = `04e-${productAbbreviation}-merge-integration-prompt_v1.md`;
     const promptOutputPath = path.join(promptOutputDir, promptFilename);
     
     console.log(`Prompt will be saved to: ${toDisplayPath(promptOutputPath)}`);
     
-    // Step 6: Load template
+    // Step 7: Load template
     console.log('\nLoading template...');
     const template = loadTemplate();
     
-    // Step 7: Generate metadata
-    console.log('Generating metadata...');
-    const metadata = generateMetadata(projectName, inventoryPath, strategyPath, guidePath, outputPath);
+    // Step 8: Replace placeholders in template
+    console.log('Replacing placeholders...');
+    let prompt = template
+      .replace(/\{\{STRUCTURED_SPEC_PATH\}\}/g, `\`${toLLMPath(specPath)}\``)
+      .replace(/\{\{INFRASTRUCTURE_INVENTORY_PATH\}\}/g, `\`${toLLMPath(inventoryPath)}\``)
+      .replace(/\{\{EXTENSION_STRATEGY_PATH\}\}/g, `\`${toLLMPath(strategyPath)}\``)
+      .replace(/\{\{IMPLEMENTATION_GUIDE_PATH\}\}/g, `\`${toLLMPath(guidePath)}\``)
+      .replace(/\{\{OUTPUT_PATH\}\}/g, `\`${toLLMPath(outputPath)}\``);
     
-    // Step 8: Add execution instructions
+    // Step 9: Add metadata header
+    console.log('Adding metadata...');
+    const metadata = generateMetadata(projectName, specPath, inventoryPath, strategyPath, guidePath, outputPath);
+    prompt = metadata + prompt;
+    
+    // Step 10: Add execution instructions
     console.log('Adding execution instructions...');
     const executionInstructions = addExecutionInstructions(outputPath);
+    prompt = prompt + executionInstructions;
     
-    // Step 9: Combine all parts
-    console.log('Assembling prompt...');
-    const prompt = metadata + template + executionInstructions;
-    
-    // Step 10: Save prompt
+    // Step 11: Save prompt
     console.log('Saving prompt...');
     savePrompt(prompt, promptOutputPath);
     
-    // Step 11: Display summary and instructions
+    // Step 12: Display summary and instructions
     console.log('\n\n╔════════════════════════════════════════════════════════════╗');
     console.log('║                    ✅ PROMPT GENERATED                      ║');
     console.log('╚════════════════════════════════════════════════════════════╝\n');
     
     console.log('📋 Summary:');
     console.log('─────────');
-    console.log(`Project:            ${projectName} (${projectAbbreviation})`);
+    console.log(`Project:            ${projectName} (${productAbbreviation})`);
+    console.log(`Structured Spec:    ${toDisplayPath(specPath)}`);
     console.log(`Infrastructure Inv: ${toDisplayPath(inventoryPath)}`);
     console.log(`Extension Strategy: ${toDisplayPath(strategyPath)}`);
     console.log(`Implementation Gd:  ${toDisplayPath(guidePath)}`);
@@ -406,10 +411,13 @@ async function main() {
     console.log('');
     console.log('2. Copy the ENTIRE contents of the prompt file');
     console.log('');
-    console.log('3. Paste into Claude Sonnet 4.5 (or similar AI assistant)');
+    console.log('3. Paste into Claude Sonnet 4.5 (200k context window)');
     console.log('');
-    console.log('4. Claude will merge the three documents and create');
-    console.log('   an integrated extension specification');
+    console.log('4. Claude will transform the structured spec using integration knowledge');
+    console.log('   - Replaces Prisma with Supabase Client');
+    console.log('   - Replaces NextAuth with Supabase Auth');
+    console.log('   - Replaces S3 with Supabase Storage');
+    console.log('   - Applies existing patterns from Infrastructure Inventory');
     console.log('');
     console.log('5. Save Claude\'s output to:');
     console.log(`   ${toDisplayPath(outputPath)}`);
@@ -417,20 +425,16 @@ async function main() {
     console.log('6. Review the integrated spec to ensure:');
     console.log('   - All infrastructure substitutions applied');
     console.log('   - Extension framing maintained throughout');
-    console.log('   - Implementation patterns are exact');
+    console.log('   - Implementation patterns match Infrastructure Inventory');
     console.log('   - Ready for segmentation');
     console.log('');
     console.log('7. After validation, run segmentation:');
-    console.log(`   node 04f-segment-integrated-spec_v1.js \\`);
-    console.log(`     --inventory "${inventoryPath}" \\`);
-    console.log(`     --strategy "${strategyPath}" \\`);
-    console.log(`     --guide "${guidePath}" \\`);
-    console.log(`     --output-dir "../_mapping/${projectAbbreviation}/_execution-prompts/"`);
+    console.log(`   node 04f-segment-integrated-spec_v2.js "${projectName}" ${productAbbreviation}`);
     console.log('');
     
     console.log('💡 Tips:');
     console.log('────────');
-    console.log('- The three input documents MUST exist before running this script');
+    console.log('- All four input documents MUST exist before running this script');
     console.log('- The integrated spec will be comprehensive (~3,000-5,000 lines)');
     console.log('- Claude maintains the extension mindset throughout');
     console.log('- The result is ready for immediate segmentation');

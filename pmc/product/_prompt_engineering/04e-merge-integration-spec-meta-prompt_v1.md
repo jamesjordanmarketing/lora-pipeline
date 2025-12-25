@@ -781,7 +781,7 @@ Process each section of the structured specification sequentially:
 6. Run Validation Checklist
 7. Move to next section
 
-**Output File**: `04e-integrated-extension-spec_v1.md`
+**Output File**: {{OUTPUT_PATH}}
 
 **Structure**:
 ```markdown

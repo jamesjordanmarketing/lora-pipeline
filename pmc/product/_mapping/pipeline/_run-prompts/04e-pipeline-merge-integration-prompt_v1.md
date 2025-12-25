@@ -1,12 +1,15 @@
-# Codebase Extension Analysis - LoRA Pipeline
+# Integration Merge Prompt - LoRA Pipeline
 
 **Generated:** 2025-12-24
-**Template:** 04d-integrate-existing-codebase_v2.md
-**Purpose:** Generate integrated extension specification for LoRA Pipeline
+**Template:** 04e-merge-integration-spec-meta-prompt_v1.md
+**Purpose:** Transform structured specification into integrated extension specification
 
 ---
 
 ## PROJECT-SPECIFIC PATHS
+
+**Structured Specification:**
+`pmc/product/_mapping/pipeline/04c-pipeline-structured-from-wireframe_v1.md`
 
 **Infrastructure Inventory:**
 `pmc/product/_mapping/pipeline/_run-prompts/04d-pipeline-infrastructure-inventory_v1.md`
@@ -18,1686 +21,877 @@
 `pmc/product/_mapping/pipeline/_run-prompts/04d-pipeline-implementation-guide_v1.md`
 
 **Output Integrated Spec:**
-`pmc/product/_mapping/pipeline/_run-prompts/04e-pipeline-integrated-extension-spec_v1.md`
+`pmc/product/_mapping/pipeline/04e-pipeline-integrated-extension-spec_v1.md`
 
 ---
 
-## INTEGRATION TASK
+# Integration Merge Meta-Prompt
 
-You are tasked with creating an integrated extension specification that merges the information from the three documents above into a single, comprehensive specification document.
-
-### Input Documents
-
-1. **Infrastructure Inventory**: Documents what EXISTS in the codebase
-2. **Extension Strategy**: Documents HOW to use existing infrastructure
-3. **Implementation Guide**: Provides EXACT code patterns and instructions
-
-### Your Task
-
-Create a unified document that:
-- Transforms generic structured spec features to use existing infrastructure
-- Replaces generic technology references with actual codebase patterns
-- Provides implementation-ready guidance
-- Maintains the extension mindset throughout
+**Version:** 1.0  
+**Date:** December 23, 2025  
+**Purpose:** Transform structured specification into integrated extension specification by replacing generic infrastructure with existing codebase patterns
 
 ---
 
-# Codebase Extension Meta-Prompt
+## CRITICAL FRAMING
 
-**Version:** 2.0  
-**Purpose:** Generate extension documentation for implementing a structured specification as a new module in an existing production codebase  
-**Input:** Structured specification + Existing codebase directory  
-**Output:** Three extension documents (Infrastructure Inventory, Extension Strategy, Implementation Guide)
+You are transforming a **structured specification** (which describes FEATURES using generic infrastructure) into an **integrated extension specification** (which describes the SAME FEATURES using the EXISTING codebase's infrastructure).
 
----
+**What you are doing:**
+- Extracting FEATURES from the structured spec (WHAT to build)
+- Replacing generic infrastructure references (Prisma, NextAuth, S3, BullMQ) with existing codebase patterns (Supabase)
+- Producing a spec that is ready for progressive segmentation into execution prompts
 
-## CRITICAL FRAMING: EXTENSION, NOT INTEGRATION
-
-**READ THIS FIRST - THIS DEFINES THE ENTIRE APPROACH**
-
-You are NOT comparing two independent applications for compatibility.
-You are NOT looking for "mismatches" or "incompatibilities" between tech stacks.
-You are NOT recommending building a separate application.
-You are NOT performing a gap analysis between two systems.
-
-**You ARE:**
-- Analyzing an existing production codebase to understand what infrastructure it provides
-- Reading a structured specification to understand what FEATURES need to be built
-- Determining how to ADD these new features as a MODULE that sits alongside existing code
-- Using the EXISTING infrastructure (auth, database, storage, components) for ALL new features
-- Specifying exactly what to CREATE NEW (tables, APIs, pages, components) using existing patterns
-
-**The Goal:**
-> Build the new module as an extension that sits alongside existing code, with direct access to existing objects, artifacts, and interfaces, functioning holistically as part of the same application.
-
-**Key Mindset Shift:**
-- The structured spec describes **FEATURES** (what to build)
-- The structured spec's infrastructure choices (Prisma, NextAuth, S3, BullMQ, etc.) are **IRRELEVANT**
-- Your job is to implement the spec's **FEATURES** using the **EXISTING** codebase's infrastructure
-- The core technologies of the existing codebase always take priority over the structured spec, unless the structured spec has some functionality that cannot be achieved using the current technologies in the existing codebase
-
-**NEVER recommend building separately.** The new module WILL be added to the existing codebase.
-
----
-
-## CORE PRINCIPLES
-
-1. **Extension First**: New features extend the existing application using its infrastructure
-2. **Preservation Always**: Existing functionality must continue working - no breaking changes
-3. **Reuse Over Create**: Use existing infrastructure wherever possible
-4. **Pattern Consistency**: New code must match existing conventions and patterns
-5. **Feature Focus**: Extract and implement the FEATURES from the spec, ignore its tech stack assumptions
-6. **Practical Guidance**: Provide specific, actionable implementation instructions
+**What you are NOT doing:**
+- Comparing two applications for compatibility
+- Deciding whether to use existing infrastructure (decision is MADE - always use existing)
+- Creating new infrastructure setup instructions
 
 ---
 
 ## INPUT FILES
 
 ### Input 1: Structured Specification
-**File Path**: `{{STRUCTURED_SPEC_PATH}}`
+**File**: ``pmc/product/_mapping/pipeline/04c-pipeline-structured-from-wireframe_v1.md``
 
-This file contains the complete structured specification for the new module. It describes **WHAT FEATURES** need to be built. The technology choices in this spec are assumptions for a greenfield project and should be IGNORED in favor of the existing codebase's infrastructure.
+This file contains 7 sections of feature requirements organized as:
+- Section 1: Foundation & Authentication
+- Section 2: Dataset Management
+- Section 3: Training Configuration
+- Section 4: Training Execution & Monitoring
+- Section 5: Model Artifacts & Delivery
+- Section 6: Cost Tracking & Notifications
+- Section 7: Complete System Integration
 
-**Read the spec to extract**:
-- ✅ Features and functionality
-- ✅ User workflows and interactions
-- ✅ Data models and relationships (conceptually)
-- ✅ Business logic and validation rules
-- ✅ UI components and pages needed
+**How to Read:**
+- Extract the FEATURES from each section (data models, APIs, UI pages, workflows)
+- IGNORE the infrastructure setup instructions (Prisma schema, NextAuth config, S3 setup, BullMQ workers)
+- Focus on WHAT the user does, WHAT data is stored, WHAT APIs are needed
 
-**Ignore from the spec**:
-- ❌ Technology choices (frameworks, libraries, services)
-- ❌ Infrastructure assumptions (auth providers, ORMs, storage services)
-- ❌ Build configurations
-- ❌ Deployment strategies
+### Input 2: Infrastructure Inventory
+**File**: ``pmc/product/_mapping/pipeline/_run-prompts/04d-pipeline-infrastructure-inventory_v1.md``
 
-### Input 2: Existing Production Codebase  
-**Directory Path**: `{{CODEBASE_PATH}}`
+This file documents what EXISTS in the codebase for you to USE:
+- Authentication patterns (Supabase Auth with `requireAuth()`)
+- Database patterns (Supabase Client with direct queries)
+- Storage patterns (Supabase Storage with on-demand signed URLs)
+- API patterns (Next.js API routes with consistent response format)
+- Component patterns (shadcn/ui components)
+- State management patterns (React Query with custom hooks)
 
-This directory contains the current production codebase where the new module will be added as an extension. You must analyze its structure, patterns, and existing infrastructure to understand what is AVAILABLE for the new module to USE.
+**How to Use:**
+- For every infrastructure need in the structured spec, find the corresponding pattern from this inventory
+- Copy the exact pattern (code, imports, structure)
+- Replace spec's infrastructure with inventory's patterns
 
-### Output Destination
-**Directory Path**: `{{OUTPUT_PATH}}`
+### Input 3: Extension Strategy
+**File**: ``pmc/product/_mapping/pipeline/_run-prompts/04d-pipeline-extension-strategy_v1.md``
 
-You will create three markdown documents in this directory:
-1. `04d-infrastructure-inventory_v1.md` - What infrastructure exists and is available to use
-2. `04d-extension-strategy_v1.md` - How new features will use existing infrastructure
-3. `04d-implementation-guide_v1.md` - Exact steps to implement new features
+This file maps each feature area to existing infrastructure:
+- Lists all features extracted from the spec
+- Defines which existing infrastructure each feature uses
+- Specifies what NEW to create (tables, APIs, pages, components)
+- Specifies what NOT to create (existing infrastructure)
+
+**How to Use:**
+- Use this as a cross-reference to ensure you're mapping features correctly
+- Check that your transformations align with the decisions in this strategy
+
+### Input 4: Implementation Guide
+**File**: ``pmc/product/_mapping/pipeline/_run-prompts/04d-pipeline-implementation-guide_v1.md``
+
+This file provides exact code patterns for:
+- Database migrations (SQL with RLS policies)
+- Type definitions (TypeScript interfaces)
+- API routes (complete implementations)
+- Components (complete implementations)
+- Pages (complete implementations)
+
+**How to Use:**
+- Reference these patterns when transforming code examples in the spec
+- Ensure consistency with the exact patterns shown here
 
 ---
 
-## PHASE 1: INFRASTRUCTURE INVENTORY
+## TRANSFORMATION RULES
 
-Before creating any documentation, perform a thorough inventory of the existing codebase to understand what infrastructure is AVAILABLE for the new module to use.
+### Rule 1: Section Header Transformation
 
-**Purpose**: Document what EXISTS and is READY TO USE by the new module.
-
----
-
-### Step 1.1: Project Architecture Inventory
-
-**Required Analysis**:
-
-1. **Framework & Build System**
-   - Identify framework (Next.js, React, Vue, etc.) and version
-   - Build configuration (next.config.js, vite.config.js, etc.)
-   - TypeScript or JavaScript? Configuration strictness
-   - Package manager (npm, yarn, pnpm) and version
-
-2. **Directory Structure**
-   - Map out key directories and their purposes
-   - Identify patterns (feature-based, layer-based, etc.)
-   - Document file naming conventions
-   - Note any monorepo or workspace setup
-
-3. **Routing Architecture**
-   - Routing system (Next.js App Router, Pages Router, React Router, etc.)
-   - Existing routes and their purposes
-   - Route protection/middleware patterns
-   - Dynamic routing conventions
-
-**Output Format**:
+**Original (from spec):**
 ```markdown
-### Project Architecture
-
-**Framework**: [Name] [Version]
-**Build System**: [Webpack/Vite/etc.]
-**TypeScript**: [Yes/No] - [Config details]
-**Package Manager**: [npm/yarn/pnpm]
-
-**Directory Structure**:
-```
-/src or /app
-  ├── /components - [Purpose and patterns]
-  ├── /lib - [Purpose and patterns]
-  ├── /hooks - [Purpose and patterns]
-  └── ... [Map all major directories]
+## SECTION [N]: [Section Name]
 ```
 
-**Routing System**: [Description]
-- Existing routes: [List key routes]
-- Protection pattern: [How routes are protected]
-- Route grouping: [How routes are organized]
+**Transformed (in integrated spec):**
+```markdown
+## SECTION [N]: [Section Name] - INTEGRATED
 
-**Available for New Module**:
-- ✅ New routes can be added following [pattern]
-- ✅ Route protection is available via [pattern]
-- ✅ Navigation can be extended via [pattern]
+**Extension Status**: ✅ Transformed to use existing infrastructure  
+**Original Infrastructure**: [List what spec used]  
+**Actual Infrastructure**: [List what we're using from codebase]
 ```
 
 ---
 
-### Step 1.2: Authentication Infrastructure Inventory
+### Rule 2: Database Schema Transformation
 
-**Required Analysis**:
-
-1. **Authentication System**
-   - Provider (NextAuth.js, Supabase Auth, Auth0, custom, etc.)
-   - Configuration location
-   - Session management approach
-   - Login/logout flow
-   - Token storage and validation
-
-2. **Authorization Patterns**
-   - Role-based access control (RBAC)
-   - Permission checking approach
-   - API route protection patterns
-   - Client-side protection patterns
-
-3. **User Model**
-   - User schema/type definition
-   - Required fields
-   - Optional fields
-   - Related models (profiles, roles, etc.)
-
-**Output Format**:
-```markdown
-### Authentication Infrastructure
-
-**Provider**: [Name and version]
-**Location**: [File paths]
-**Configuration**: 
-- Provider setup: [File path and key config]
-- Session strategy: [JWT/Database/etc.]
-- Session storage: [Cookies/localStorage/etc.]
-
-**User Model Available to New Module**:
-```typescript
-interface User {
-  // Document actual user model structure
-  id: string;
-  email: string;
-  // ... all fields available
+**Original (from spec):**
+```prisma
+model Dataset {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(...)
+  name        String
+  status      String
+  createdAt   DateTime      @default(now())
 }
 ```
 
-**API Protection Pattern (USE THIS)**:
-```typescript
-// Show actual pattern used in codebase
-// e.g., requireAuth() helper, middleware, etc.
-// NEW MODULE SHOULD USE THIS EXACT PATTERN
-```
-
-**Client Protection Pattern (USE THIS)**:
-```typescript
-// Show actual pattern for protecting pages
-// e.g., useSession() hook, HOC, etc.
-// NEW MODULE SHOULD USE THIS EXACT PATTERN
-```
-
-**Available for New Module**:
-- ✅ Authentication is already set up
-- ✅ User object is available in all authenticated contexts
-- ✅ API routes can be protected using [pattern]
-- ✅ Pages can be protected using [pattern]
-- ✅ User ID can be used as foreign key in new tables: `[field_name]`
-```
-
----
-
-### Step 1.3: Database Infrastructure Inventory
-
-**Required Analysis**:
-
-1. **Database Technology**
-   - Database type (PostgreSQL, MySQL, MongoDB, etc.)
-   - ORM/Client (Prisma, Drizzle, Mongoose, Supabase client, etc.)
-   - Schema location and structure
-   - Migration system
-
-2. **Existing Schema**
-   - All existing tables/collections
-   - Field definitions
-   - Relationships
-   - Indexes
-   - Constraints
-
-3. **Database Client Pattern**
-   - Client initialization
-   - Query patterns
-   - Transaction handling
-   - Connection pooling
-
-**Output Format**:
+**Transformed (in integrated spec):**
 ```markdown
-### Database Infrastructure
+**Database Schema (INTEGRATED):**
 
-**Database**: [Type and version]
-**ORM/Client**: [Name and version]
-**Location**: [Schema files path]
+Instead of Prisma, use **Supabase Client** with direct SQL migration:
 
-**Existing Tables Overview**:
-
-**Table: users**
-```typescript
-// Actual schema definition
-{
-  id: string;
-  email: string;
-  // ... all fields with types
-}
-```
-**Relationships**: [List relationships]
-**Indexes**: [List indexes]
-
-[Document ALL existing tables]
-
-**Database Client Pattern (USE THIS)**:
-```typescript
-// Show how database is accessed in codebase
-import { db } from '@/lib/db';
-
-// Example query pattern
-const user = await db.user.findUnique({ ... });
-// NEW MODULE SHOULD USE THIS EXACT PATTERN
-```
-
-**Migration System**: [Describe migration approach]
-
-**Available for New Module**:
-- ✅ Database connection is already set up
-- ✅ New tables can be added via [migration pattern]
-- ✅ New module can reference existing tables (e.g., `users` table via user_id foreign key)
-- ✅ Query pattern is established and should be followed
-- ✅ RLS policies [are/are not] in use - new tables should follow same pattern
-```
-
----
-
-### Step 1.4: API Architecture Inventory
-
-**Required Analysis**:
-
-1. **API Patterns**
-   - REST/GraphQL/tRPC/other
-   - Route naming conventions
-   - Response format standards
-   - Error handling patterns
-   - Validation approach (Zod, Yup, etc.)
-
-2. **Existing Endpoints**
-   - List all API routes
-   - Document patterns (CRUD, custom, etc.)
-   - Authentication requirements per route
-   - Response structures
-
-3. **Middleware & Interceptors**
-   - Request/response middleware
-   - Error handlers
-   - Logging patterns
-   - Rate limiting
-
-**Output Format**:
-```markdown
-### API Architecture
-
-**API Style**: [REST/GraphQL/tRPC]
-**Location**: [Directory path for APIs]
-
-**Standard Response Format (USE THIS)**:
-```typescript
-// Success response
-{
-  success: true,
-  data: T,
-  meta?: { ... }
-}
-
-// Error response  
-{
-  success: false,
-  error: {
-    code: string,
-    message: string,
-    // ... additional fields
-  }
-}
-// NEW MODULE APIS MUST USE THIS EXACT FORMAT
-```
-
-**Validation (USE THIS)**: [Approach and library]
-
-**Existing API Endpoints**:
-
-| Route | Method | Auth | Purpose |
-|-------|--------|------|---------|
-| `/api/users` | GET | Yes | List users |
-| `/api/users/[id]` | GET | Yes | Get user |
-[List ALL existing API routes]
-
-**Middleware Pattern (USE THIS)**:
-```typescript
-// Show actual middleware usage
-// NEW MODULE SHOULD USE THIS EXACT PATTERN
-```
-
-**Available for New Module**:
-- ✅ API routes can be added following [pattern]
-- ✅ Authentication middleware is available at [location]
-- ✅ Error handling is standardized via [pattern]
-- ✅ Validation is done using [library]
-- ✅ Response format is consistent and must be followed
-```
-
----
-
-### Step 1.5: Component Library Inventory
-
-**Required Analysis**:
-
-1. **UI Library/Framework**
-   - Component library (shadcn/ui, Material-UI, Chakra, custom, etc.)
-   - Location of reusable components
-   - Styling system (Tailwind, CSS Modules, styled-components, etc.)
-   - Theme configuration
-
-2. **Component Patterns**
-   - File structure (co-location, separate, etc.)
-   - Naming conventions
-   - Props patterns
-   - State management approach
-
-3. **Existing Components Inventory**
-   - List all reusable components
-   - Document their purposes
-   - Note which are available for reuse
-
-**Output Format**:
-```markdown
-### Component Library
-
-**UI Framework**: [Name and version]
-**Location**: `/components/` (or applicable path)
-**Styling System**: [Tailwind/CSS Modules/etc.]
-**Theme Config**: [Location and approach]
-
-**Available Components for Reuse**:
-
-**Layout Components** (`/components/layout/`):
-- `AppLayout.tsx` - Main application layout wrapper - **USE THIS for new pages**
-- `Sidebar.tsx` - Navigation sidebar - **EXTEND THIS to add new nav items**
-- `Header.tsx` - Top navigation header - **REUSE AS-IS**
-[List all layout components with reuse guidance]
-
-**UI Components** (`/components/ui/`):
-- `Button.tsx` - [Description, props, usage] - **REUSE THIS**
-- `Card.tsx` - [Description, props, usage] - **REUSE THIS**
-- `Input.tsx` - [Description, props, usage] - **REUSE THIS**
-[List all UI components with brief descriptions]
-
-**Feature Components** (`/components/[feature]/`):
-[List feature-specific components if applicable]
-
-**Component Pattern (FOLLOW THIS)**:
-```typescript
-// Show typical component structure
-export interface ComponentNameProps {
-  // ...
-}
-
-export function ComponentName({ ... }: ComponentNameProps) {
-  // ...
-}
-// NEW MODULE COMPONENTS SHOULD FOLLOW THIS EXACT PATTERN
-```
-
-**Available for New Module**:
-- ✅ [N] UI components ready to use
-- ✅ Layout system ready to extend
-- ✅ Styling approach is [system] - use this for new components
-- ✅ Component pattern is established - follow it
-```
-
----
-
-### Step 1.6: State Management Infrastructure Inventory
-
-**Required Analysis**:
-
-1. **State Management Solution**
-   - Library (Redux, Zustand, Jotai, Context, none, etc.)
-   - Configuration location
-   - Store structure
-   - Actions/reducers patterns
-
-2. **Data Fetching**
-   - Library (SWR, React Query, Apollo, native fetch, etc.)
-   - Caching strategy
-   - Revalidation patterns
-   - Error handling
-
-3. **Form State**
-   - Form library (React Hook Form, Formik, etc.)
-   - Validation approach
-   - Submit patterns
-
-**Output Format**:
-```markdown
-### State Management Infrastructure
-
-**Global State**: [Library or approach]
-**Location**: [File paths]
-**Store Structure**:
-```typescript
-// Show actual store structure if applicable
-```
-
-**Data Fetching (USE THIS)**: [Library and version]
-**Pattern**:
-```typescript
-// Show typical data fetching pattern
-const { data, error, isLoading } = useSWR('/api/endpoint', fetcher);
-// NEW MODULE SHOULD USE THIS EXACT PATTERN
-```
-
-**Form Handling (USE THIS)**: [Library if applicable]
-**Pattern**:
-```typescript
-// Show form handling pattern
-// NEW MODULE SHOULD USE THIS EXACT PATTERN
-```
-
-**Available for New Module**:
-- ✅ Data fetching pattern is established - use [library]
-- ✅ Form handling pattern is established - use [library]
-- ✅ Global state (if any) can be extended via [pattern]
-- ✅ Caching strategy is in place - follow it
-```
-
----
-
-### Step 1.7: File Storage Infrastructure Inventory
-
-**Required Analysis**:
-
-1. **File Storage**
-   - S3, Cloudflare R2, Supabase Storage, local, etc.
-   - Configuration location
-   - Upload/download patterns
-   - Presigned URL handling
-
-2. **External Integrations**
-   - Third-party services integrated
-   - API clients location
-   - Configuration patterns
-
-3. **Background Jobs**
-   - Queue system (BullMQ, Inngest, none, etc.)
-   - Worker patterns
-   - Scheduled tasks
-
-**Output Format**:
-```markdown
-### File Storage Infrastructure
-
-**Provider**: [S3/R2/Supabase/etc.]
-**Configuration**: [Location]
-**Client**: [File path to storage client]
-
-**Upload Pattern (USE THIS)**:
-```typescript
-// Show actual upload pattern in codebase
-// NEW MODULE SHOULD USE THIS EXACT PATTERN
-```
-
-**Download Pattern (USE THIS)**:
-```typescript
-// Show actual download pattern
-// NEW MODULE SHOULD USE THIS EXACT PATTERN
-```
-
-### Background Jobs Infrastructure
-
-**Queue System**: [Name or "None"]
-**Location**: [If applicable]
-**Patterns**: [Description]
-
-**Available for New Module**:
-- ✅ File storage is set up - use [provider]
-- ✅ Upload pattern is established - follow it
-- ✅ Download/access pattern is established - follow it
-- ✅ Background jobs [are/are not] available - [guidance]
-```
-
----
-
-### Step 1.8: Utility Functions & Helpers Inventory
-
-**Required Analysis**:
-
-1. **Common Utilities**
-   - Location (`/lib/utils.ts`, `/utils/`, etc.)
-   - Available helper functions
-   - Formatting utilities
-   - Validation helpers
-
-2. **Custom Hooks**
-   - Location (`/hooks/`)
-   - Available hooks and their purposes
-   - Data fetching hooks
-   - UI interaction hooks
-
-3. **Type Definitions**
-   - Location (`/types/`, `*.d.ts`)
-   - Shared types and interfaces
-   - Naming conventions
-
-**Output Format**:
-```markdown
-### Utilities & Helpers
-
-**Utilities Location**: `/lib/` (or applicable)
-
-**Available Utility Functions (USE THESE)**:
-- `formatDate()` - [Description] - **USE THIS for date formatting**
-- `cn()` - [Description] - **USE THIS for className merging**
-- `formatCurrency()` - [Description] - **USE THIS for currency display**
-[List all utility functions]
-
-**Custom Hooks Available** (`/hooks/`):
-- `useAuth()` - [Purpose] - **USE THIS for auth state**
-- `useApi()` - [Purpose] - **USE THIS for API calls**
-[List all custom hooks]
-
-**Type Definitions** (`/types/`):
-```typescript
-// Key shared types
-export interface ApiResponse<T> {
-  // ...
-}
-// USE THESE TYPES in new module
-```
-
-**Available for New Module**:
-- ✅ [N] utility functions ready to use
-- ✅ [N] custom hooks ready to use
-- ✅ Shared types available - import and use
-- ✅ Follow established naming conventions
-```
-
----
-
-### Step 1.9: Testing Infrastructure Inventory
-
-**Required Analysis**:
-
-1. **Testing Framework**
-   - Test runner (Jest, Vitest, etc.)
-   - Testing library (React Testing Library, etc.)
-   - E2E framework (Playwright, Cypress, etc.)
-
-2. **Test Patterns**
-   - Test file organization
-   - Naming conventions
-   - Mock patterns
-   - Test utilities
-
-**Output Format**:
-```markdown
-### Testing Infrastructure
-
-**Unit Testing**: [Framework]
-**Component Testing**: [Library]
-**E2E Testing**: [Framework if present]
-
-**Test Location Pattern**: [Pattern, e.g., `__tests__/`, `*.test.ts`]
-**Coverage**: [Current coverage if known]
-
-**Test Pattern (FOLLOW THIS)**:
-```typescript
-// Show typical test structure
-// NEW MODULE TESTS SHOULD FOLLOW THIS PATTERN
-```
-
-**Available for New Module**:
-- ✅ Testing framework is set up - [framework]
-- ✅ Test patterns are established - follow them
-- ✅ Mock utilities available at [location]
-- ✅ New tests should follow [pattern]
-```
-
----
-
-### Step 1.10: Environment & Configuration Inventory
-
-**Required Analysis**:
-
-1. **Environment Variables**
-   - Required variables
-   - Configuration files
-   - Secrets management
-
-2. **Build Configuration**
-   - Build scripts
-   - Environment-specific configs
-   - Feature flags
-
-**Output Format**:
-```markdown
-### Environment & Configuration
-
-**Environment Variables** (`.env*`):
-```bash
-# List all environment variables in use
-DATABASE_URL=
-NEXT_PUBLIC_API_URL=
-# ... etc.
-```
-
-**Configuration Files**:
-- `next.config.js` - [Key settings]
-- `tailwind.config.js` - [Key settings]
-[List all config files]
-
-**Available for New Module**:
-- ✅ Environment setup is in place
-- ✅ New variables can be added to [file]
-- ✅ Configuration follows [pattern]
-```
-
----
-
-## PHASE 2: EXTENSION STRATEGY DEVELOPMENT
-
-Now that you understand what infrastructure exists and is available, develop a strategy for how the new module will USE this infrastructure to implement the features specified in the structured spec.
-
-**Purpose**: Define HOW new features will use existing infrastructure and what needs to be CREATED NEW.
-
----
-
-### Step 2.1: Feature Extraction from Structured Spec
-
-Extract the actual FEATURES from the structured specification, ignoring technology choices.
-
-**Analysis Required**:
-
-```markdown
-### Features Extracted from Structured Spec
-
-For EACH section of the structured spec, extract:
-
-## Section [N]: [Section Name]
-
-**Features Described**:
-
-| Feature ID | Feature Description | Data/Models Needed | APIs Needed | UI Pages/Components Needed |
-|------------|---------------------|-------------------|-------------|----------------------------|
-| F[N].1 | [What user can do] | [Conceptual data] | [API actions] | [UI elements] |
-| F[N].2 | [What user can do] | [Conceptual data] | [API actions] | [UI elements] |
-
-**Technology Choices in Spec (IGNORE THESE)**:
-- Auth: [What spec says] → IGNORE, use existing [existing auth]
-- Database: [What spec says] → IGNORE, use existing [existing DB]
-- Storage: [What spec says] → IGNORE, use existing [existing storage]
-- Components: [What spec says] → IGNORE, use existing [existing components]
-- State: [What spec says] → IGNORE, use existing [existing state management]
-
-[Repeat for ALL sections]
-```
-
----
-
-### Step 2.2: Infrastructure Mapping Strategy
-
-For each infrastructure area, define HOW the new module will use it.
-
-**Strategy Format**:
-
-```markdown
-### Infrastructure Mapping Strategy
-
-#### Authentication Strategy
-
-**Existing Infrastructure**: [What exists - from Phase 1]
-**Spec Assumes**: [What spec says - for context only]
-**Strategy**: USE_EXISTING
-
-**How New Module Will Use It**:
-1. Import authentication from `[file path]`
-2. Protect API routes using `[existing pattern]`
-3. Protect pages using `[existing pattern]`
-4. Access user object via `[existing pattern]`
-5. Use `[user_id_field]` as foreign key in new tables
-
-**Implementation Notes**:
-- DO NOT install [spec's auth solution]
-- DO NOT create new auth configuration
-- DO USE existing auth throughout
-- NEW user fields (if needed): Add via migration to existing users table
-
----
-
-#### Database Strategy
-
-**Existing Infrastructure**: [What exists - from Phase 1]
-**Spec Assumes**: [What spec says - for context only]
-**Strategy**: EXTEND_EXISTING
-
-**How New Module Will Use It**:
-1. Use existing database connection from `[file path]`
-2. Create NEW tables for module-specific data
-3. Reference existing `users` table via foreign key
-4. Follow existing query patterns
-5. Add migrations using existing migration system
-
-**New Tables to Create**:
-- `[table_1]` - [Purpose]
-- `[table_2]` - [Purpose]
-[List all new tables needed]
-
-**Existing Tables to Reference**:
-- `users` - via `user_id` foreign key
-[List any existing tables the new module will reference]
-
-**Implementation Notes**:
-- DO NOT install [spec's ORM]
-- DO NOT create separate database connection
-- DO USE existing database client pattern
-- NEW tables should follow existing naming conventions
-- NEW tables should use RLS policies if existing tables do
-
----
-
-#### Storage Strategy
-
-**Existing Infrastructure**: [What exists - from Phase 1]
-**Spec Assumes**: [What spec says - for context only]
-**Strategy**: USE_EXISTING
-
-**How New Module Will Use It**:
-1. Use existing storage client from `[file path]`
-2. Create NEW bucket(s) for module files
-3. Follow existing upload/download patterns
-4. Use existing presigned URL approach (if applicable)
-
-**New Storage Buckets/Folders**:
-- `[bucket/folder_1]` - [Purpose]
-[List new storage areas needed]
-
-**Implementation Notes**:
-- DO NOT install [spec's storage solution]
-- DO NOT create new storage configuration
-- DO USE existing storage client and patterns
-
----
-
-#### API Strategy
-
-**Existing Infrastructure**: [What exists - from Phase 1]
-**Spec Assumes**: [What spec says - for context only]
-**Strategy**: EXTEND_EXISTING
-
-**How New Module Will Use It**:
-1. Create NEW API routes under `/api/[module-namespace]/`
-2. Use existing response format
-3. Use existing authentication middleware
-4. Use existing error handling
-5. Use existing validation library
-
-**New API Routes to Create**:
-- `POST /api/[module]/[resource]` - [Purpose]
-- `GET /api/[module]/[resource]` - [Purpose]
-[List all new API routes needed]
-
-**Implementation Notes**:
-- DO NOT create different response format
-- DO NOT create custom error handling
-- DO USE existing patterns throughout
-
----
-
-#### Component Strategy
-
-**Existing Infrastructure**: [What exists - from Phase 1]
-**Spec Assumes**: [What spec says - for context only]
-**Strategy**: REUSE_AND_CREATE
-
-**How New Module Will Use It**:
-1. REUSE existing UI components (Button, Card, Input, etc.)
-2. EXTEND existing layout components (add nav items)
-3. CREATE NEW feature-specific components
-4. Follow existing component patterns
-5. Use existing styling approach
-
-**Components to Reuse**:
-- `Button` - existing at `[path]`
-- `Card` - existing at `[path]`
-[List all components to reuse]
-
-**Components to Create**:
-- `[NewComponent1]` - [Purpose] - using existing patterns
-- `[NewComponent2]` - [Purpose] - using existing patterns
-[List all new components needed]
-
-**Implementation Notes**:
-- DO NOT recreate existing UI components
-- DO NOT use different styling approach
-- DO USE existing component library
-- NEW components should match existing patterns
-
----
-
-#### State Management Strategy
-
-**Existing Infrastructure**: [What exists - from Phase 1]
-**Spec Assumes**: [What spec says - for context only]
-**Strategy**: USE_EXISTING
-
-**How New Module Will Use It**:
-1. Use existing data fetching library for API calls
-2. Follow existing caching strategy
-3. Use existing form handling library
-4. Follow existing state patterns
-
-**Implementation Notes**:
-- DO NOT install different data fetching library
-- DO NOT install different form library
-- DO USE existing patterns throughout
-
----
-
-[Continue for all infrastructure areas]
-```
-
----
-
-### Step 2.3: Routing Extension Strategy
-
-**Analysis Required**:
-
-```markdown
-### Routing Extension Strategy
-
-**Existing Routes**:
-```
-/ (home)
-/dashboard
-/[existing routes]
-```
-
-**New Routes to Add for Module**:
-```
-/[module]
-├── /[module] (list view)
-├── /[module]/[id] (detail view)
-├── /[module]/create (create view)
-└── ... [all new routes]
-```
-
-**Navigation Integration**:
-- Extend sidebar navigation at `[file path]` to include:
-  - [New nav item 1]
-  - [New nav item 2]
-- Add to dashboard (if applicable) at `[file path]`
-- Use existing route protection patterns
-
-**Implementation Notes**:
-- DO NOT change existing routes
-- DO ADD new routes following existing patterns
-- DO EXTEND navigation components
-```
-
----
-
-### Step 2.4: Implementation Phases
-
-Organize implementation into logical phases:
-
-```markdown
-### Implementation Phases
-
-**Phase 1: Database Foundation** (Est: [hours])
-- Create database migrations
-- Add new tables
-- Set up relationships and constraints
-- Test database connectivity
-
-**Phase 2: API Layer** (Est: [hours])
-- Create API routes for [features]
-- Implement authentication
-- Add validation
-- Test API endpoints
-
-**Phase 3: UI Components** (Est: [hours])
-- Create feature-specific components
-- Integrate with existing UI components
-- Implement forms and interactions
-- Test component rendering
-
-**Phase 4: Pages & Routing** (Est: [hours])
-- Create page routes
-- Integrate with layout
-- Add navigation items
-- Test routing and protection
-
-**Phase 5: Integration & Testing** (Est: [hours])
-- End-to-end feature testing
-- Ensure existing features still work
-- Performance testing
-- Bug fixes
-
-**Total Estimated Effort**: [hours]
-```
-
----
-
-## PHASE 3: IMPLEMENTATION GUIDE GENERATION
-
-Create detailed, step-by-step implementation instructions.
-
-**Purpose**: Provide EXACT instructions for implementing new features using existing infrastructure.
-
----
-
-### Implementation Guide Structure
-
-```markdown
-# Implementation Guide - [Module Name]
-
-**Date**: [Date]
-**Structured Spec**: [Reference]
-**Infrastructure Inventory**: [Reference to inventory doc]
-**Extension Strategy**: [Reference to strategy doc]
-
----
-
-## PURPOSE
-
-This document provides exact implementation instructions for adding the [Module Name] to the existing codebase. Follow sections in order for systematic implementation.
-
-**Implementation Approach**:
-1. Database setup (migrations)
-2. Type definitions (TypeScript interfaces)
-3. API routes (backend logic)
-4. React hooks (data fetching)
-5. Components (UI building blocks)
-6. Pages (full views)
-7. Navigation (app integration)
-8. Background processing (if applicable)
-9. Testing
-
----
-
-## PHASE 1: DATABASE SETUP
-
-### Step 1.1: Create Database Migration
-
-**File**: `[migration file path following existing convention]`
+**Migration File**: `supabase/migrations/YYYYMMDD_create_datasets_table.sql`
 
 ```sql
--- Create new tables for [Module Name]
-
--- Table: [table_1]
-CREATE TABLE [table_1] (
-  id [TYPE] PRIMARY KEY [DEFAULT],
-  user_id [TYPE] REFERENCES users(id) ON DELETE CASCADE,  -- Reference existing users table
-  [other fields],
-  created_at TIMESTAMP DEFAULT NOW(),
-  updated_at TIMESTAMP DEFAULT NOW()
+CREATE TABLE datasets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name VARCHAR(200) NOT NULL,
+  status VARCHAR(50) DEFAULT 'uploading',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- RLS Policy (if applicable)
-[RLS policies following existing patterns]
+-- RLS Policies
+ALTER TABLE datasets ENABLE ROW LEVEL SECURITY;
 
--- Indexes
-[Indexes following existing patterns]
+CREATE POLICY "Users can view own datasets"
+  ON datasets FOR SELECT
+  USING (auth.uid() = user_id);
 
-[Continue for all new tables]
+CREATE POLICY "Users can create own datasets"
+  ON datasets FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE INDEX idx_datasets_user_id ON datasets(user_id);
+CREATE INDEX idx_datasets_status ON datasets(status);
 ```
 
-**Implementation Notes**:
-- Use existing user table reference: `user_id REFERENCES users(id)`
-- Follow existing naming conventions (snake_case, etc.)
-- Follow existing timestamp patterns
-- Follow existing RLS policy patterns (if applicable)
-
-### Step 1.2: Run Migration
-
-**Command**:
-```bash
-[Command to run migration in existing system]
-```
-
-### Step 1.3: Verify Database Setup
-
-**Verification**:
-```sql
--- Verify tables created
-[Verification queries]
-```
-
----
-
-## PHASE 2: TYPE DEFINITIONS
-
-### Step 2.1: Create Module Types
-
-**File**: `[type file path following existing convention]`
+**TypeScript Interface:**
 
 ```typescript
-// Types for [Module Name]
-
-// [Table 1] type
-export interface [Type1] {
+// File: src/lib/types/lora-training.ts
+export interface Dataset {
   id: string;
   user_id: string;
-  [other fields];
+  name: string;
+  status: 'uploading' | 'validating' | 'ready' | 'error';
   created_at: string;
   updated_at: string;
 }
-
-// [Request/Response types]
-export interface [RequestType] {
-  [fields];
-}
-
-export interface [ResponseType] {
-  [fields];
-}
-
-[Continue for all types needed]
 ```
-
-**Implementation Notes**:
-- Follow existing type naming conventions
-- Import and use existing types where applicable (e.g., `User` type)
-- Place types in existing types directory following conventions
+```
 
 ---
 
-## PHASE 3: API ROUTES
+### Rule 3: Authentication Transformation
 
-### Step 3.1: Create API Route - [Feature 1]
+**Original (from spec):**
+```typescript
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
-**File**: `[API route path following existing convention]`
+export async function GET(request: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  
+  const userId = session.user.id;
+  // ... rest of logic
+}
+```
+
+**Transformed (in integrated spec):**
+```markdown
+**Authentication (INTEGRATED):**
+
+Instead of NextAuth, use **Supabase Auth** with existing patterns:
 
 ```typescript
-import { [existing auth] } from '[existing auth path]';
-import { [existing db client] } from '[existing db path]';
-import { [existing validation] } from '[existing validation path]';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/supabase-server';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
-export async function [METHOD](request: Request) {
-  // Authenticate using EXISTING pattern
-  const user = await [existing auth pattern];
+export async function GET(request: NextRequest) {
+  // Use existing auth pattern
+  const { user, response } = await requireAuth(request);
+  if (response) return response; // 401 if not authenticated
   
-  if (!user) {
-    return Response.json(
-      { success: false, error: 'Unauthorized' },  // Use existing error format
-      { status: 401 }
+  const userId = user.id;
+  // ... rest of logic
+}
+```
+
+**Pattern Source**: Infrastructure Inventory Section 1 - Authentication
+```
+
+---
+
+### Rule 4: Storage Transformation
+
+**Original (from spec):**
+```typescript
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+const s3 = new S3Client({ region: process.env.AWS_REGION });
+
+// Generate presigned URL
+const command = new PutObjectCommand({
+  Bucket: 'datasets-bucket',
+  Key: `${userId}/${datasetId}/${fileName}`,
+  ContentType: 'application/json',
+});
+
+const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
+```
+
+**Transformed (in integrated spec):**
+```markdown
+**Storage (INTEGRATED):**
+
+Instead of AWS S3, use **Supabase Storage** with existing patterns:
+
+```typescript
+import { createServerSupabaseAdminClient } from '@/lib/supabase-server';
+
+export async function POST(request: NextRequest) {
+  const { user, response } = await requireAuth(request);
+  if (response) return response;
+  
+  const supabase = createServerSupabaseAdminClient();
+  
+  // Generate storage path
+  const storagePath = `${user.id}/${datasetId}/${fileName}`;
+  
+  // Create presigned upload URL
+  const { data: uploadData, error: uploadError } = await supabase
+    .storage
+    .from('lora-datasets') // Bucket name
+    .createSignedUploadUrl(storagePath);
+  
+  if (uploadError) {
+    return NextResponse.json(
+      { error: 'Failed to generate upload URL', details: uploadError.message },
+      { status: 500 }
     );
   }
   
-  // Parse and validate request using EXISTING pattern
-  const body = await request.json();
-  const validated = [existing validation pattern](body);
-  
-  // Database query using EXISTING pattern
-  const result = await [existing db pattern];
-  
-  // Return using EXISTING response format
-  return Response.json({
+  return NextResponse.json({
     success: true,
-    data: result
+    data: {
+      uploadUrl: uploadData.signedUrl,
+      storagePath: storagePath,
+    }
   });
 }
 ```
 
-**Implementation Notes**:
-- Use existing authentication pattern from `[file]`
-- Use existing database client from `[file]`
-- Use existing validation library
-- Use existing response format
-- Use existing error handling
+**Pattern Source**: Infrastructure Inventory Section 3 - Storage
 
-[Repeat for all API routes needed]
+**Storage Best Practices**:
+- Never store URLs in database - store only `storage_path`
+- Generate signed URLs on-demand via API routes
+- Use admin client for signing operations
+- Set appropriate expiry (3600 seconds = 1 hour)
+```
 
 ---
 
-## PHASE 4: REACT HOOKS
+### Rule 5: API Route Transformation
 
-### Step 4.1: Create Data Fetching Hook - [Feature 1]
-
-**File**: `[hook file path following existing convention]`
-
+**Original (from spec):**
 ```typescript
-import { [existing data fetching] } from '[existing lib path]';
-
-export function use[Feature]() {
-  // Use EXISTING data fetching pattern
-  const { data, error, isLoading, mutate } = [existing pattern](
-    '/api/[endpoint]',
-    [existing fetcher]
-  );
-  
-  return {
-    [data name]: data,
-    [error name]: error,
-    [loading name]: isLoading,
-    [refresh name]: mutate
-  };
+// Generic API route structure
+export async function GET(request: NextRequest) {
+  // Auth check
+  // Database query
+  // Return response
 }
 ```
 
-**Implementation Notes**:
-- Use existing data fetching library (SWR, React Query, etc.)
-- Follow existing hook naming conventions
-- Follow existing hook patterns
+**Transformed (in integrated spec):**
+```markdown
+**API Route (INTEGRATED):**
 
-[Repeat for all hooks needed]
+Use exact pattern from Infrastructure Inventory Section 4:
+
+**File**: `src/app/api/datasets/route.ts`
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+import { requireAuth } from '@/lib/supabase-server';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
+
+/**
+ * GET /api/datasets - List user's datasets
+ */
+export async function GET(request: NextRequest) {
+  try {
+    // Authentication (existing pattern)
+    const { user, response } = await requireAuth(request);
+    if (response) return response;
+    
+    // Query parameters
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    
+    // Database query (existing pattern)
+    const supabase = await createServerSupabaseClient();
+    let query = supabase
+      .from('datasets')
+      .select('*', { count: 'exact' })
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    
+    if (status) {
+      query = query.eq('status', status);
+    }
+    
+    const { data, error, count } = await query;
+    
+    if (error) {
+      console.error('Database error:', error);
+      return NextResponse.json(
+        { error: 'Failed to fetch datasets', details: error.message },
+        { status: 500 }
+      );
+    }
+    
+    // Response format (existing pattern)
+    return NextResponse.json({
+      success: true,
+      data: {
+        datasets: data,
+        total: count || 0,
+      }
+    });
+    
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
+  }
+}
+```
+
+**Pattern Source**: Infrastructure Inventory Section 4 - API Architecture
+```
 
 ---
 
-## PHASE 5: COMPONENTS
+### Rule 6: Component Transformation
 
-### Step 5.1: Create Component - [Component 1]
+**Original (from spec):**
+```tsx
+// Generic component structure
+import { Button } from '@/components/ui/button';
 
-**File**: `[component file path following existing convention]`
+export function DatasetCard() {
+  return <div>...</div>;
+}
+```
+
+**Transformed (in integrated spec):**
+```markdown
+**Component (INTEGRATED):**
+
+Use exact patterns from Infrastructure Inventory Section 5:
+
+**File**: `src/components/datasets/DatasetCard.tsx`
 
 ```typescript
-import { [existing components] } from '[existing UI lib]';
-import { [existing hooks] } from '[existing hooks path]';
+'use client';
 
-interface [Component]Props {
-  [props];
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import type { Dataset } from '@/lib/types/lora-training';
+
+interface DatasetCardProps {
+  dataset: Dataset;
+  onSelect?: (dataset: Dataset) => void;
 }
 
-export function [Component]({ [props] }: [Component]Props) {
-  // Use existing hooks
-  const [hook] = [existing hook]();
-  
+export function DatasetCard({ dataset, onSelect }: DatasetCardProps) {
   return (
-    <div>
-      {/* Use EXISTING UI components */}
-      <[ExistingComponent]>
-        [implementation]
-      </[ExistingComponent]>
-    </div>
+    <Card className="hover:shadow-md transition-shadow cursor-pointer">
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start">
+          <CardTitle className="text-lg">{dataset.name}</CardTitle>
+          <Badge>{dataset.status}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Button 
+          onClick={() => onSelect?.(dataset)}
+          variant="outline"
+          className="w-full"
+        >
+          View Details
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 ```
 
-**Implementation Notes**:
-- Import and use existing UI components
-- Follow existing component structure
-- Use existing styling approach
-- Follow existing naming conventions
+**Pattern Source**: Infrastructure Inventory Section 5 - Component Library
 
-[Repeat for all components needed]
+**Available Components**: All 47+ shadcn/ui components from `/components/ui/`
+```
 
 ---
 
-## PHASE 6: PAGES
+### Rule 7: Data Fetching Transformation
 
-### Step 6.1: Create Page - [Page 1]
-
-**File**: `[page file path following existing routing convention]`
-
+**Original (from spec):**
 ```typescript
-import { [existing layout] } from '[existing layout path]';
-import { [new components] } from '[new component paths]';
-import { [existing auth] } from '[existing auth path]';
+import useSWR from 'swr';
 
-export default async function [Page]() {
-  // Use EXISTING page protection pattern
-  const user = await [existing protection pattern]();
-  
-  return (
-    <[ExistingLayout]>
-      {/* Use new feature components */}
-      <[NewComponent1] />
-      <[NewComponent2] />
-    </[ExistingLayout]>
-  );
+export function useDatasets() {
+  const { data, error } = useSWR('/api/datasets', fetcher);
+  return { data, error };
 }
 ```
 
-**Implementation Notes**:
-- Use existing layout components
-- Use existing page protection patterns
-- Follow existing page structure
-- Follow existing routing conventions
+**Transformed (in integrated spec):**
+```markdown
+**Data Fetching (INTEGRATED):**
 
-[Repeat for all pages needed]
+Instead of SWR, use **React Query** with existing patterns:
 
----
+**File**: `src/hooks/use-datasets.ts`
 
-## PHASE 7: NAVIGATION UPDATES
-
-### Step 7.1: Extend Navigation
-
-**File**: `[navigation file path]`
-
-**Modification**:
 ```typescript
-// Add to existing navigation array
-const navigation = [
-  // ... existing items
-  {
-    name: '[New Module]',
-    href: '/[module]',
-    icon: [Icon],
-  },
-  // ... additional items
-];
-```
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { Dataset } from '@/lib/types/lora-training';
 
-**Implementation Notes**:
-- Add to existing navigation structure
-- Follow existing navigation patterns
-- Use existing icon library
-- Test navigation integration
-
----
-
-## PHASE 8: BACKGROUND PROCESSING (If Applicable)
-
-[Include only if spec requires background jobs and existing infrastructure supports it]
-
-### Step 8.1: [Background Task Implementation]
-
-[Instructions following existing patterns]
-
----
-
-## PHASE 9: TESTING
-
-### Step 9.1: Write Tests
-
-**Pattern**: Follow existing test patterns from `[test examples]`
-
-**Tests to Create**:
-- API route tests for `/api/[endpoints]`
-- Component tests for `[components]`
-- Integration tests for `[features]`
-
-**Example Test**:
-```typescript
-// Follow EXISTING test patterns
-import { [existing test utils] } from '[existing test path]';
-
-describe('[Feature]', () => {
-  it('[test case]', async () => {
-    // Use existing test patterns
-    [test implementation]
+export function useDatasets(filters?: { status?: string }) {
+  return useQuery({
+    queryKey: ['datasets', filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.status) params.set('status', filters.status);
+      
+      const response = await fetch(`/api/datasets?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch datasets');
+      return response.json();
+    },
+    staleTime: 60 * 1000, // 60 seconds (existing config)
   });
+}
+
+export function useCreateDataset() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateDatasetInput) => {
+      const response = await fetch('/api/datasets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to create dataset');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['datasets'] });
+    },
+  });
+}
+```
+
+**Pattern Source**: Infrastructure Inventory Section 6 - State & Data Fetching
+```
+
+---
+
+### Rule 8: Background Processing Transformation
+
+**Original (from spec):**
+```typescript
+// BullMQ worker setup
+import { Worker } from 'bullmq';
+
+const worker = new Worker('dataset-validation', async (job) => {
+  // Validation logic
 });
 ```
 
----
+**Transformed (in integrated spec):**
+```markdown
+**Background Processing (INTEGRATED):**
 
-## IMPLEMENTATION CHECKLIST
+Instead of BullMQ + Redis, use **Supabase Edge Functions** with Cron:
 
-### Database
-- [ ] Migration created following existing pattern
-- [ ] Tables reference existing users table correctly
-- [ ] RLS policies added (if applicable)
-- [ ] Migration run successfully
+**File**: `supabase/functions/validate-datasets/index.ts`
 
-### API Routes
-- [ ] Routes created following existing convention
-- [ ] Authentication uses existing pattern
-- [ ] Validation uses existing library
-- [ ] Response format matches existing
-- [ ] Error handling matches existing
+```typescript
+import { createClient } from '@supabase/supabase-js';
 
-### Components & Pages
-- [ ] Components use existing UI library
-- [ ] Components follow existing patterns
-- [ ] Pages use existing layout
-- [ ] Pages use existing protection patterns
+Deno.serve(async (req) => {
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  );
+  
+  // Fetch datasets pending validation
+  const { data: datasets } = await supabase
+    .from('datasets')
+    .select('*')
+    .eq('status', 'uploaded');
+  
+  for (const dataset of datasets) {
+    // Perform validation
+    const validationResult = await validateDataset(dataset);
+    
+    // Update dataset
+    await supabase
+      .from('datasets')
+      .update({
+        status: validationResult.isValid ? 'ready' : 'error',
+        validation_errors: validationResult.errors,
+        total_training_pairs: validationResult.stats?.total_pairs,
+        validated_at: new Date().toISOString(),
+      })
+      .eq('id', dataset.id);
+  }
+  
+  return new Response('OK');
+});
+```
 
-### Navigation
-- [ ] Navigation extended with new items
-- [ ] Routing follows existing conventions
+**Deployment**: Via Supabase CLI (`supabase functions deploy validate-datasets`)
 
-### Testing
-- [ ] Tests follow existing patterns
-- [ ] All tests passing
-- [ ] Existing tests still passing
+**Cron Trigger**: Configure in Supabase Dashboard  
+- Function: `validate-datasets`
+- Schedule: `*/5 * * * *` (every 5 minutes)
 
-### Verification
-- [ ] Existing features still work
-- [ ] New features work as specified
-- [ ] No breaking changes introduced
-- [ ] Code follows existing conventions
+**Reason for Change**: BullMQ + Redis adds infrastructure complexity. Supabase Edge Functions + Cron provides equivalent functionality with less overhead.
+
+**Pattern Source**: Extension Strategy Section - Background Processing
 ```
 
 ---
 
-## OUTPUT DOCUMENT 1: INFRASTRUCTURE INVENTORY
+## OUTPUT STRUCTURE
 
-**File**: `04d-infrastructure-inventory_v1.md`
-
-**Structure**:
+For each section in the structured spec, produce an integrated section with this structure:
 
 ```markdown
-# Infrastructure Inventory - [Project Name]
+## SECTION [N]: [Section Name] - INTEGRATED
 
-**Inventory Date**: [Date]
-**Codebase Path**: [Path]
-**Structured Spec**: [Reference to spec file]
-
----
-
-## EXECUTIVE SUMMARY
-
-This document inventories the existing [Project Name] infrastructure available for the new [Module Name] to use. All new features will be implemented using this existing infrastructure.
-
-**Available Infrastructure**:
-- ✅ **Authentication**: [What exists] - Ready to use
-- ✅ **Database**: [What exists] - Ready to use  
-- ✅ **Storage**: [What exists] - Ready to use
-- ✅ **Components**: [What exists] - Ready to use
-- ✅ **State Management**: [What exists] - Ready to use
-- ✅ **API Architecture**: [What exists] - Ready to use
-
-**Approach**: The new [Module Name] will EXTEND this existing application by adding new tables, new API routes, new pages, and new components - all using the patterns documented below.
+**Extension Status**: ✅ Transformed to use existing infrastructure  
+**Original Infrastructure**: [List technologies from spec]  
+**Actual Infrastructure**: [List what we're using from codebase]
 
 ---
 
-## 1. PROJECT ARCHITECTURE
+### Overview (from original spec)
 
-[Output from Step 1.1]
-
----
-
-## 2. AUTHENTICATION INFRASTRUCTURE
-
-[Output from Step 1.2]
+[Copy the section purpose and user value unchanged]
 
 ---
 
-## 3. DATABASE INFRASTRUCTURE
+### Dependencies
 
-[Output from Step 1.3]
+**Codebase Prerequisites** (MUST exist before this section):
+- [List existing infrastructure this section USES]
+- [Reference to specific files/functions from Infrastructure Inventory]
 
----
-
-## 4. API ARCHITECTURE
-
-[Output from Step 1.4]
-
----
-
-## 5. COMPONENT LIBRARY
-
-[Output from Step 1.5]
+**Previous Section Prerequisites**:
+- [List what from previous sections this section needs]
 
 ---
 
-## 6. STATE MANAGEMENT INFRASTRUCTURE
+### Features & Requirements (INTEGRATED)
 
-[Output from Step 1.6]
+#### FR-[N].[M]: [Feature Name]
 
----
+**Type**: [Original type from spec]
 
-## 7. FILE STORAGE INFRASTRUCTURE
+**Description**: [Original description from spec]
 
-[Output from Step 1.7]
-
----
-
-## 8. UTILITIES & HELPERS
-
-[Output from Step 1.8]
+**Implementation Strategy**: EXTENSION (using existing infrastructure)
 
 ---
 
-## 9. TESTING INFRASTRUCTURE
+**Database Changes (INTEGRATED)**:
 
-[Output from Step 1.9]
-
----
-
-## 10. ENVIRONMENT & CONFIGURATION
-
-[Output from Step 1.10]
+[Apply Rule 2: Database Schema Transformation]
 
 ---
 
-## APPENDIX A: COMPLETE FILE STRUCTURE
+**API Routes (INTEGRATED)**:
 
-[Tree output of codebase structure]
-
----
-
-## APPENDIX B: DEPENDENCY ANALYSIS
-
-[Key dependencies from package.json with versions]
+[Apply Rule 5: API Route Transformation]
 
 ---
 
-## APPENDIX C: REUSABLE ASSETS SUMMARY
+**Components (INTEGRATED)**:
 
-**Components**: [Count] - [List key ones]
-**Hooks**: [Count] - [List key ones]
-**Utilities**: [Count] - [List key ones]
-**Types**: [Count] - [List key ones]
-**APIs**: [Count endpoints] - [List namespaces]
+[Apply Rule 6: Component Transformation]
 
-**Summary**: The existing codebase provides substantial infrastructure that the new module will use, minimizing new code needed and ensuring consistency.
+---
+
+**Data Fetching (INTEGRATED)**:
+
+[Apply Rule 7: Data Fetching Transformation]
+
+---
+
+**Acceptance Criteria** (from spec):
+
+[Copy acceptance criteria from spec, adjust for infrastructure changes]
+
+---
+
+**Verification Steps**:
+
+1. ✅ Database: Migration applied, tables exist, RLS policies active
+2. ✅ API: Endpoints respond correctly, authentication works
+3. ✅ Components: UI renders correctly, uses shadcn/ui components
+4. ✅ Integration: Feature works end-to-end with existing infrastructure
+
+---
+
+[Repeat for each FR in section]
+
+---
+
+### Section Summary
+
+**What Was Added**:
+- [List new tables]
+- [List new API routes]
+- [List new components]
+- [List new pages]
+- [List new hooks]
+
+**What Was Reused**:
+- [List existing infrastructure used]
+
+**Integration Points**:
+- [How this section connects to existing codebase]
+
+---
+
 ```
-
----
-
-## OUTPUT DOCUMENT 2: EXTENSION STRATEGY
-
-**File**: `04d-extension-strategy_v1.md`
-
-**Structure**:
-
-```markdown
-# Extension Strategy - [Module Name]
-
-**Strategy Date**: [Date]
-**Codebase**: [Path]
-**Structured Spec**: [Reference]
-**Infrastructure Inventory**: [Reference to inventory doc]
-
----
-
-## EXECUTIVE SUMMARY
-
-This document defines how the new [Module Name] EXTENDS the existing [Project Name] by using existing infrastructure to implement the features specified in the structured specification.
-
-**Critical Understanding**:
-- **Structured Spec describes**: FEATURES to build ([list key features])
-- **Structured Spec's tech choices**: IGNORED ([list ignored techs])
-- **Existing Codebase provides**: INFRASTRUCTURE to use ([list infrastructure])
-- **This Strategy defines**: HOW to implement spec's FEATURES using existing INFRASTRUCTURE
-
-**Key Decisions**:
-1. ✅ Use existing [auth] for all authentication
-2. ✅ Use existing [database] for all database operations
-3. ✅ Use existing [storage] for all file operations
-4. ✅ Use existing [components] for all UI
-5. ✅ Use existing [state management] for data fetching
-6. ✅ Only CREATE NEW: [list what's new]
-
----
-
-## 1. FEATURES EXTRACTED FROM SPEC
-
-[Output from Step 2.1]
-
----
-
-## 2. INFRASTRUCTURE MAPPING STRATEGY
-
-[Output from Step 2.2 - all infrastructure areas]
-
----
-
-## 3. ROUTING EXTENSION STRATEGY
-
-[Output from Step 2.3]
-
----
-
-## 4. IMPLEMENTATION PHASES
-
-[Output from Step 2.4]
-
----
-
-## RISK ASSESSMENT
-
-**Extension Complexity**: [LOW | MEDIUM | HIGH]
-**Breaking Change Risk**: [LOW | MEDIUM | HIGH]
-
-**Potential Risks**:
-- [Risk 1] - Mitigation: [Strategy]
-- [Risk 2] - Mitigation: [Strategy]
 
 ---
 
 ## VALIDATION CHECKLIST
 
-Before beginning implementation:
-- [ ] Existing infrastructure fully documented
-- [ ] All features extracted from spec
-- [ ] Extension strategy defined for all areas
-- [ ] No breaking changes planned
-- [ ] Reuse opportunities maximized
-- [ ] Implementation phases defined
+After transformation, verify for EACH section:
+
+### Infrastructure Validation
+- [ ] ✅ No Prisma references remain (use Supabase Client)
+- [ ] ✅ No NextAuth references remain (use Supabase Auth)
+- [ ] ✅ No direct S3 SDK references remain (use Supabase Storage)
+- [ ] ✅ No BullMQ/Redis references remain (use Edge Functions)
+- [ ] ✅ No SWR references remain (use React Query)
+
+### Pattern Consistency Validation
+- [ ] ✅ All database operations use Supabase query builder
+- [ ] ✅ All auth uses `requireAuth()` pattern
+- [ ] ✅ All storage uses on-demand signed URLs
+- [ ] ✅ All API routes follow existing response format
+- [ ] ✅ All components import from `/components/ui/`
+- [ ] ✅ All hooks use React Query patterns
+
+### Documentation Validation
+- [ ] ✅ Each FR references Infrastructure Inventory section
+- [ ] ✅ Pattern sources are cited
+- [ ] ✅ Exact code patterns match inventory
+- [ ] ✅ Dependencies are explicit and accurate
+
+---
+
+## SECTION PROCESSING ORDER
+
+Process sections sequentially (dependencies matter):
+
+1. **Section 1: Foundation & Authentication**
+   - Transform to use existing Supabase Auth (SKIP most of it - already exists)
+   - Transform database schema to Supabase migrations
+   - Keep only NEW tables needed for LoRA training
+
+2. **Section 2: Dataset Management**
+   - Depends on Section 1 (auth, base schema)
+   - Transform storage to Supabase Storage
+   - Transform validation workers to Edge Functions
+
+3. **Section 3: Training Configuration**
+   - Depends on Section 1 (auth) and Section 2 (datasets)
+   - Transform configuration storage to JSONB columns
+
+4. **Section 4: Training Execution & Monitoring**
+   - Depends on Sections 1-3
+   - Transform BullMQ to Edge Functions + Cron
+   - Transform SSE to React Query polling
+
+5. **Section 5: Model Artifacts & Delivery**
+   - Depends on Section 4 (job completion)
+   - Transform S3 artifacts to Supabase Storage
+
+6. **Section 6: Cost Tracking & Notifications**
+   - Depends on all previous sections
+   - Transform to simple database inserts
+
+7. **Section 7: Complete System Integration**
+   - Depends on all previous sections
+   - Validate all transformations are consistent
+
+---
+
+## SPECIAL HANDLING
+
+### Section 1 Special Case
+Section 1 of the spec is "Foundation & Authentication" which sets up NextAuth, Prisma, and base infrastructure. Since our codebase ALREADY HAS all of this (Supabase Auth, Supabase DB), you should:
+
+**SKIP** most of Section 1 infrastructure setup
+
+**KEEP** from Section 1:
+- New database tables specific to LoRA training (datasets, training_jobs, etc.)
+- Dashboard page structure (if different from existing)
+- Any LoRA-specific models not in existing codebase
+
+**TRANSFORM** Section 1 to:
+```markdown
+## SECTION 1: Foundation & Authentication - INTEGRATED
+
+**Extension Status**: ✅ Most infrastructure ALREADY EXISTS - only adding LoRA-specific tables
+
+**What Already Exists**:
+- ✅ Next.js 14 App Router with TypeScript
+- ✅ Supabase Auth with protected routes
+- ✅ Supabase PostgreSQL database
+- ✅ Supabase Storage
+- ✅ shadcn/ui components
+- ✅ Dashboard layout and routing
+
+**What We're Adding** (LoRA Training specific):
+- New database tables: datasets, training_jobs, metrics_points, model_artifacts, cost_records, notifications
+- New storage buckets: lora-datasets, lora-models
+
+[Then provide only the NEW table migrations]
 ```
 
 ---
 
-## OUTPUT DOCUMENT 3: IMPLEMENTATION GUIDE
+## BEGIN TRANSFORMATION
 
-**File**: `04d-implementation-guide_v1.md`
+Process each section of the structured specification sequentially:
 
-[Use structure from Phase 3 above]
+1. Read Section [N] from structured spec
+2. Identify all features and requirements
+3. For each infrastructure component mentioned, find the replacement pattern from Infrastructure Inventory
+4. Apply transformation rules (Rules 1-8)
+5. Generate integrated section following Output Structure
+6. Run Validation Checklist
+7. Move to next section
 
----
+**Output File**: `pmc/product/_mapping/pipeline/04e-pipeline-integrated-extension-spec_v1.md`
 
-## QUALITY CHECKLIST
+**Structure**:
+```markdown
+# BrightRun LoRA Training Platform - Integrated Extension Specification
 
-Before finalizing your three documents, verify:
-
-### Infrastructure Inventory Document
-- [ ] All major areas inventoried (architecture, auth, database, API, components, state, storage, utilities, testing, config)
-- [ ] Actual code examples included (not generic descriptions)
-- [ ] File paths specific and accurate
-- [ ] Existing patterns clearly documented with "USE THIS" markers
-- [ ] All reusable components identified
-- [ ] "Available for New Module" section for each area
-- [ ] Focus is on WHAT EXISTS and HOW TO USE IT
-
-### Extension Strategy Document
-- [ ] Features extracted from spec (ignoring tech choices)
-- [ ] Every infrastructure area has USE_EXISTING or EXTEND strategy
-- [ ] Clear rationale for using existing infrastructure
-- [ ] Specific list of what NEW things to create
-- [ ] No language about "mismatches" or "incompatibilities"
-- [ ] No recommendations to build separately
-- [ ] Implementation phases with time estimates
-- [ ] Language consistently frames this as EXTENSION
-
-### Implementation Guide Document
-- [ ] Step-by-step instructions for EVERY feature
-- [ ] Specific file paths following existing conventions
-- [ ] Code examples using EXISTING patterns
-- [ ] Clear "USE EXISTING [pattern]" instructions
-- [ ] Database migrations reference existing tables
-- [ ] API routes use existing auth/validation/responses
-- [ ] Components use existing UI library
-- [ ] Pages use existing layouts
-- [ ] Implementation checklist provided
-
-### Cross-Document Consistency
-- [ ] Documents reference each other correctly
-- [ ] Terminology consistent across all three
-- [ ] File paths match across documents
-- [ ] Strategy aligns with implementation guide
-- [ ] No contradictions between documents
-- [ ] Consistent "extension" framing throughout
-
-### Practical Usability
-- [ ] Developer can follow without ambiguity
-- [ ] Specific enough to implement immediately
-- [ ] All edge cases addressed
-- [ ] Migration path clear
-- [ ] Testing guidance provided
-- [ ] Focus on reuse and consistency
+**Version:** 1.0  
+**Date:** [Current Date]  
+**Source:** 04c-pipeline-structured-from-wireframe_v1.md  
+**Integration Basis:** Infrastructure Inventory v1, Extension Strategy v1, Implementation Guide v1
 
 ---
 
-## FINAL OUTPUT SUMMARY
+## INTEGRATION SUMMARY
 
-You will create THREE comprehensive markdown documents:
+This specification describes how to implement the BrightRun LoRA Training Platform as an EXTENSION to the existing BrightHub application.
 
-1. **04d-infrastructure-inventory_v1.md** (~2,000-3,000 lines)
-   - Complete inventory of existing infrastructure
-   - What exists, where, and how to use it
-   - Reusable assets documented
-   - Focus: "Here's what's AVAILABLE for you to USE"
+**Approach**: EXTENSION (not separate application)
 
-2. **04d-extension-strategy_v1.md** (~1,500-2,500 lines)
-   - Features extracted from spec (ignoring tech choices)
-   - How new module uses existing infrastructure
-   - What new things need to be created
-   - Implementation phases
-   - Focus: "Here's HOW to use existing infrastructure for new features"
+**Infrastructure Decisions**:
+- ✅ Use existing Supabase Auth (not NextAuth)
+- ✅ Use existing Supabase PostgreSQL (not Prisma)
+- ✅ Use existing Supabase Storage (not S3)
+- ✅ Use existing shadcn/ui components
+- ✅ Use existing React Query (not SWR)
+- ✅ Use Edge Functions + Cron (not BullMQ + Redis)
 
-3. **04d-implementation-guide_v1.md** (~2,000-4,000 lines)
-   - Exact implementation steps
-   - Code examples using existing patterns
-   - File paths and naming conventions
-   - Implementation checklist
-   - Focus: "Here's EXACTLY what to do"
+**What We're Adding**:
+- 7 new database tables
+- 2 new storage buckets
+- ~25 new API routes
+- ~8-10 new pages
+- ~25-30 new components
+- ~15 new hooks
+- 2 Edge Functions
 
-**Total Expected Output**: ~5,500-9,500 lines of comprehensive extension documentation
-
----
-
-## REMEMBER: THE CRITICAL FRAMING
-
-**This is NOT integration - this is EXTENSION.**
-
-Your goal is to enable a developer to:
-
-1. ✅ Understand exactly what infrastructure EXISTS and is AVAILABLE
-2. ✅ Know exactly HOW to USE existing infrastructure for new features
-3. ✅ Have specific, actionable instructions for what to CREATE NEW
-4. ✅ Implement new features WITHOUT breaking existing functionality
-5. ✅ Maximize code reuse and pattern consistency
-6. ✅ Build new features as an EXTENSION alongside existing code
-
-**The structured spec describes FEATURES.**
-**The existing codebase provides INFRASTRUCTURE.**
-**Your job is to document HOW TO IMPLEMENT THE FEATURES USING THE INFRASTRUCTURE.**
-
-**NEVER suggest building separately. ALWAYS frame as extension.**
+**What We're NOT Creating**:
+- ❌ New authentication system
+- ❌ New database client
+- ❌ New storage client
+- ❌ Job queue infrastructure
+- ❌ Component library
 
 ---
 
-**Meta-Prompt Version**: 2.0  
-**Date**: December 24, 2024  
-**Status**: Ready for Generator Script
+[SECTION 1: Foundation & Authentication - INTEGRATED]
 
+[SECTION 2: Dataset Management - INTEGRATED]
 
+[SECTION 3: Training Configuration - INTEGRATED]
+
+[SECTION 4: Training Execution & Monitoring - INTEGRATED]
+
+[SECTION 5: Model Artifacts & Delivery - INTEGRATED]
+
+[SECTION 6: Cost Tracking & Notifications - INTEGRATED]
+
+[SECTION 7: Complete System Integration - INTEGRATED]
+
+---
+
+## APPENDIX: Integration Reference
+
+### Infrastructure Inventory Cross-Reference
+[Quick reference to key patterns from inventory]
+
+### Extension Strategy Alignment
+[Confirmation that all transformations align with strategy]
+
+### Implementation Guide Patterns
+[Index of exact patterns used]
+
+---
+
+**Document Status**: READY FOR SEGMENTATION  
+**Next Step**: Run segmentation script (04f-segment-integrated-spec_v1.js)
+```
+
+---
+
+**Meta-Prompt Version**: 1.0  
+**Date**: December 23, 2025  
+**Status**: Ready for Execution  
+**Input File Paths**: To be provided at runtime
 
 
 ---
