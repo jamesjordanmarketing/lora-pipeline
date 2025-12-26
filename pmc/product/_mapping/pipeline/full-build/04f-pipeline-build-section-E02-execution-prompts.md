@@ -1515,7 +1515,3 @@ export function useExample() {
 ```
 
 ---
-
-**Ready to implement Section E02, Prompt P01!**
-
----
