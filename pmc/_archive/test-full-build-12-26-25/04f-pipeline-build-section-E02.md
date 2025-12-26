@@ -2,7 +2,7 @@
 
 **Product**: PIPELINE  
 **Section**: 2 - Dataset Management  
-**Generated**: 2025-12-26  
+**Generated**: 2025-12-25  
 **Source**: 04e-pipeline-integrated-extension-spec_v1.md
 
 ---

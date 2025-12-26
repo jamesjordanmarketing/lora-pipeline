@@ -1,15 +1,15 @@
-# Customized Meta-Prompt: Section E07
+# Customized Meta-Prompt: Section E02
 
 **Product:** PIPELINE  
-**Section:** 7 - Complete System Integration  
-**Generated:** 2025-12-26  
-**Source Section File:** `04f-pipeline-build-section-E07.md`
+**Section:** 2 - Dataset Management  
+**Generated:** 2025-12-25  
+**Source Section File:** `04f-pipeline-build-section-E02.md`
 
 ---
 
 ## 🎯 Purpose
 
-This is a **customized meta-prompt** for generating progressive execution prompts for Section E07.
+This is a **customized meta-prompt** for generating progressive execution prompts for Section E02.
 
 **What This Document Does:**
 - Provides section-specific context and requirements
@@ -18,7 +18,7 @@ This is a **customized meta-prompt** for generating progressive execution prompt
 - Outputs a single file with all prompts for this section
 
 **What You'll Generate:**
-- **Output File:** `04f-pipeline-build-section-E07-execution-prompts.md`
+- **Output File:** `04f-pipeline-build-section-E02-execution-prompts.md`
 - **Location:** Same directory as this file
 - **Contents:** Progressive execution prompts (P01, P02, P03, etc.)
 
@@ -26,19 +26,23 @@ This is a **customized meta-prompt** for generating progressive execution prompt
 
 ## 📊 Section Statistics
 
-- **Section Number:** E07
-- **Title:** Complete System Integration
-- **Features:** 0 identified
+- **Section Number:** E02
+- **Title:** Dataset Management
+- **Features:** 2 identified
 - **Complexity:** LOW
 - **Estimated Hours:** 3-5
 - **Expected Prompts:** 1
-- **Source File:** `04f-pipeline-build-section-E07.md`
+- **Source File:** `04f-pipeline-build-section-E02.md`
 
 ---
 
 ## 📋 Section Overview
 
-No overview found in section file.
+Enable users to upload, validate, and manage conversation datasets for LoRA training.
+
+**User Value**: Users can upload conversation datasets, validate formats, view statistics, and manage their dataset library
+
+---
 
 ---
 
@@ -49,31 +53,6 @@ No overview found in section file.
 #### Section E01: Foundation & Authentication
 - Source: `04f-pipeline-build-section-E01.md`
 - Features implemented: 1
-- Key deliverables: [Will be detailed in execution prompts]
-
-#### Section E02: Dataset Management
-- Source: `04f-pipeline-build-section-E02.md`
-- Features implemented: 2
-- Key deliverables: [Will be detailed in execution prompts]
-
-#### Section E03: Training Configuration
-- Source: `04f-pipeline-build-section-E03.md`
-- Features implemented: 3
-- Key deliverables: [Will be detailed in execution prompts]
-
-#### Section E04: Training Execution & Monitoring
-- Source: `04f-pipeline-build-section-E04.md`
-- Features implemented: 2
-- Key deliverables: [Will be detailed in execution prompts]
-
-#### Section E05: Model Artifacts & Delivery
-- Source: `04f-pipeline-build-section-E05.md`
-- Features implemented: 2
-- Key deliverables: [Will be detailed in execution prompts]
-
-#### Section E06: Cost Tracking & Notifications
-- Source: `04f-pipeline-build-section-E06.md`
-- Features implemented: 2
 - Key deliverables: [Will be detailed in execution prompts]
 
 
@@ -96,10 +75,10 @@ The complete meta-prompt methodology is defined in:
 ### Step 2: Read the Section File
 
 Load and analyze the complete section specification:
-`C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\full-build\04f-pipeline-build-section-E07.md`
+`C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\full-build\04f-pipeline-build-section-E02.md`
 
 **What to extract:**
-- All features (FR-7.X format)
+- All features (FR-2.X format)
 - Code blocks (SQL, TypeScript, TSX, etc.)
 - File specifications (paths, new vs modify)
 - Dependencies (on previous sections and within section)
@@ -111,7 +90,7 @@ Follow the methodology from the base meta-prompt:
 
 #### Phase 1: Section Analysis
 - Parse section metadata (already done above)
-- Extract all 0 features
+- Extract all 2 features
 - Assess complexity for each feature
 - Build dependency graph
 
@@ -125,7 +104,7 @@ Follow the methodology from the base meta-prompt:
 - Use the prompt template from base meta-prompt
 - Generate one prompt for each group
 - Include all code blocks from section file
-- Specify integration points with previous sections: E01, E02, E03, E04, E05, E06
+- Specify integration points with previous sections: E01
 - Add acceptance criteria and testing steps
 
 #### Phase 4: Cross-Prompt Validation
@@ -139,14 +118,14 @@ Follow the methodology from the base meta-prompt:
 Create a single markdown file with this structure:
 
 ```markdown
-# PIPELINE - Section E07: Complete System Integration - Execution Prompts
+# PIPELINE - Section E02: Dataset Management - Execution Prompts
 
 **Product:** PIPELINE  
-**Section:** 7 - Complete System Integration  
+**Section:** 2 - Dataset Management  
 **Generated:** [Today's date]  
 **Total Prompts:** [Number you determined]  
 **Estimated Total Time:** [Total hours] hours  
-**Source Section File:** 04f-pipeline-build-section-E07.md
+**Source Section File:** 04f-pipeline-build-section-E02.md
 
 ---
 
@@ -165,7 +144,7 @@ Create a single markdown file with this structure:
 ## Integration Context
 
 ### Dependencies from Previous Sections
-[List what this section needs from sections: E01, E02, E03, E04, E05, E06]
+[List what this section needs from sections: E01]
 
 ### Provides for Next Sections
 [List what future sections will use]
@@ -200,13 +179,13 @@ Create a single markdown file with this structure:
 
 ---
 
-**End of Section E07 Execution Prompts**
+**End of Section E02 Execution Prompts**
 ```
 
 ### Step 5: Save Output
 
 **File Path:**
-`C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\full-build/04f-pipeline-build-section-E07-execution-prompts.md`
+`C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\full-build/04f-pipeline-build-section-E02-execution-prompts.md`
 
 ---
 
@@ -214,50 +193,45 @@ Create a single markdown file with this structure:
 
 Your generated execution prompts file is complete when:
 
-1. ✅ All 0 features from section file are covered
+1. ✅ All 2 features from section file are covered
 2. ✅ Each prompt is 6-8 hours of work (not too large/small)
 3. ✅ Prompts are in correct dependency order
 4. ✅ Integration points with previous sections are explicit
 5. ✅ All code blocks from section file are included in appropriate prompts
 6. ✅ Acceptance criteria and testing steps are specific
 7. ✅ File follows the template structure exactly
-8. ✅ Output file name matches: `04f-pipeline-build-section-E07-execution-prompts.md`
+8. ✅ Output file name matches: `04f-pipeline-build-section-E02-execution-prompts.md`
 
 ---
 
 ## 📚 Reference Materials
 
 ### Section File Location
-`C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\full-build\04f-pipeline-build-section-E07.md`
+`C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\full-build\04f-pipeline-build-section-E02.md`
 
 ### Base Meta-Prompt Template
 `pmc/product/_prompt_engineering/04f-integrated-spec-to-progressive-prompts_v2.md`
 
 ### Previous Section Files
 - `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\full-build\04f-pipeline-build-section-E01.md`
-- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\full-build\04f-pipeline-build-section-E02.md`
-- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\full-build\04f-pipeline-build-section-E03.md`
-- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\full-build\04f-pipeline-build-section-E04.md`
-- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\full-build\04f-pipeline-build-section-E05.md`
-- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_mapping\pipeline\full-build\04f-pipeline-build-section-E06.md`
 
 ---
 
 ## 🚀 Ready to Generate
 
-You now have all the information needed to generate execution prompts for Section E07.
+You now have all the information needed to generate execution prompts for Section E02.
 
 **Next Steps:**
-1. Open the section file: `04f-pipeline-build-section-E07.md`
+1. Open the section file: `04f-pipeline-build-section-E02.md`
 2. Reference the base meta-prompt for methodology
 3. Apply the 4 phases (Analysis → Planning → Generation → Validation)
 4. Generate the output file with all prompts
 
 **Expected Output:**
-- File: `04f-pipeline-build-section-E07-execution-prompts.md`
+- File: `04f-pipeline-build-section-E02-execution-prompts.md`
 - Prompts: 1 progressive build prompts
 - Total Time: 3-5 hours of implementation work
 
 ---
 
-**Let's generate execution prompts for Complete System Integration!** 🎯
+**Let's generate execution prompts for Dataset Management!** 🎯

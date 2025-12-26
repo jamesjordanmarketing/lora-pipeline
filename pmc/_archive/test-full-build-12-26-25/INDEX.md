@@ -1,22 +1,16 @@
 # Build Sections Index
 
 **Product**: PIPELINE  
-**Generated**: 2025-12-26  
-**Total Sections**: 7  
-**Source File**: 04e-pipeline-integrated-extension-spec_v1.md
+**Generated**: 2025-12-25  
+**Total Sections**: 5  
+**Source File**: 04e-pipeline-integrated-extension-spec_v1b.md
 
 ---
 
 ## Sections
 
-This document has been split into 7 individual section files for easier navigation and implementation.
+This document has been split into 5 individual section files for easier navigation and implementation.
 
-
-### Section 1: Foundation & Authentication
-**File**: `04f-pipeline-build-section-E01.md`
-
-### Section 2: Dataset Management
-**File**: `04f-pipeline-build-section-E02.md`
 
 ### Section 3: Training Configuration
 **File**: `04f-pipeline-build-section-E03.md`

@@ -1,90 +1,86 @@
+#!/usr/bin/env node
+
 /**
- * Integrated Spec Segmenter (v1)
+ * Integrated Spec Section Splitter (v1)
  * 
- * Purpose: Segment integrated extension specification into progressive execution prompts.
- * 
- * Input:
- *   - Integrated Extension Spec (04e): Features with existing infrastructure patterns
- * 
- * Output:
- *   - Execution Prompts (04f-E[XX]-P[YY].md): Progressive prompts for implementation
- * 
- * Progressive Dependency Model:
- *   - Intra-section: Database → API → UI → Integration
- *   - Inter-section: E01 → E02 → E03 with dependency chains
+ * Purpose: Split integrated extension specification into individual section files.
  * 
  * Usage:
- *   node 04f-segment-integrated-spec_v1.js \
- *     --input "path/to/04e-integrated-extension-spec_v1.md" \
- *     --output-dir "path/to/execution-prompts/"
+ *   node 04f-segment-integrated-spec_v1.js "Product Name" product-abbrev
+ * 
+ * Examples:
+ *   node 04f-segment-integrated-spec_v1.js "LoRA Pipeline" pipeline
+ *   node 04f-segment-integrated-spec_v1.js "BMO Extension" bmo
+ * 
+ * Output:
+ *   Creates: pmc/product/_mapping/[product-abbreviation]/full-build/
+ *   Files:   04f-[product-abbreviation]-build-section-E01.md
+ *            04f-[product-abbreviation]-build-section-E02.md
+ *            ...
  */
 
 const fs = require('fs');
 const path = require('path');
+const readline = require('readline');
 
 // ============================================================================
-// CONFIGURATION
+// READLINE INTERFACE
 // ============================================================================
 
-const CONFIG = {
-  // Prompt grouping by layer
-  layers: ['database', 'api', 'ui', 'integration'],
-  
-  // Layer descriptions
-  layerDescriptions: {
-    database: 'Database Setup - Tables, Migrations, RLS Policies',
-    api: 'API Routes - Backend Logic and Data Access',
-    ui: 'UI Components - User Interface Building Blocks',
-    integration: 'Integration - Hooks, State Management, Page Assembly',
-  },
-  
-  // Infrastructure context template
-  infrastructureContext: `
-**What Exists in Codebase (ALWAYS USE)**:
-- **Authentication**: Supabase Auth via \`requireAuth()\` from \`@/lib/supabase-server\`
-- **Database**: Supabase Client via \`createServerSupabaseClient()\` from \`@/lib/supabase-server\`
-- **Storage**: Supabase Storage via \`createServerSupabaseAdminClient()\` for signed URLs
-- **Components**: 47+ shadcn/ui components at \`@/components/ui/*\`
-- **State Management**: React Query v5 with custom hooks pattern
-- **API Format**: \`{ success: true, data }\` for success, \`{ error, details }\` for errors
-`,
-};
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+function question(query) {
+  return new Promise(resolve => rl.question(query, resolve));
+}
 
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 
-/**
- * Parse command line arguments
- */
-function parseArgs() {
-  const args = process.argv.slice(2);
-  const parsed = {};
-  
-  for (let i = 0; i < args.length; i += 2) {
-    const key = args[i].replace(/^--/, '');
-    const value = args[i + 1];
-    parsed[key] = value;
-  }
-  
-  return parsed;
+function toDisplayPath(absolutePath) {
+  return absolutePath.replace(/\\/g, '/');
 }
 
-/**
- * Read file content
- */
+function normalizePath(inputPath, defaultDir) {
+  try {
+    const baseDir = path.resolve(__dirname, '..');
+    
+    if (inputPath.startsWith('../')) {
+      return path.resolve(__dirname, inputPath);
+    }
+    
+    if (!inputPath.includes('/') && !inputPath.includes('\\')) {
+      return path.resolve(baseDir, defaultDir, inputPath);
+    }
+    
+    let normalizedPath = inputPath.replace(/\\/g, '/');
+    return path.resolve(baseDir, normalizedPath);
+  } catch (error) {
+    console.error('Path normalization error:', error);
+    return null;
+  }
+}
+
+function validateFilePath(filePath) {
+  try {
+    return filePath && fs.existsSync(filePath);
+  } catch (error) {
+    return false;
+  }
+}
+
 function readFile(filePath) {
   try {
     return fs.readFileSync(filePath, 'utf-8');
   } catch (error) {
-    console.error(`Error reading file ${filePath}:`, error.message);
+    console.error(`❌ Error reading file ${filePath}:`, error.message);
     process.exit(1);
   }
 }
 
-/**
- * Write file content
- */
 function writeFile(filePath, content) {
   try {
     const dir = path.dirname(filePath);
@@ -93,29 +89,97 @@ function writeFile(filePath, content) {
     }
     fs.writeFileSync(filePath, content, 'utf-8');
   } catch (error) {
-    console.error(`Error writing file ${filePath}:`, error.message);
+    console.error(`❌ Error writing file ${filePath}:`, error.message);
     process.exit(1);
   }
 }
 
+// ============================================================================
+// FILE INPUT WITH VALIDATION
+// ============================================================================
+
+async function getValidFilePath(description, defaultPath, productAbbrev) {
+  const fullDefaultPath = normalizePath(defaultPath, '');
+  const exists = validateFilePath(fullDefaultPath);
+  
+  console.log(`\n${description}`);
+  console.log(`Default: ${toDisplayPath(fullDefaultPath)}`);
+  console.log(`Exists: ${exists ? 'TRUE' : 'FALSE'}`);
+  
+  if (exists) {
+    const useDefault = await question('Use this path? (y/n) [default: y]: ');
+    if (!useDefault.trim() || useDefault.toLowerCase() === 'y' || useDefault.toLowerCase() === 'yes') {
+      return fullDefaultPath;
+    }
+  }
+  
+  // File doesn't exist or user wants to provide custom path
+  while (true) {
+    console.log('\nPlease provide the correct path:');
+    console.log('(You can paste the full path, or type "q" to quit)');
+    const input = await question('> ');
+    
+    if (input.toLowerCase() === 'q' || input.toLowerCase() === 'quit') {
+      console.log('Exiting...');
+      rl.close();
+      process.exit(0);
+    }
+    
+    const customPath = normalizePath(input.trim(), '');
+    const customExists = validateFilePath(customPath);
+    
+    console.log(`Path: ${toDisplayPath(customPath)}`);
+    console.log(`Exists: ${customExists ? 'TRUE' : 'FALSE'}`);
+    
+    if (customExists) {
+      return customPath;
+    }
+    
+    console.log('❌ File not found. Please try again or type "q" to quit.');
+  }
+}
+
+// ============================================================================
+// SECTION EXTRACTION LOGIC
+// ============================================================================
+
 /**
- * Extract sections from integrated spec
+ * Extract sections from integrated specification
+ * Sections are identified by "## SECTION N:" headers
  */
 function extractSections(content) {
   const sections = [];
-  const sectionRegex = /## SECTION (\d+):\s*(.+?)\s*-\s*INTEGRATED([\s\S]*?)(?=\n## SECTION \d+:|## APPENDIX:|$)/g;
   
-  let match;
-  while ((match = sectionRegex.exec(content)) !== null) {
+  // Split content by section headers
+  const sectionPattern = /^## SECTION (\d+):/gm;
+  const matches = [...content.matchAll(sectionPattern)];
+  
+  if (matches.length === 0) {
+    console.warn('⚠️  No sections found with pattern "## SECTION N:"');
+    return sections;
+  }
+  
+  // Extract each section's content
+  for (let i = 0; i < matches.length; i++) {
+    const match = matches[i];
     const sectionNumber = parseInt(match[1]);
-    const title = match[2].trim();
-    const content = match[3];
+    const startIndex = match.index;
+    
+    // Find where this section ends (start of next section or end of file)
+    const endIndex = i < matches.length - 1 
+      ? matches[i + 1].index 
+      : content.length;
+    
+    const sectionContent = content.substring(startIndex, endIndex).trim();
+    
+    // Extract title from first line
+    const titleMatch = sectionContent.match(/## SECTION \d+:\s*(.+?)(?:\s*-\s*INTEGRATED)?$/m);
+    const title = titleMatch ? titleMatch[1].trim() : 'Unknown';
     
     sections.push({
       number: sectionNumber,
       title: title,
-      content: content,
-      fullMatch: match[0],
+      content: sectionContent,
     });
   }
   
@@ -123,568 +187,236 @@ function extractSections(content) {
 }
 
 /**
- * Extract features from a section
+ * Generate section file with header
  */
-function extractFeatures(sectionContent) {
-  const features = [];
-  const featureRegex = /#### (FR-\d+\.\d+(?:\.\d+)?):(.+?)\n([\s\S]*?)(?=\n#### FR-|\n### [\w\s]+ Summary|$)/g;
-  
-  let match;
-  while ((match = featureRegex.exec(sectionContent)) !== null) {
-    const featureId = match[1];
-    const featureName = match[2].trim();
-    const featureContent = match[3];
-    
-    features.push({
-      id: featureId,
-      name: featureName,
-      content: featureContent,
-      fullContent: match[0],
-    });
-  }
-  
-  return features;
-}
+function generateSectionFile(section, productAbbreviation, metadata) {
+  const header = `# Build Section E${String(section.number).padStart(2, '0')}
 
-/**
- * Categorize feature by layer
- */
-function categorizeFeature(feature) {
-  const content = feature.content.toLowerCase();
-  const layers = [];
-  
-  // Check for database layer
-  if (content.includes('database') || 
-      content.includes('table') || 
-      content.includes('migration') ||
-      content.includes('schema') ||
-      content.includes('rls')) {
-    layers.push('database');
-  }
-  
-  // Check for API layer
-  if (content.includes('api') || 
-      content.includes('route') || 
-      content.includes('endpoint') ||
-      content.includes('post /') ||
-      content.includes('get /') ||
-      content.includes('patch /') ||
-      content.includes('delete /')) {
-    layers.push('api');
-  }
-  
-  // Check for UI layer
-  if (content.includes('component') || 
-      content.includes('ui') || 
-      content.includes('page') ||
-      content.includes('button') ||
-      content.includes('form') ||
-      content.includes('card') ||
-      content.includes('dialog')) {
-    layers.push('ui');
-  }
-  
-  // Check for integration layer
-  if (content.includes('hook') || 
-      content.includes('usequery') || 
-      content.includes('usemutation') ||
-      content.includes('state') ||
-      content.includes('navigation')) {
-    layers.push('integration');
-  }
-  
-  // If no specific layer identified, default to integration
-  if (layers.length === 0) {
-    layers.push('integration');
-  }
-  
-  return layers;
-}
-
-/**
- * Group features by layer
- */
-function groupFeaturesByLayer(features) {
-  const groups = {
-    database: [],
-    api: [],
-    ui: [],
-    integration: [],
-  };
-  
-  for (const feature of features) {
-    const layers = categorizeFeature(feature);
-    
-    // Add feature to all applicable layers
-    for (const layer of layers) {
-      if (groups[layer]) {
-        groups[layer].push(feature);
-      }
-    }
-  }
-  
-  return groups;
-}
-
-/**
- * Format feature for prompt
- */
-function formatFeature(feature) {
-  return `### ${feature.id}: ${feature.name}
-
-${feature.content}
-
----
-`;
-}
-
-/**
- * Generate execution prompt
- */
-function generateExecutionPrompt(section, layer, features, dependencies) {
-  const sectionNum = String(section.number).padStart(2, '0');
-  const promptNum = CONFIG.layers.indexOf(layer) + 1;
-  const promptNumPadded = String(promptNum).padStart(2, '0');
-  
-  const title = `Section ${section.number} - ${layer.charAt(0).toUpperCase() + layer.slice(1)} Layer`;
-  const description = CONFIG.layerDescriptions[layer];
-  
-  let prompt = `# Execution Prompt: E${sectionNum}-P${promptNumPadded}
-
+**Product**: ${productAbbreviation.toUpperCase()}  
 **Section**: ${section.number} - ${section.title}  
-**Layer**: ${description}  
-**Dependencies**: ${dependencies.previous.length > 0 ? dependencies.previous.join(', ') : 'None'}
-
----
-
-## CONTEXT SUMMARY
-
-${CONFIG.infrastructureContext}
-
-### From Previous Prompts (AVAILABLE)
-
-${dependencies.previousPrompts.length > 0 ? dependencies.previousPrompts.join('\n') : 'None - this is the first prompt in this section'}
-
-### From Previous Sections (AVAILABLE)
-
-${dependencies.previousSections.length > 0 ? dependencies.previousSections.join('\n') : 'None - this is the first section'}
-
----
-
-## FEATURES TO IMPLEMENT
-
-This prompt implements **${features.length} feature(s)** at the ${layer} layer:
-
-${features.map(f => `- ${f.id}: ${f.name}`).join('\n')}
-
----
-
-${features.map(f => formatFeature(f)).join('\n')}
-
----
-
-## IMPLEMENTATION REQUIREMENTS
-
-All code must follow existing patterns from the codebase:
-
-### Database Layer Requirements
-- ✅ Use Supabase migrations (SQL files in \`supabase/migrations/\`)
-- ✅ Enable RLS on all tables
-- ✅ Create policies for SELECT, INSERT, UPDATE, DELETE
-- ✅ Add indexes for foreign keys and frequently queried columns
-- ✅ Use \`auth.uid()\` for user ownership checks
-
-### API Layer Requirements
-- ✅ Use \`requireAuth()\` for authentication in all routes
-- ✅ Use \`createServerSupabaseClient()\` for database queries
-- ✅ Follow response format: \`{ success: true, data }\` or \`{ error, details }\`
-- ✅ Add try-catch for error handling
-- ✅ Log errors with \`console.error()\`
-- ✅ Use Zod for request validation
-
-### UI Layer Requirements
-- ✅ Import all components from \`@/components/ui/\`
-- ✅ Use \`'use client'\` directive for client components
-- ✅ Use TypeScript with proper interfaces
-- ✅ Use Tailwind CSS for styling
-- ✅ Use \`cn()\` utility for class merging
-- ✅ Follow existing component patterns
-
-### Integration Layer Requirements
-- ✅ Use React Query for all data fetching
-- ✅ Create custom hooks following \`use[Resource]\` naming
-- ✅ Use \`useQuery\` for fetching, \`useMutation\` for modifications
-- ✅ Invalidate queries on success in mutations
-- ✅ Show toast notifications on success/error (use Sonner)
-
----
-
-## ACCEPTANCE CRITERIA
-
-`;
-
-  // Add acceptance criteria based on layer
-  if (layer === 'database') {
-    prompt += `
-- [ ] Migration file created in \`supabase/migrations/\`
-- [ ] All tables created successfully
-- [ ] RLS policies enabled and working
-- [ ] Indexes created for performance
-- [ ] Foreign key constraints working
-- [ ] Can insert/query/update/delete data
-- [ ] User isolation working (users can only see own data)
-`;
-  } else if (layer === 'api') {
-    prompt += `
-- [ ] All API routes created in \`src/app/api/\`
-- [ ] Authentication working (requireAuth)
-- [ ] Database queries working
-- [ ] Response format consistent
-- [ ] Error handling working
-- [ ] Validation working (Zod schemas)
-- [ ] Can test with curl/Postman
-`;
-  } else if (layer === 'ui') {
-    prompt += `
-- [ ] All components created
-- [ ] Components render without errors
-- [ ] TypeScript types correct
-- [ ] Styling matches design
-- [ ] shadcn/ui components used correctly
-- [ ] Responsive on mobile/desktop
-- [ ] Accessibility considerations
-`;
-  } else if (layer === 'integration') {
-    prompt += `
-- [ ] Hooks created and working
-- [ ] React Query setup correct
-- [ ] Data fetching working
-- [ ] Mutations working
-- [ ] Query invalidation working
-- [ ] Toast notifications working
-- [ ] Pages render with data
-- [ ] Navigation working
-`;
-  }
-
-  prompt += `
----
-
-## VALIDATION STEPS
-
-1. **Code Review**:
-   - Check all patterns match Infrastructure Inventory
-   - Verify imports are correct
-   - Ensure TypeScript types are defined
-
-2. **Testing**:
-   - Test all functionality manually
-   - Check error cases
-   - Verify authentication works
-   - Test with different user accounts
-
-3. **Integration Check**:
-   - Verify works with existing infrastructure
-   - Check no breaking changes to existing features
-   - Confirm data appears correctly
-
----
-
-## DO NOT
-
-- ❌ Create new authentication system
-- ❌ Use Prisma or any ORM (use Supabase Client)
-- ❌ Use NextAuth (use Supabase Auth)
-- ❌ Use AWS S3 SDK (use Supabase Storage)
-- ❌ Create BullMQ/Redis infrastructure (use Edge Functions if needed)
-- ❌ Use SWR (use React Query)
-- ❌ Store URLs in database (store paths only, generate URLs on-demand)
-- ❌ Modify existing infrastructure files
-- ❌ Add dependencies not already in package.json
-
----
-
-## REFERENCE DOCUMENTS
-
-For detailed patterns and examples, refer to:
-
-- **Infrastructure Inventory**: Existing patterns to use
-- **Extension Strategy**: Feature mapping to infrastructure
-- **Implementation Guide**: Complete code examples
-
----
-
-**Prompt Status**: Ready for execution  
-**Estimated Time**: ${estimateTime(features.length, layer)}  
-**Next Prompt**: E${sectionNum}-P${String(promptNum + 1).padStart(2, '0')} (${CONFIG.layers[promptNum] || 'Next section'})
-`;
-
-  return prompt;
-}
-
-/**
- * Estimate implementation time
- */
-function estimateTime(featureCount, layer) {
-  const baseTime = {
-    database: 1,
-    api: 2,
-    ui: 3,
-    integration: 2,
-  };
-  
-  const hours = baseTime[layer] * featureCount;
-  return `${hours}-${hours + 2} hours`;
-}
-
-/**
- * Build dependencies object
- */
-function buildDependencies(sectionIndex, promptIndex, allSections, currentPrompts) {
-  const dependencies = {
-    previous: [],
-    previousPrompts: [],
-    previousSections: [],
-  };
-  
-  // Add dependency on previous prompts in same section
-  for (let i = 0; i < promptIndex; i++) {
-    const prevLayer = CONFIG.layers[i];
-    dependencies.previous.push(`E${String(sectionIndex + 1).padStart(2, '0')}-P${String(i + 1).padStart(2, '0')}`);
-    dependencies.previousPrompts.push(`- **${prevLayer}**: ${CONFIG.layerDescriptions[prevLayer]}`);
-  }
-  
-  // Add dependency on previous sections
-  for (let i = 0; i < sectionIndex; i++) {
-    const prevSection = allSections[i];
-    dependencies.previousSections.push(`- **Section ${prevSection.number}**: ${prevSection.title}`);
-  }
-  
-  return dependencies;
-}
-
-/**
- * Generate all prompts for a section
- */
-function generateSectionPrompts(section, sectionIndex, allSections, outputDir) {
-  const prompts = [];
-  
-  // Skip Section 1 if it's foundation (already exists in codebase)
-  if (section.number === 1) {
-    console.log(`   ⚠️  Section 1 (Foundation): Most infrastructure exists, creating minimal prompts for new tables only`);
-  }
-  
-  // Extract features from section
-  const features = extractFeatures(section.content);
-  
-  if (features.length === 0) {
-    console.log(`   ⚠️  No features found in section ${section.number}`);
-    return prompts;
-  }
-  
-  console.log(`   📋 Found ${features.length} features`);
-  
-  // Group features by layer
-  const groups = groupFeaturesByLayer(features);
-  
-  // Generate prompt for each layer that has features
-  CONFIG.layers.forEach((layer, layerIndex) => {
-    const layerFeatures = groups[layer];
-    
-    if (layerFeatures.length === 0) {
-      return; // Skip empty layers
-    }
-    
-    console.log(`      - ${layer}: ${layerFeatures.length} features`);
-    
-    // Build dependencies
-    const dependencies = buildDependencies(sectionIndex, layerIndex, allSections, prompts);
-    
-    // Generate prompt
-    const prompt = generateExecutionPrompt(section, layer, layerFeatures, dependencies);
-    
-    // Create filename
-    const sectionNum = String(section.number).padStart(2, '0');
-    const promptNum = String(layerIndex + 1).padStart(2, '0');
-    const filename = `04f-execution-E${sectionNum}-P${promptNum}.md`;
-    const filepath = path.join(outputDir, filename);
-    
-    // Write prompt
-    writeFile(filepath, prompt);
-    
-    prompts.push({
-      filename,
-      filepath,
-      layer,
-      featureCount: layerFeatures.length,
-    });
-  });
-  
-  return prompts;
-}
-
-// ============================================================================
-// MAIN FUNCTION
-// ============================================================================
-
-function main() {
-  console.log('🚀 Integrated Spec Segmenter v1\n');
-  
-  // Parse arguments
-  const args = parseArgs();
-  
-  if (!args.input || !args['output-dir']) {
-    console.error('❌ Usage: node 04f-segment-integrated-spec_v1.js \\');
-    console.error('    --input "path/to/04e-integrated-extension-spec_v1.md" \\');
-    console.error('    --output-dir "path/to/execution-prompts/"');
-    process.exit(1);
-  }
-  
-  const inputPath = args.input;
-  const outputDir = args['output-dir'];
-  
-  console.log('📂 Reading integrated specification...\n');
-  const content = readFile(inputPath);
-  console.log(`✅ Input: ${inputPath}\n`);
-  
-  // Create output directory
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-    console.log(`📁 Created output directory: ${outputDir}\n`);
-  }
-  
-  // Extract sections
-  console.log('🔍 Extracting sections...\n');
-  const sections = extractSections(content);
-  console.log(`✅ Found ${sections.length} sections\n`);
-  
-  // Generate prompts for each section
-  console.log('📝 Generating execution prompts...\n');
-  
-  const allPrompts = [];
-  
-  sections.forEach((section, index) => {
-    console.log(`\n📦 Section ${section.number}: ${section.title}`);
-    const sectionPrompts = generateSectionPrompts(section, index, sections, outputDir);
-    allPrompts.push(...sectionPrompts);
-    console.log(`   ✅ Generated ${sectionPrompts.length} prompts`);
-  });
-  
-  // Generate index file
-  console.log('\n📋 Generating execution index...\n');
-  generateExecutionIndex(allPrompts, sections, outputDir);
-  
-  // Summary
-  console.log('\n✅ SEGMENTATION COMPLETE!\n');
-  console.log('📊 Summary:');
-  console.log(`   - Sections processed: ${sections.length}`);
-  console.log(`   - Prompts generated: ${allPrompts.length}`);
-  console.log(`   - Output directory: ${outputDir}`);
-  console.log(`   - Total features: ${allPrompts.reduce((sum, p) => sum + p.featureCount, 0)}\n`);
-  console.log('🎯 Next step: Execute prompts in order');
-  console.log(`   Start with: ${allPrompts[0]?.filename || 'N/A'}\n`);
-}
-
-/**
- * Generate execution index
- */
-function generateExecutionIndex(prompts, sections, outputDir) {
-  let index = `# Execution Prompts Index
-
 **Generated**: ${new Date().toISOString().split('T')[0]}  
-**Total Prompts**: ${prompts.length}  
-**Total Sections**: ${sections.length}
+**Source**: ${metadata.sourceFile}
 
 ---
-
-## Execution Order
-
-Execute prompts in the order listed below. Each prompt builds upon the previous ones.
-
-### Progressive Dependency Model
-
-**Within Section** (Intra-section):
-\`\`\`
-Database → API → UI → Integration
-\`\`\`
-
-**Between Sections** (Inter-section):
-\`\`\`
-E01 → E02 → E03 → E04 → E05 → E06 → E07
-\`\`\`
-
----
-
-## Prompt List
 
 `;
 
-  // Group prompts by section
-  const promptsBySection = {};
-  
-  prompts.forEach(prompt => {
-    const sectionMatch = prompt.filename.match(/E(\d+)-P/);
-    if (sectionMatch) {
-      const sectionNum = parseInt(sectionMatch[1]);
-      if (!promptsBySection[sectionNum]) {
-        promptsBySection[sectionNum] = [];
-      }
-      promptsBySection[sectionNum].push(prompt);
-    }
-  });
-  
-  // Generate list
+  return header + section.content + '\n';
+}
+
+/**
+ * Generate index file listing all sections
+ */
+function generateIndexFile(sections, productAbbreviation, metadata) {
+  let index = `# Build Sections Index
+
+**Product**: ${productAbbreviation.toUpperCase()}  
+**Generated**: ${new Date().toISOString().split('T')[0]}  
+**Total Sections**: ${sections.length}  
+**Source File**: ${metadata.sourceFile}
+
+---
+
+## Sections
+
+This document has been split into ${sections.length} individual section files for easier navigation and implementation.
+
+`;
+
   sections.forEach(section => {
-    const sectionPrompts = promptsBySection[section.number] || [];
-    
-    index += `\n### Section ${section.number}: ${section.title}\n\n`;
-    
-    if (sectionPrompts.length === 0) {
-      index += `*No prompts generated for this section*\n`;
-    } else {
-      sectionPrompts.forEach((prompt, idx) => {
-        index += `${idx + 1}. **${prompt.filename}** - ${prompt.layer} layer (${prompt.featureCount} features)\n`;
-      });
-    }
+    const filename = `04f-${productAbbreviation}-build-section-E${String(section.number).padStart(2, '0')}.md`;
+    index += `\n### Section ${section.number}: ${section.title}\n`;
+    index += `**File**: \`${filename}\`\n`;
   });
-  
+
   index += `\n---
 
 ## Usage
 
-1. Execute each prompt in order
-2. Complete all acceptance criteria before moving to next prompt
-3. Run validation steps after each prompt
-4. Do not skip prompts (dependencies matter)
+Each section file contains the complete specification for that section, including:
+- Database schemas and migrations
+- API routes and endpoints
+- UI components and pages
+- Integration hooks and logic
+
+Implement sections in order (E01 → E02 → E03 → ...) as each section may depend on previous sections.
 
 ---
 
-**Status**: Ready for progressive execution
+**Status**: Ready for implementation
 `;
 
-  const indexPath = path.join(outputDir, 'EXECUTION-INDEX.md');
-  writeFile(indexPath, index);
-  console.log(`✅ Created execution index: ${indexPath}`);
+  return index;
 }
 
 // ============================================================================
-// ENTRY POINT
+// MAIN EXECUTION
 // ============================================================================
 
-if (require.main === module) {
+async function main() {
   try {
-    main();
+    // Parse command-line arguments
+    const args = process.argv.slice(2);
+    
+    if (args.length < 2) {
+      console.error('❌ Usage: node 04f-segment-integrated-spec_v1.js "Product Name" product-abbrev');
+      console.error('');
+      console.error('Examples:');
+      console.error('  node 04f-segment-integrated-spec_v1.js "LoRA Pipeline" pipeline');
+      console.error('  node 04f-segment-integrated-spec_v1.js "BMO Extension" bmo');
+      process.exit(1);
+    }
+    
+    const productName = args[0];
+    const productAbbreviation = args[1];
+    
+    console.log('\n╔════════════════════════════════════════════════════════════╗');
+    console.log('║        Integrated Spec Section Splitter (v1)               ║');
+    console.log('╚════════════════════════════════════════════════════════════╝\n');
+    console.log(`📦 Product: ${productName}`);
+    console.log(`🔖 Abbreviation: ${productAbbreviation}\n`);
+    
+    // Step 1: Get input file path with validation
+    console.log('═══════════════════════════════════════════════════════════');
+    console.log('STEP 1: Locate Input Specification');
+    console.log('═══════════════════════════════════════════════════════════');
+    
+    const defaultInputPath = `_mapping/${productAbbreviation}/04e-${productAbbreviation}-integrated-extension-spec_v1.md`;
+    const inputFile = await getValidFilePath(
+      'Input: Integrated Extension Specification',
+      defaultInputPath,
+      productAbbreviation
+    );
+    
+    console.log(`\n✓ Using input file: ${toDisplayPath(inputFile)}`);
+    
+    // Step 2: Determine output directory
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log('STEP 2: Prepare Output Directory');
+    console.log('═══════════════════════════════════════════════════════════');
+    
+    const outputDir = path.resolve(
+      __dirname,
+      '..',
+      '_mapping',
+      productAbbreviation,
+      'full-build'
+    );
+    
+    console.log(`\n📁 Output Directory: ${toDisplayPath(outputDir)}`);
+    
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
+      console.log(`✓ Created directory`);
+    } else {
+      console.log(`⚠️  Directory exists, files may be overwritten`);
+    }
+    
+    // Step 3: Read and parse input file
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log('STEP 3: Parse Specification');
+    console.log('═══════════════════════════════════════════════════════════');
+    
+    console.log('\n📖 Reading file...');
+    const content = readFile(inputFile);
+    console.log(`✓ Read ${content.length.toLocaleString()} characters`);
+    
+    console.log('\n🔍 Extracting sections...');
+    const sections = extractSections(content);
+    
+    if (sections.length === 0) {
+      console.error('❌ No sections found in input file!');
+      console.error('   Expected sections with headers like: ## SECTION 1: Title');
+      rl.close();
+      process.exit(1);
+    }
+    
+    console.log(`✓ Found ${sections.length} sections:`);
+    sections.forEach(section => {
+      console.log(`   - Section ${section.number}: ${section.title}`);
+    });
+    
+    // Step 4: Write section files
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log('STEP 4: Write Section Files');
+    console.log('═══════════════════════════════════════════════════════════\n');
+    
+    const metadata = {
+      sourceFile: path.basename(inputFile),
+      generatedDate: new Date().toISOString().split('T')[0],
+    };
+    
+    const generatedFiles = [];
+    
+    sections.forEach(section => {
+      const filename = `04f-${productAbbreviation}-build-section-E${String(section.number).padStart(2, '0')}.md`;
+      const filepath = path.join(outputDir, filename);
+      
+      const fileContent = generateSectionFile(section, productAbbreviation, metadata);
+      writeFile(filepath, fileContent);
+      
+      generatedFiles.push({
+        filename,
+        filepath,
+        section: section.number,
+        title: section.title,
+        size: fileContent.length,
+      });
+      
+      console.log(`✓ ${filename} (${fileContent.length.toLocaleString()} chars)`);
+    });
+    
+    // Step 5: Write index file
+    console.log('\n═══════════════════════════════════════════════════════════');
+    console.log('STEP 5: Write Index File');
+    console.log('═══════════════════════════════════════════════════════════\n');
+    
+    const indexContent = generateIndexFile(sections, productAbbreviation, metadata);
+    const indexPath = path.join(outputDir, 'INDEX.md');
+    writeFile(indexPath, indexContent);
+    console.log(`✓ INDEX.md`);
+    
+    // Summary
+    console.log('\n╔════════════════════════════════════════════════════════════╗');
+    console.log('║                   ✅ SPLIT COMPLETE!                        ║');
+    console.log('╚════════════════════════════════════════════════════════════╝\n');
+    
+    console.log('📊 Summary:');
+    console.log('───────────');
+    console.log(`Product:              ${productAbbreviation.toUpperCase()}`);
+    console.log(`Sections Split:       ${sections.length}`);
+    console.log(`Files Generated:      ${generatedFiles.length + 1} (${generatedFiles.length} sections + 1 index)`);
+    console.log(`Output Directory:     ${toDisplayPath(outputDir)}`);
+    console.log(`Total Output Size:    ${(generatedFiles.reduce((sum, f) => sum + f.size, 0) + indexContent.length).toLocaleString()} characters`);
+    
+    console.log('\n📂 Generated Files:');
+    console.log('───────────────────');
+    generatedFiles.forEach(file => {
+      console.log(`   ${file.filename}`);
+    });
+    console.log(`   INDEX.md`);
+    
+    console.log('\n📖 Next Steps:');
+    console.log('──────────────');
+    console.log('1. Review the INDEX.md file in the output directory');
+    console.log('2. Run 04g-generate-section-meta-prompts_v1.js to generate meta-prompts');
+    console.log('3. Use meta-prompts to generate execution prompts with AI');
+    console.log('4. Implement sections in order (E01 → E02 → E03 → ...)');
+    console.log('');
+    
+    rl.close();
+    
   } catch (error) {
-    console.error('\n❌ ERROR:', error.message);
-    console.error(error.stack);
+    console.error('\n❌ Error:', error.message);
+    if (error.stack) {
+      console.error('\nStack trace:');
+      console.error(error.stack);
+    }
+    rl.close();
     process.exit(1);
   }
 }
 
-module.exports = { 
-  extractSections, 
-  extractFeatures, 
-  groupFeaturesByLayer, 
-  generateExecutionPrompt 
-};
+// Run the script
+main();
 

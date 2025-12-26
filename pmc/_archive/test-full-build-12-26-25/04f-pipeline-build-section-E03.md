@@ -1,215 +1,58 @@
-# PIPELINE - Section E03: Training Configuration - Execution Prompts
+# Build Section E03
 
-**Product:** PIPELINE  
-**Section:** 3 - Training Configuration  
-**Generated:** December 26, 2025  
-**Total Prompts:** 1  
-**Estimated Total Time:** 10 hours  
-**Source Section File:** 04f-pipeline-build-section-E03.md
+**Product**: PIPELINE  
+**Section**: 3 - Training Configuration  
+**Generated**: 2025-12-25  
+**Source**: 04e-pipeline-integrated-extension-spec_v1b.md
 
 ---
 
-## Section Overview
+## SECTION 3: Training Configuration - INTEGRATED
+
+**Extension Status**: ✅ Transformed to use existing infrastructure  
+**Original Infrastructure**: Generic preset system, separate cost calculation service  
+**Actual Infrastructure**: React Query forms with existing shadcn/ui components, inline cost calculation
+
+---
+
+### Overview (from original spec)
 
 Enable users to configure training jobs with hyperparameter presets, advanced settings, and GPU selection.
 
 **User Value**: Users can easily configure training parameters using presets or customize advanced settings with real-time cost estimates
 
-**Implementation Approach**: This section builds upon the dataset management system from Section E02, adding:
-- Cost estimation API with GPU pricing and training duration calculation
-- Training job creation API with dataset validation
-- Interactive configuration UI with preset selection and custom hyperparameters
-- Real-time cost updates with debouncing
+---
+
+### Dependencies
+
+**Codebase Prerequisites** (MUST exist before this section):
+- ✅ Supabase Auth (`requireAuth()` function)
+- ✅ Database tables created (from Section 1)
+- ✅ shadcn/ui components (Slider, Select, Card, Button, Label)
+- ✅ React Query configured
+- ✅ useDebounce hook (from existing codebase)
+
+**Previous Section Prerequisites**:
+- Section 1: `lora_training_jobs` table, `lora_datasets` table, type definitions
+- Section 2: At least one dataset with `status='ready'` and `training_ready=true`
 
 ---
 
-## Prompt Sequence for This Section
+### Features & Requirements (INTEGRATED)
 
-This section has been divided into **1 progressive prompt**:
+#### FR-3.1: Cost Estimation API
 
-1. **Prompt P01: Training Configuration System** (10h)
-   - Features: FR-3.1 (Cost Estimation), FR-3.2 (Job Creation), FR-3.3 (Configuration UI)
-   - Key Deliverables:
-     - API route: POST /api/jobs/estimate (cost calculation)
-     - API route: POST /api/jobs (job creation with validation)
-     - API route: GET /api/jobs (list jobs)
-     - React hooks: useEstimateCost, useCreateTrainingJob, useTrainingJobs, useTrainingJob
-     - Page: /training/configure (full configuration form)
-     - Preset configurations (Fast, Balanced, Quality)
+**Type**: API Endpoint
+
+**Description**: Calculate estimated training cost based on GPU configuration, hyperparameters, and dataset size.
+
+**Implementation Strategy**: EXTENSION (using existing Supabase patterns)
 
 ---
 
-## Integration Context
+**API Routes (INTEGRATED)**:
 
-### Dependencies from Previous Sections
-
-**From Section E01 (Foundation & Authentication):**
-- Database tables: `lora_training_jobs` table with full schema
-- Database tables: `lora_datasets` table for validation checks
-- Database tables: `lora_notifications` table for user notifications
-- TypeScript types: `TrainingJob`, `JobStatus`, `HyperparameterConfig` from `@/lib/types/lora-training`
-- Auth infrastructure: `requireAuth()` from `@/lib/supabase-server`
-
-**From Section E02 (Dataset Management):**
-- Dataset validation system - Only ready datasets can be used for training
-- Dataset statistics (total_training_pairs, total_tokens) - Used for cost/duration estimation
-- Dataset API for querying available datasets
-- Dataset status checks (training_ready=true, status='ready')
-
-### Provides for Next Sections
-
-**For Section E04 (Training Execution):**
-- Training job records in database with status='queued'
-- Job configuration (hyperparameters, GPU config)
-- Cost estimates for tracking
-- Job listing API for monitoring
-
-**For Section E05 (Job Monitoring):**
-- Job creation flow
-- Real-time job status tracking infrastructure
-- Job details API endpoint
-
----
-
-## Dependency Flow (This Section)
-
-```
-E01 (Database Schema) + E02 (Dataset Management)
-  ↓
-E03-P01 (Cost Estimation API)
-  ↓
-E03-P01 (Job Creation API)
-  ↓
-E03-P01 (Configuration UI with Presets)
-```
-
-**Note:** All features in a single prompt since they form a tightly coupled vertical slice (10 hours total).
-
----
-
-# PROMPT 1: Training Configuration System
-
-**Generated:** December 26, 2025  
-**Section:** 3 - Training Configuration  
-**Prompt:** 1 of 1 in this section  
-**Estimated Time:** 10 hours  
-**Prerequisites:** Section E01 complete (database schema, types), Section E02 complete (dataset management)
-
----
-
-## 🎯 Mission Statement
-
-Implement a complete training job configuration system that allows users to select datasets, configure training parameters using intuitive presets, customize advanced hyperparameters, select GPU configurations, and view real-time cost estimates before starting training. This system provides the critical interface between dataset management and training execution, ensuring users can make informed decisions about their training jobs.
-
----
-
-## 📦 Section Context
-
-### This Section's Goal
-
-Enable users to configure training jobs with hyperparameter presets, advanced settings, and GPU selection. Users should be able to:
-- Select from 3 preset configurations (Fast, Balanced, Quality)
-- Customize all hyperparameters with interactive sliders
-- Select GPU type and count (1-8 GPUs)
-- View real-time cost estimates with duration and breakdown
-- Create training jobs that are queued for processing
-- List and filter their training jobs
-
-### This Prompt's Scope
-
-This is **Prompt 1 of 1** in Section E03. It implements:
-- **FR-3.1**: Cost Estimation API (GPU pricing, training duration calculation)
-- **FR-3.2**: Training Job Creation API (with dataset validation)
-- **FR-3.3**: Training Configuration Page (presets, custom settings, real-time updates)
-
----
-
-## 🔗 Integration with Previous Work
-
-### From Previous Sections
-
-#### Section E01: Foundation & Authentication
-
-**Database Tables We'll Use:**
-
-- `lora_training_jobs` table - Full schema created in E01
-  - Columns: id, user_id, dataset_id, preset_id, hyperparameters (JSONB), gpu_config (JSONB), status, current_stage, progress, current_epoch, total_epochs, current_step, total_steps, current_metrics, queued_at, started_at, completed_at, estimated_total_cost, current_cost, etc.
-  - We'll INSERT new job records with status='queued'
-  - We'll SELECT for listing jobs with pagination
-
-- `lora_datasets` table - For validation
-  - Columns: id, name, status, training_ready, total_training_pairs, total_tokens
-  - We'll SELECT to verify dataset exists and is ready (training_ready=true, status='ready')
-  - We'll use statistics for cost/duration estimation
-
-- `lora_notifications` table - For user notifications
-  - We'll INSERT notification when job is queued
-
-**TypeScript Types We'll Reuse:**
-- `TrainingJob` interface from `@/lib/types/lora-training.ts`
-- `JobStatus` type: 'queued' | 'initializing' | 'running' | 'completed' | 'failed' | 'cancelled'
-- `HyperparameterConfig` interface
-- `GPUConfig` interface
-- `PresetId` type: 'fast' | 'balanced' | 'quality' | 'custom'
-
-**Authentication Functions We'll Import:**
-- `requireAuth()` from `@/lib/supabase-server` - Protects API routes
-- `createServerSupabaseClient()` from `@/lib/supabase-server` - Database queries
-
-#### Section E02: Dataset Management
-
-**APIs We'll Call:**
-- We'll query `lora_datasets` table to validate dataset readiness
-- We'll use dataset statistics (total_training_pairs, total_tokens) for estimation
-
-**Data We'll Validate:**
-- Dataset must exist and belong to user
-- Dataset must have status='ready'
-- Dataset must have training_ready=true
-- Dataset must have valid total_training_pairs
-
-### From Previous Prompts (This Section)
-
-This is the first prompt in Section E03. No previous prompts in this section.
-
----
-
-## 🎯 Implementation Requirements
-
-### Feature FR-3.1: Cost Estimation API
-
-**Type:** API Endpoint  
-**Strategy:** EXTENSION - building on existing Supabase patterns
-
-#### Description
-
-Calculate estimated training cost based on GPU configuration, hyperparameters, and dataset size. The API performs sophisticated calculations including:
-- Training duration based on dataset size and GPU throughput
-- Per-GPU pricing for different GPU types
-- Compute cost (hourly rate × estimated duration)
-- Storage cost for model artifacts
-- Total steps calculation for progress tracking
-
-#### What Already Exists (Don't Rebuild)
-
-- ✅ Supabase Auth infrastructure
-- ✅ API route patterns and response formats
-- ✅ `lora_datasets` table with statistics
-- ✅ TypeScript validation with Zod
-
-#### What We're Building (New in This Prompt)
-
-- 🆕 `src/app/api/jobs/estimate/route.ts` - Cost estimation endpoint
-
-#### Implementation Details
-
-**File:** `src/app/api/jobs/estimate/route.ts`
-
-**Endpoint:** `POST /api/jobs/estimate`
-
-**Purpose:** Calculate training cost and duration based on configuration
-
-**Implementation:**
+**File**: `src/app/api/jobs/estimate/route.ts`
 
 ```typescript
 import { NextRequest, NextResponse } from 'next/server';
@@ -242,7 +85,7 @@ const EstimateRequestSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    // From Section E01 - authentication pattern
+    // Authentication (existing pattern)
     const { user, response } = await requireAuth(request);
     if (response) return response;
 
@@ -264,7 +107,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerSupabaseClient();
 
-    // From Section E02 - fetch dataset statistics for accurate duration estimation
+    // Fetch dataset statistics for accurate duration estimation
     const { data: dataset, error: datasetError } = await supabase
       .from('lora_datasets')
       .select('total_training_pairs, total_tokens, name')
@@ -351,45 +194,21 @@ export async function POST(request: NextRequest) {
 }
 ```
 
-**Key Points:**
-- Uses `requireAuth()` from Section E01
-- Queries `lora_datasets` from Section E02 for statistics
-- Sophisticated duration calculation based on throughput and overhead
-- GPU pricing and throughput configuration
-- Returns detailed breakdown for UI display
-- Follows existing API response format
+**Pattern Source**: Infrastructure Inventory Section 2 (Database), Section 4 (API Architecture)
 
 ---
 
-### Feature FR-3.2: Training Job Creation API
+#### FR-3.2: Training Job Creation API
 
-**Type:** API Endpoint  
-**Strategy:** EXTENSION - building on existing Supabase patterns
+**Type**: API Endpoint
 
-#### Description
+**Description**: Create training job record with validated configuration and queue for processing.
 
-Create training job record with validated configuration and queue for processing. Validates that the dataset is ready, calculates total steps for progress tracking, creates the job record with status='queued', and sends a notification to the user.
+**Implementation Strategy**: EXTENSION (using existing Supabase patterns)
 
-#### What Already Exists (Don't Rebuild)
+---
 
-- ✅ `lora_training_jobs` table (Section E01)
-- ✅ `lora_datasets` table (Section E01)
-- ✅ `lora_notifications` table (Section E01)
-- ✅ Authentication system
-
-#### What We're Building (New in This Prompt)
-
-- 🆕 `src/app/api/jobs/route.ts` - Job creation and listing endpoints
-
-#### Implementation Details
-
-**File:** `src/app/api/jobs/route.ts`
-
-**Endpoints:**
-- `POST /api/jobs` - Create new training job
-- `GET /api/jobs` - List user's training jobs
-
-**Implementation:**
+**File**: `src/app/api/jobs/route.ts`
 
 ```typescript
 import { NextRequest, NextResponse } from 'next/server';
@@ -426,7 +245,6 @@ const CreateJobSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    // From Section E01 - authentication
     const { user, response } = await requireAuth(request);
     if (response) return response;
 
@@ -447,7 +265,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = createServerSupabaseClient();
 
-    // From Section E02 - verify dataset exists, belongs to user, and is ready for training
+    // Verify dataset exists, belongs to user, and is ready for training
     const { data: dataset, error: datasetError } = await supabase
       .from('lora_datasets')
       .select('id, name, training_ready, status, total_training_pairs')
@@ -476,7 +294,7 @@ export async function POST(request: NextRequest) {
     const stepsPerEpoch = Math.ceil((dataset.total_training_pairs || 1000) / hyperparameters.batch_size);
     const totalSteps = stepsPerEpoch * hyperparameters.epochs;
 
-    // From Section E01 - create training job record
+    // Create training job record
     const { data: job, error: jobError } = await supabase
       .from('lora_training_jobs')
       .insert({
@@ -508,7 +326,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // From Section E01 - create notification for user
+    // Create notification for user
     await supabase.from('lora_notifications').insert({
       user_id: user.id,
       type: 'job_queued',
@@ -540,7 +358,6 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    // From Section E01 - authentication
     const { user, response } = await requireAuth(request);
     if (response) return response;
 
@@ -599,47 +416,23 @@ export async function GET(request: NextRequest) {
 }
 ```
 
-**Key Points:**
-- Validates dataset readiness before creating job
-- Calculates total steps for progress tracking
-- Creates notification for user
-- Joins with dataset table for enriched job listing
-- Supports pagination and status filtering
-- Follows existing API patterns
+**Pattern Source**: Infrastructure Inventory Section 2 (Database), Section 4 (API Architecture)
 
 ---
 
-### Feature FR-3.3: Training Configuration Page
+#### FR-3.3: Training Configuration Page
 
-**Type:** UI Page + React Hooks  
-**Strategy:** EXTENSION - using existing shadcn/ui components and React Query
+**Type**: UI Page
 
-#### Description
+**Description**: Interactive form for configuring training jobs with preset selection, custom hyperparameters, and real-time cost estimation.
 
-Interactive form for configuring training jobs with preset selection, custom hyperparameters, and real-time cost estimation. Features three preset configurations (Fast, Balanced, Quality), interactive sliders for all hyperparameters, GPU type and count selection, and debounced real-time cost updates.
+**Implementation Strategy**: EXTENSION (using existing shadcn/ui components and React Query)
 
-#### What Already Exists (Don't Rebuild)
+---
 
-- ✅ shadcn/ui components (Card, Slider, Select, Button, Label, Alert)
-- ✅ React Query configured
-- ✅ `useDebounce` hook from existing codebase
-- ✅ Toast notifications (sonner)
-- ✅ Page routing and layouts
+**React Hooks (INTEGRATED)**:
 
-#### What We're Building (New in This Prompt)
-
-- 🆕 `src/hooks/useTrainingConfig.ts` - React Query hooks
-- 🆕 `src/app/(dashboard)/training/configure/page.tsx` - Configuration page
-
-#### Implementation Details
-
-##### React Hooks
-
-**File:** `src/hooks/useTrainingConfig.ts`
-
-**Purpose:** React Query hooks for cost estimation and job creation
-
-**Implementation:**
+**File**: `src/hooks/useTrainingConfig.ts`
 
 ```typescript
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -764,22 +557,13 @@ export function useTrainingJob(jobId: string | null) {
 }
 ```
 
-**Pattern Source:** Infrastructure Inventory Section 6 - Data Fetching
+**Pattern Source**: Infrastructure Inventory Section 6 (Data Fetching)
 
-**Key Points:**
-- Uses React Query (existing pattern)
-- Mutation for cost estimation (allows re-triggering)
-- Auto-invalidation on success
-- Toast notifications for feedback
-- Polling for active jobs
+---
 
-##### Configuration Page
+**Page Component (INTEGRATED)**:
 
-**File:** `src/app/(dashboard)/training/configure/page.tsx`
-
-**Purpose:** Full training configuration UI with presets and custom settings
-
-**Implementation:**
+**File**: `src/app/(dashboard)/training/configure/page.tsx`
 
 ```typescript
 'use client';
@@ -849,7 +633,7 @@ export default function TrainingConfigurePage() {
   const estimateCost = useEstimateCost();
   const createJob = useCreateTrainingJob();
 
-  // From existing codebase - debounce configuration changes to avoid excessive API calls
+  // Debounce configuration changes to avoid excessive API calls
   const debouncedConfig = useDebounce(
     { 
       dataset_id: datasetId, 
@@ -1220,453 +1004,61 @@ export default function TrainingConfigurePage() {
 }
 ```
 
-**Pattern Source:** Infrastructure Inventory Section 5 - Components, Section 6 - Data Fetching
-
-**Key Points:**
-- Uses existing `useDebounce` hook for cost estimation
-- Three preset configurations with icons
-- Interactive sliders for all parameters
-- Real-time cost updates (debounced to 500ms)
-- GPU type selection with pricing info
-- Comprehensive cost breakdown display
-- Loading and error states
-- Navigation integration
+**Pattern Source**: Infrastructure Inventory Section 5 (Components), Section 6 (Data Fetching)
 
 ---
 
-## ✅ Acceptance Criteria
+**Acceptance Criteria** (adjusted for infrastructure):
 
-### Functional Requirements
+1. ✅ User can select from 3 preset configurations (Fast, Balanced, Quality)
+2. ✅ User can customize all hyperparameters with sliders
+3. ✅ User can select GPU type and count (1-8 GPUs)
+4. ✅ Cost estimate updates in real-time (debounced to 500ms)
+5. ✅ Cost estimate shows breakdown (compute + storage) and training details
+6. ✅ Training job created with status='queued' when submitted
+7. ✅ User redirected to job monitor page after creation
+8. ✅ Form validates dataset exists and is ready before submission
+9. ✅ Loading states shown during cost estimation and job creation
+10. ✅ Toast notifications shown for success/error states
 
-**FR-3.1: Cost Estimation API**
-- [ ] POST /api/jobs/estimate endpoint works
-- [ ] Validates request with Zod schema
-- [ ] Fetches dataset statistics from database
-- [ ] Calculates training duration based on throughput
-- [ ] Includes overhead calculations (initialization, validation, save)
-- [ ] Returns cost breakdown (compute + storage)
-- [ ] Returns training details (steps, throughput, duration)
-- [ ] Handles missing or inaccessible datasets
+**Verification Steps**:
 
-**FR-3.2: Training Job Creation API**
-- [ ] POST /api/jobs endpoint works
-- [ ] Validates dataset exists and belongs to user
-- [ ] Validates dataset is ready (training_ready=true, status='ready')
-- [ ] Calculates total steps for progress tracking
-- [ ] Creates job record with status='queued'
-- [ ] Creates notification for user
-- [ ] GET /api/jobs endpoint works with pagination
-- [ ] Status filtering works
-- [ ] Dataset join works (enriched response)
-
-**FR-3.3: Training Configuration UI**
-- [ ] User can select from 3 presets (Fast, Balanced, Quality)
-- [ ] Preset selection updates all hyperparameters immediately
-- [ ] User can customize learning rate, batch size, epochs, rank
-- [ ] User can select GPU type (4 options with pricing)
-- [ ] User can select GPU count (1-8)
-- [ ] Cost estimate updates automatically (debounced)
-- [ ] Cost breakdown displays correctly
-- [ ] Training details display (steps, duration, throughput)
-- [ ] Form validates dataset ID before submission
-- [ ] User redirected to job page after creation
-- [ ] Loading states shown during operations
-- [ ] Error handling with toast notifications
-
-### Technical Requirements
-
-- [ ] No TypeScript errors
-- [ ] No linter warnings
-- [ ] All imports resolve correctly
-- [ ] Follows existing patterns:
-  - API response format: `{ success, data }` or `{ error, details }`
-  - React Query hooks with proper cache invalidation
-  - shadcn/ui components
-  - Authentication with `requireAuth()`
-- [ ] Zod validation schemas for API requests
-- [ ] Proper error handling and logging
-
-### Integration Requirements
-
-- [ ] Successfully imports types from E01 (`TrainingJob`, `JobStatus`, etc.)
-- [ ] Successfully queries `lora_training_jobs` table from E01
-- [ ] Successfully queries `lora_datasets` table from E01
-- [ ] Successfully inserts into `lora_notifications` table from E01
-- [ ] Successfully uses `requireAuth()` from E01
-- [ ] Successfully validates dataset readiness from E02
-- [ ] Successfully uses dataset statistics from E02
-- [ ] RLS policies enforced (users only see own data)
+1. ✅ API: `/api/jobs/estimate` returns accurate cost calculation
+2. ✅ API: `/api/jobs` creates job record with all configuration
+3. ✅ API: Dataset validation prevents creating jobs for unready datasets
+4. ✅ UI: Preset selection updates all hyperparameters immediately
+5. ✅ UI: Slider adjustments trigger debounced cost recalculation
+6. ✅ UI: Cost breakdown displays correctly with all details
+7. ✅ Integration: Job creation succeeds and redirects to monitor page
+8. ✅ Integration: Created job appears in jobs list with correct status
 
 ---
 
-## 🧪 Testing & Validation
+### Section Summary
 
-### Manual Testing Steps
+**What Was Added**:
+- API route: `POST /api/jobs/estimate` (cost estimation with GPU pricing and duration calculation)
+- API route: `POST /api/jobs` (job creation with dataset validation)
+- API route: `GET /api/jobs` (list jobs with pagination and filtering)
+- React hooks: `useEstimateCost`, `useCreateTrainingJob`, `useTrainingJobs`, `useTrainingJob`
+- Page: `/training/configure` (full configuration form with presets and custom settings)
+- Preset configurations (Fast, Balanced, Quality)
 
-#### 1. API Testing: Cost Estimation
+**What Was Reused**:
+- Supabase Auth (`requireAuth()` for all API routes)
+- Supabase Client for database queries and inserts
+- shadcn/ui components (Card, Slider, Select, Button, Label, Alert)
+- React Query for mutations and queries
+- Existing API response format (`{ success, data }` or `{ error, details }`)
+- `useDebounce` hook for cost estimation optimization
+- Toast notifications for user feedback
+- Existing page layout patterns
 
-```bash
-# Test cost estimation
-curl -X POST http://localhost:3000/api/jobs/estimate \
-  -H "Content-Type: application/json" \
-  -H "Cookie: your-auth-cookie" \
-  -d '{
-    "dataset_id": "uuid-of-ready-dataset",
-    "gpu_config": {
-      "type": "A100-80GB",
-      "count": 2
-    },
-    "hyperparameters": {
-      "batch_size": 4,
-      "epochs": 3,
-      "learning_rate": 0.00005,
-      "rank": 16
-    }
-  }'
-
-# Expected response:
-# {
-#   "success": true,
-#   "data": {
-#     "estimated_cost": 25.50,
-#     "cost_breakdown": { "compute": 25.00, "storage": 0.50 },
-#     "estimated_duration_hours": 3.57,
-#     "hourly_rate": 7.00,
-#     "training_details": { ... }
-#   }
-# }
-```
-
-#### 2. API Testing: Job Creation
-
-```bash
-# Test job creation
-curl -X POST http://localhost:3000/api/jobs \
-  -H "Content-Type: application/json" \
-  -H "Cookie: your-auth-cookie" \
-  -d '{
-    "dataset_id": "uuid-of-ready-dataset",
-    "preset_id": "balanced",
-    "gpu_config": { "type": "A100-80GB", "count": 2 },
-    "hyperparameters": {
-      "learning_rate": 0.00005,
-      "batch_size": 4,
-      "epochs": 3,
-      "rank": 16,
-      "alpha": 32,
-      "dropout": 0.1
-    },
-    "estimated_cost": 25.50
-  }'
-
-# Expected: Job created with status='queued'
-```
-
-#### 3. Database Verification
-
-```sql
--- Verify job created
-SELECT id, dataset_id, status, preset_id, estimated_total_cost, total_steps
-FROM lora_training_jobs
-WHERE user_id = 'your-user-id'
-ORDER BY created_at DESC
-LIMIT 1;
-
--- Expected: One row with status='queued'
-
--- Verify notification created
-SELECT type, title, message
-FROM lora_notifications
-WHERE user_id = 'your-user-id'
-ORDER BY created_at DESC
-LIMIT 1;
-
--- Expected: type='job_queued'
-```
-
-#### 4. UI Testing: Configuration Page
-
-1. Navigate to: `http://localhost:3000/training/configure?datasetId=<uuid>`
-2. Expected behavior:
-   - Page loads with Balanced preset selected
-   - All sliders at default values
-   - GPU type selector shows A100-80GB
-   - GPU count slider shows 2
-   - Cost estimate calculates automatically
-3. Verify:
-   - Click Fast preset → all values update
-   - Adjust learning rate slider → cost recalculates (debounced)
-   - Change GPU count → cost recalculates
-   - Cost breakdown displays compute + storage
-   - Training details show steps, duration, throughput
-4. Submit:
-   - Click "Start Training"
-   - Loading state shows
-   - Success toast appears
-   - Redirected to job page
-
-#### 5. Integration Testing: Complete Flow
-
-1. Start from datasets page
-2. Click "Start Training" on ready dataset
-3. Redirected to configuration page with datasetId
-4. Select preset and adjust parameters
-5. Verify cost updates in real-time
-6. Submit job
-7. Verify job appears in database
-8. Verify notification created
-
-### Expected Outputs
-
-After completing this prompt, you should have:
-
-- [ ] API route file: `src/app/api/jobs/estimate/route.ts` (POST handler)
-- [ ] API route file: `src/app/api/jobs/route.ts` (POST, GET handlers)
-- [ ] Hooks file: `src/hooks/useTrainingConfig.ts` (4 hooks)
-- [ ] Page: `src/app/(dashboard)/training/configure/page.tsx`
-- [ ] Application runs without errors
-- [ ] All features testable and working
-- [ ] Cost estimation accurate
-- [ ] Job creation successful with all validations
+**Integration Points**:
+- Navigation: `/datasets/[id]` → `/training/configure?datasetId=[id]` (from dataset detail page)
+- Database: References `lora_datasets` table to verify `training_ready` status
+- Database: Inserts into `lora_training_jobs` table with `status='queued'`
+- Section 4 Integration: Created jobs picked up by Edge Function for processing
+- Status progression: `queued` → `initializing` → `running` → `completed`/`failed`
 
 ---
-
-## 📦 Deliverables Checklist
-
-### New Files Created
-
-- [ ] `src/app/api/jobs/estimate/route.ts` - Cost estimation API
-- [ ] `src/app/api/jobs/route.ts` - Job creation and listing API
-- [ ] `src/hooks/useTrainingConfig.ts` - React Query hooks for training
-- [ ] `src/app/(dashboard)/training/configure/page.tsx` - Configuration page
-
-### Existing Files Modified
-
-None (all files are new in this section)
-
-### Database Changes
-
-No schema changes (using tables from E01)
-
-**Operations:**
-- SELECT from `lora_datasets` table (validate readiness, get statistics)
-- INSERT into `lora_training_jobs` table
-- SELECT from `lora_training_jobs` table (listing with pagination)
-- INSERT into `lora_notifications` table
-
-### API Endpoints
-
-- [ ] `POST /api/jobs/estimate` - Calculate training cost and duration
-- [ ] `POST /api/jobs` - Create training job
-- [ ] `GET /api/jobs` - List training jobs with pagination and filters
-
-### Components
-
-None (uses existing shadcn/ui components)
-
-### Pages
-
-- [ ] `/training/configure` - Training configuration form
-
----
-
-## 🔜 What's Next
-
-### For Next Prompt in This Section
-
-**Section Complete:** This is the final prompt in Section E03.
-
-### For Next Section
-
-**Next Section:** E04: Training Execution & Monitoring
-
-The next section will build upon this section's deliverables:
-
-**From This Section:**
-- Training job records with status='queued' - Edge Function will process these
-- Job configuration (hyperparameters, GPU config) - Used to initiate training
-- Cost estimates - Tracked against actual costs during training
-- Job listing API - Enhanced with real-time progress updates
-
-**What Next Section Will Add:**
-- Edge Function to process queued jobs
-- Training simulation/execution logic
-- Real-time progress updates (metrics, logs)
-- Job monitoring UI with live updates
-- Job cancellation functionality
-- Final cost tracking and artifact storage
-
----
-
-## ⚠️ Important Reminders
-
-1. **Follow the Spec Exactly:** All code provided in this prompt comes from the integrated specification. Implement it as written.
-
-2. **Reuse Existing Infrastructure:** Don't recreate what already exists. Import and use:
-   - Database: Tables from Section E01 (`lora_training_jobs`, `lora_datasets`, `lora_notifications`)
-   - Types: `TrainingJob`, `JobStatus`, `HyperparameterConfig` from `@/lib/types/lora-training`
-   - Auth: `requireAuth()` from `@/lib/supabase-server`
-   - Dataset validation from Section E02
-   - Components: All shadcn/ui components from `@/components/ui/*`
-   - Data fetching: React Query (already configured)
-   - Utilities: `useDebounce` hook from existing codebase
-
-3. **Integration Points:** When importing from previous work, add comments:
-   ```typescript
-   // From Section E01 - database schema
-   import { TrainingJob, JobStatus } from '@/lib/types/lora-training';
-   
-   // From Section E01 - authentication
-   import { requireAuth } from '@/lib/supabase-server';
-   
-   // From Section E02 - dataset validation
-   // Verify dataset.training_ready and dataset.status
-   ```
-
-4. **Pattern Consistency:** Match existing patterns:
-   - API responses: `{ success: true, data }` or `{ error, details }`
-   - React Query: `staleTime: 30 * 1000` for queries
-   - Toast notifications: `toast({ title, description })`
-   - Component structure: Use shadcn/ui patterns
-   - Validation: Zod schemas for API requests
-
-5. **Cost Calculation Best Practices:**
-   - GPU pricing should be configurable (consider moving to database/config)
-   - Duration calculation includes overhead (initialization, validation, save)
-   - Throughput estimates are approximations
-   - Storage cost is fixed ($0.50 for model artifacts)
-   - Round final costs to 2 decimal places
-
-6. **UI Best Practices:**
-   - Debounce cost estimation to 500ms to avoid excessive API calls
-   - Show loading states during operations
-   - Disable submit button while loading or if required data missing
-   - Provide helpful error messages
-   - Use icons for visual hierarchy (Zap, Target, Crown)
-   - Display cost breakdown for transparency
-
-7. **Don't Skip Steps:** Implement all features listed in this prompt before moving to the next section.
-
----
-
-## 📚 Reference Materials
-
-### Files from Previous Work
-
-#### Section E01: Foundation & Authentication
-
-**Database Schema:**
-- Table: `lora_training_jobs` - Stores training job configuration and status
-- Table: `lora_datasets` - Used for validation and statistics
-- Table: `lora_notifications` - User notifications
-
-**TypeScript Types:**
-- `src/lib/types/lora-training.ts`:
-  - `TrainingJob` interface
-  - `JobStatus` type
-  - `HyperparameterConfig` interface
-  - `GPUConfig` interface
-  - `PresetId` type
-
-**Authentication:**
-- `@/lib/supabase-server`:
-  - `requireAuth()` - Protects API routes, returns user
-  - `createServerSupabaseClient()` - For database queries
-
-#### Section E02: Dataset Management
-
-**Dataset Validation:**
-- Check `training_ready=true`
-- Check `status='ready'`
-- Use `total_training_pairs` for step calculation
-- Use `total_tokens` for duration estimation
-
-### Infrastructure Patterns
-
-**Authentication Pattern:**
-```typescript
-const { user, response } = await requireAuth(request);
-if (response) return response;
-// user is now authenticated
-```
-
-**Database Query Pattern:**
-```typescript
-const supabase = createServerSupabaseClient();
-const { data, error } = await supabase
-  .from('table_name')
-  .select('*')
-  .eq('user_id', user.id);
-```
-
-**API Response Pattern:**
-```typescript
-// Success
-return NextResponse.json({
-  success: true,
-  data: { ... }
-});
-
-// Error
-return NextResponse.json({
-  error: 'Error message',
-  details: 'Detailed explanation'
-}, { status: 400 });
-```
-
-**React Query Hook Pattern:**
-```typescript
-export function useExample() {
-  return useQuery({
-    queryKey: ['example'],
-    queryFn: async () => { ... },
-    staleTime: 30 * 1000,
-  });
-}
-```
-
-**Zod Validation Pattern:**
-```typescript
-const Schema = z.object({
-  field: z.string().uuid(),
-});
-
-const validation = Schema.safeParse(body);
-if (!validation.success) {
-  return NextResponse.json({
-    error: 'Validation error',
-    details: validation.error.flatten().fieldErrors,
-  }, { status: 400 });
-}
-```
-
----
-
-**Ready to implement Section E03, Prompt P01!**
-
----
-
-## Section Completion Checklist
-
-After completing all prompts in this section:
-
-- [ ] All 3 features implemented
-  - [ ] FR-3.1: Cost Estimation API
-  - [ ] FR-3.2: Training Job Creation API
-  - [ ] FR-3.3: Training Configuration Page
-- [ ] All files created/modified as specified
-- [ ] All API endpoints tested and working
-- [ ] Cost estimation accurate and performant
-- [ ] Job creation validates dataset properly
-- [ ] UI responsive and user-friendly
-- [ ] Real-time cost updates working (debounced)
-- [ ] Integration with E01 database tables verified
-- [ ] Integration with E02 dataset validation verified
-- [ ] No TypeScript errors
-- [ ] No linter warnings
-- [ ] Ready to proceed to Section E04 (Training Execution)
-
----
-
-**End of Section E03 Execution Prompts**
-

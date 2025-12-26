@@ -2,7 +2,7 @@
 
 **Product:** PIPELINE  
 **Section:** 1 - Foundation & Authentication  
-**Generated:** 2025-12-25  
+**Generated:** 2025-12-26  
 **Total Prompts:** 1  
 **Estimated Total Time:** 3-5 hours  
 **Source Section File:** 04f-pipeline-build-section-E01.md
@@ -11,21 +11,19 @@
 
 ## Section Overview
 
-This section establishes the foundational database infrastructure for the LoRA training module. Since we're **EXTENDING** an existing Next.js + Supabase application, most infrastructure already exists. We're only adding LoRA-specific database tables, storage buckets, and TypeScript types.
+This section establishes the foundational database infrastructure for the LoRA Training Module. Since we're **extending an existing application**, most infrastructure already exists (Next.js 14, Supabase Auth, PostgreSQL, Storage, shadcn/ui components, Dashboard layout, React Query).
 
-**What Already Exists:**
-- ✅ Next.js 14 App Router with TypeScript
-- ✅ Supabase Auth with protected routes
-- ✅ Supabase PostgreSQL database
-- ✅ Supabase Storage
-- ✅ shadcn/ui components (47+ components)
-- ✅ Dashboard layout and routing
-- ✅ React Query for data fetching
+**What We're Adding in This Section**:
+- ✅ 7 new database tables for LoRA training workflow
+- ✅ TypeScript type definitions matching the schema
+- ✅ 2 new Supabase Storage buckets
+- ✅ Row-Level Security (RLS) policies for data isolation
 
-**What We're Adding:**
-- 🆕 7 new database tables: `datasets`, `training_jobs`, `metrics_points`, `model_artifacts`, `cost_records`, `notifications`
-- 🆕 2 new storage buckets: `lora-datasets`, `lora-models`
-- 🆕 Complete TypeScript type definitions for LoRA training domain
+**Key Infrastructure We're Reusing**:
+- Existing Supabase PostgreSQL database
+- Existing Supabase Auth system (`auth.users` table)
+- Existing migration workflow
+- Existing authentication patterns
 
 ---
 
@@ -33,13 +31,13 @@ This section establishes the foundational database infrastructure for the LoRA t
 
 This section has been divided into **1 progressive prompt**:
 
-1. **Prompt P01: Database Foundation & TypeScript Types** (3-5 hours)
-   - Features: FR-1.1
+1. **Prompt P01: Database Foundation & TypeScript Types** (3-5h)
+   - Features: FR-1.1 (Database Schema for LoRA Training)
    - Key Deliverables:
-     - SQL migration file with 7 tables
-     - 2 Supabase storage buckets
+     - Migration file with 7 tables
+     - RLS policies for security
      - Complete TypeScript type definitions
-     - RLS policies for data security
+     - 2 storage buckets configured
 
 ---
 
@@ -47,75 +45,62 @@ This section has been divided into **1 progressive prompt**:
 
 ### Dependencies from Previous Sections
 
-**None** - This is the first section (E01 - Foundation).
+**None** - This is the foundation section (E01). No previous sections exist.
 
-However, this section **depends on existing codebase infrastructure**:
-- Supabase Auth system (auth.users table)
-- Supabase Database client configuration
-- Supabase Storage configuration
-- Migration workflow in `supabase/migrations/`
+**Codebase Prerequisites** (must already exist):
+- ✅ Supabase Auth configured (`@/lib/supabase-server`, `@/lib/auth-service`)
+- ✅ Supabase Database client (`createServerSupabaseClient()`)
+- ✅ Supabase Storage configured (environment variables)
+- ✅ DashboardLayout component (`(dashboard)/layout.tsx`)
+- ✅ shadcn/ui components in `/components/ui/`
+- ✅ React Query provider configured
 
 ### Provides for Next Sections
 
-This section provides foundational data models for all subsequent sections:
+This section provides the foundational data layer for all subsequent sections:
 
-**For Section E02 (Dataset Management):**
-- `datasets` table for storing dataset metadata
-- `lora-datasets` storage bucket for JSONL files
-- `Dataset` TypeScript interface
+**Database Tables:**
+- `datasets` - Dataset metadata and validation results
+- `training_jobs` - Training job tracking and metrics
+- `metrics_points` - Real-time training metrics
+- `model_artifacts` - Trained model storage references
+- `cost_records` - Cost tracking and billing
+- `notifications` - User notifications
 
-**For Section E03 (Training Configuration):**
-- `training_jobs` table for job state management
-- `HyperparameterConfig` and `GPUConfig` interfaces
-- `HYPERPARAMETER_PRESETS` configuration object
+**TypeScript Types:**
+- `Dataset`, `TrainingJob`, `HyperparameterConfig`, `GPUConfig` interfaces
+- Type enums: `DatasetStatus`, `JobStatus`, `PresetId`
+- Preset configurations: `HYPERPARAMETER_PRESETS`
 
-**For Section E04 (Training Execution):**
-- `training_jobs` table for job updates
-- `metrics_points` table for real-time metrics
-- `model_artifacts` table for output storage
-
-**For Section E05 (Model Management):**
-- `model_artifacts` table for model metadata
-- `lora-models` storage bucket for model files
-- Quality metrics schema
-
-**For Section E06 (Monitoring):**
-- `metrics_points` table for visualization
-- `training_jobs` table for status monitoring
-- `cost_records` table for cost tracking
-
-**For Section E07 (Notifications):**
-- `notifications` table for user notifications
-- Notification type definitions
+**Storage Buckets:**
+- `lora-datasets` - For dataset file uploads
+- `lora-models` - For trained model artifacts
 
 ---
 
 ## Dependency Flow (This Section)
 
 ```
-E01-P01: Database Foundation & TypeScript Types
-  |
-  ├─ Creates: 7 database tables
-  ├─ Creates: 2 storage buckets
-  ├─ Creates: TypeScript type definitions
-  └─ Enables: All subsequent sections
+E01-P01 (Database Foundation)
+  ↓
+  Provides: Tables + Types + Buckets for all future sections
 ```
 
 ---
 
 # PROMPT 1: Database Foundation & TypeScript Types
 
-**Generated:** 2025-12-25  
+**Generated:** 2025-12-26  
 **Section:** 1 - Foundation & Authentication  
 **Prompt:** 1 of 1 in this section  
 **Estimated Time:** 3-5 hours  
-**Prerequisites:** Existing Supabase project with Auth configured
+**Prerequisites:** Existing Supabase infrastructure (Auth, Database, Storage)
 
 ---
 
 ## 🎯 Mission Statement
 
-Establish the foundational database schema and TypeScript types for the LoRA training module. This prompt creates all necessary database tables, storage buckets, RLS policies, and type definitions that subsequent sections will build upon. This is a pure data layer implementation with no API or UI components.
+Create the complete database foundation for the LoRA Training Module by implementing 7 new PostgreSQL tables, comprehensive TypeScript type definitions, and 2 storage buckets. This foundation will support dataset management, training job tracking, metrics collection, model artifact storage, cost tracking, and user notifications—all while leveraging the existing Supabase infrastructure.
 
 ---
 
@@ -123,12 +108,14 @@ Establish the foundational database schema and TypeScript types for the LoRA tra
 
 ### This Section's Goal
 
-Create the complete data infrastructure for LoRA training: 7 PostgreSQL tables with proper relationships, indexes, and security policies, plus 2 storage buckets for datasets and model artifacts.
+Establish the foundational database infrastructure for LoRA training features by extending the existing Supabase PostgreSQL database with new tables specifically designed for managing the complete LoRA training workflow.
 
 ### This Prompt's Scope
 
 This is **Prompt 1 of 1** in Section E01. It implements:
-- **FR-1.1:** Database Schema for LoRA Training (7 tables + 2 storage buckets + TypeScript types)
+- FR-1.1: Database Schema for LoRA Training (tables, indexes, RLS policies)
+- Complete TypeScript type definitions
+- Storage bucket configuration
 
 ---
 
@@ -136,43 +123,36 @@ This is **Prompt 1 of 1** in Section E01. It implements:
 
 ### From Previous Sections
 
-**None** - This is the first section (E01 - Foundation).
+**None** - This is the first section (E01 - Foundation). No previous sections exist.
 
-### From Existing Codebase
+### From Existing Codebase (MUST Already Exist)
 
-This prompt **extends** existing infrastructure rather than creating from scratch:
+This prompt extends existing infrastructure. **Do NOT rebuild these**:
 
-#### Supabase Authentication
-**What Exists:**
-- `auth.users` table (managed by Supabase Auth)
-- `auth.uid()` function for getting current user ID
-- Row Level Security (RLS) system
+#### Supabase Authentication System
+- ✅ `auth.users` table - We'll reference this for user ownership
+- ✅ `auth.uid()` function - Used in RLS policies
+- ✅ Authentication patterns via `@/lib/supabase-server`
 
-**How We'll Use It:**
-- All new tables will reference `auth.users(id)` for user ownership
-- RLS policies will use `auth.uid()` to restrict access to user's own data
-- Following existing RLS patterns from other tables in the system
-
-#### Supabase Database
-**What Exists:**
-- PostgreSQL database configured
-- Supabase client setup in `@/lib/supabase-server`
-- Migration workflow in `supabase/migrations/`
-
-**How We'll Use It:**
-- Create new migration file following existing naming convention
-- Use standard Supabase migration format
-- Follow existing table design patterns (UUID primary keys, timestamptz for dates)
+#### Supabase Database Client
+- ✅ `createServerSupabaseClient()` - For querying database
+- ✅ Migration workflow - We'll add a new migration file
 
 #### Supabase Storage
-**What Exists:**
-- Storage system configured with environment variables
-- Existing buckets for other features
+- ✅ Storage infrastructure configured
+- ✅ Environment variables set (`NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`)
 
-**How We'll Use It:**
-- Create 2 new buckets via Supabase Dashboard
-- Configure bucket policies (private access, file size limits, MIME types)
-- Store only paths in database (never URLs, following existing pattern)
+#### Application Framework
+- ✅ Next.js 14 App Router with TypeScript
+- ✅ shadcn/ui components library
+- ✅ React Query for data fetching
+- ✅ Dashboard layout and routing
+
+**What We're Adding**: New tables that integrate with the existing `auth.users` table via foreign keys and RLS policies.
+
+### From Previous Prompts (This Section)
+
+**N/A** - This is the first prompt in Section E01.
 
 ---
 
@@ -180,54 +160,56 @@ This prompt **extends** existing infrastructure rather than creating from scratc
 
 ### Feature FR-1.1: Database Schema for LoRA Training
 
-**Type:** Database  
-**Strategy:** EXTENSION - building on existing Supabase infrastructure
+**Type:** Database (Data Model)  
+**Strategy:** EXTENSION - Building on existing Supabase PostgreSQL database
 
 #### Description
 
-Create a complete, production-ready database schema for the LoRA training module. This includes 7 tables with proper relationships, indexes, RLS policies, and TypeScript type definitions. The schema supports the full training workflow: dataset upload → validation → training job execution → model artifact storage → cost tracking → user notifications.
+Create a comprehensive database schema to support the complete LoRA training workflow, including dataset management, training job orchestration, real-time metrics collection, model artifact tracking, cost accounting, and user notifications. All tables integrate with the existing Supabase Auth system for user isolation and security.
 
 #### What Already Exists (Don't Rebuild)
 
-- ✅ Supabase Auth system with `auth.users` table
-- ✅ Supabase PostgreSQL database
-- ✅ Supabase Storage system
+- ✅ Supabase PostgreSQL database instance
+- ✅ `auth.users` table (from Supabase Auth)
 - ✅ Migration directory: `supabase/migrations/`
-- ✅ TypeScript types directory: `src/lib/types/`
-- ✅ RLS policy patterns
-- ✅ Trigger functions for `updated_at` timestamps
+- ✅ RLS (Row-Level Security) infrastructure
+- ✅ Supabase Storage buckets infrastructure
 
 #### What We're Building (New in This Prompt)
 
-- 🆕 **Migration File:** `supabase/migrations/20241223_create_lora_training_tables.sql`
-  - Purpose: Create 7 new tables for LoRA training workflow
-  
-- 🆕 **Type Definition File:** `src/lib/types/lora-training.ts`
-  - Purpose: TypeScript interfaces matching database schema
-  
-- 🆕 **Storage Buckets:** (via Supabase Dashboard)
-  - `lora-datasets`: For storing training dataset JSONL files
-  - `lora-models`: For storing trained model artifacts
+**Database:**
+- 🆕 Migration file: `supabase/migrations/20241223_create_lora_training_tables.sql`
+- 🆕 Table: `datasets` - Dataset uploads and validation
+- 🆕 Table: `training_jobs` - Training job lifecycle management
+- 🆕 Table: `metrics_points` - Real-time training metrics
+- 🆕 Table: `model_artifacts` - Trained model references
+- 🆕 Table: `cost_records` - Cost tracking and billing
+- 🆕 Table: `notifications` - User notification system
+- 🆕 RLS policies for all tables
+- 🆕 Indexes for query performance
+- 🆕 Triggers for `updated_at` timestamp management
+
+**TypeScript:**
+- 🆕 Type definitions file: `src/lib/types/lora-training.ts`
+- 🆕 All interfaces matching database schema
+- 🆕 Enum types for status fields
+- 🆕 Preset configurations for hyperparameters
+
+**Storage:**
+- 🆕 Bucket: `lora-datasets` (for dataset uploads)
+- 🆕 Bucket: `lora-models` (for trained model artifacts)
 
 #### Implementation Details
 
 ---
 
-### Part A: Database Migration
+### Part 1: Database Migration
 
 **Migration File:** `supabase/migrations/20241223_create_lora_training_tables.sql`
 
-**Purpose:** Create all database tables, indexes, RLS policies, and triggers for the LoRA training module.
+**Purpose:** Create all database tables, indexes, RLS policies, and triggers for the LoRA training workflow.
 
-**Tables to Create:**
-1. `datasets` - Dataset metadata and validation results
-2. `training_jobs` - Training job state and progress tracking
-3. `metrics_points` - Time-series training metrics
-4. `model_artifacts` - Trained model metadata and storage references
-5. `cost_records` - Cost tracking and billing data
-6. `notifications` - User notifications for training events
-
-**Complete Migration SQL:**
+**Implementation:**
 
 ```sql
 -- ============================================
@@ -436,33 +418,45 @@ FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 COMMIT;
 ```
 
-**Key Design Decisions:**
+**Key Schema Design Decisions:**
 
-1. **User Isolation:** All tables reference `auth.users(id)` with `ON DELETE CASCADE`
-2. **RLS Policies:** Users can only see/modify their own data
-3. **Soft Deletes:** `datasets` and `model_artifacts` use `deleted_at` for soft deletes
-4. **Timestamps:** Automatic `updated_at` triggers on mutable tables
-5. **Indexes:** Optimized for common queries (user lists, status filtering, time-series)
-6. **JSONB Fields:** Flexible storage for configuration, metadata, and metrics
-7. **Foreign Key Constraints:** Maintain referential integrity with appropriate cascade rules
+1. **User Isolation**: All tables have `user_id` foreign key to `auth.users(id)` with CASCADE delete
+2. **RLS Policies**: Every user-facing table has policies using `auth.uid()` to isolate data
+3. **Status Tracking**: VARCHAR status fields for flexibility (not enums, easier to extend)
+4. **JSONB Fields**: Used for flexible metadata (validation_errors, hyperparameters, etc.)
+5. **Storage Paths**: Store only paths, never full URLs (URLs generated on-demand)
+6. **Soft Deletes**: `deleted_at` fields for datasets and model_artifacts
+7. **Timestamps**: Automatic `created_at`, `updated_at` with triggers
+8. **Indexes**: Strategic indexes on user_id, status, timestamps for query performance
+
+**Pattern Source**: Existing Supabase patterns in the codebase (Infrastructure Inventory Section 2)
 
 ---
 
-### Part B: TypeScript Type Definitions
+### Part 2: TypeScript Type Definitions
 
 **File:** `src/lib/types/lora-training.ts`
 
-**Purpose:** Provide type-safe interfaces matching the database schema for use throughout the application.
+**Purpose:** Provide complete TypeScript types matching the database schema, including helper types, enums, and preset configurations.
 
-**Complete Type Definitions:**
+**Implementation:**
 
 ```typescript
-// Enums
+// ============================================
+// BrightRun LoRA Training Module
+// TypeScript Type Definitions
+// ============================================
+
+// -------------------- ENUMS --------------------
+
 export type DatasetStatus = 'uploading' | 'validating' | 'ready' | 'error';
+
 export type JobStatus = 'queued' | 'initializing' | 'running' | 'completed' | 'failed' | 'cancelled';
+
 export type PresetId = 'conservative' | 'balanced' | 'aggressive' | 'custom';
 
-// Dataset Interface
+// -------------------- DATASET --------------------
+
 export interface Dataset {
   id: string;
   user_id: string;
@@ -488,7 +482,8 @@ export interface Dataset {
   deleted_at: string | null;
 }
 
-// Training Job Interface
+// -------------------- TRAINING JOB --------------------
+
 export interface TrainingJob {
   id: string;
   user_id: string;
@@ -520,7 +515,8 @@ export interface TrainingJob {
   updated_at: string;
 }
 
-// Hyperparameter Configuration
+// -------------------- HYPERPARAMETERS --------------------
+
 export interface HyperparameterConfig {
   base_model: string;
   learning_rate: number;
@@ -533,7 +529,8 @@ export interface HyperparameterConfig {
   weight_decay?: number;
 }
 
-// GPU Configuration
+// -------------------- GPU CONFIGURATION --------------------
+
 export interface GPUConfig {
   gpu_type: string;
   num_gpus: number;
@@ -541,7 +538,8 @@ export interface GPUConfig {
   cost_per_gpu_hour: number;
 }
 
-// Current Metrics
+// -------------------- METRICS --------------------
+
 export interface CurrentMetrics {
   training_loss: number;
   validation_loss?: number;
@@ -550,14 +548,103 @@ export interface CurrentMetrics {
   gpu_utilization?: number;
 }
 
-// Validation Error
+export interface MetricsPoint {
+  id: string;
+  job_id: string;
+  timestamp: string;
+  epoch: number;
+  step: number;
+  training_loss: number;
+  validation_loss: number | null;
+  learning_rate: number;
+  gradient_norm: number | null;
+  throughput: number | null;
+  gpu_utilization: number | null;
+}
+
+// -------------------- MODEL ARTIFACTS --------------------
+
+export interface ModelArtifact {
+  id: string;
+  user_id: string;
+  job_id: string;
+  dataset_id: string;
+  name: string;
+  version: string;
+  description: string | null;
+  status: string;
+  deployed_at: string | null;
+  quality_metrics: QualityMetrics;
+  training_summary: TrainingSummary;
+  configuration: HyperparameterConfig;
+  artifacts: ArtifactFiles;
+  parent_model_id: string | null;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+}
+
+export interface QualityMetrics {
+  final_training_loss: number;
+  final_validation_loss: number;
+  best_epoch: number;
+  convergence_score: number;
+}
+
+export interface TrainingSummary {
+  total_epochs: number;
+  total_steps: number;
+  total_duration_seconds: number;
+  total_cost: number;
+  gpu_type: string;
+  dataset_name: string;
+}
+
+export interface ArtifactFiles {
+  adapter_model: string;      // storage path
+  adapter_config: string;      // storage path
+  training_logs: string;       // storage path
+  metrics_chart?: string;      // storage path
+}
+
+// -------------------- COST RECORDS --------------------
+
+export interface CostRecord {
+  id: string;
+  user_id: string;
+  job_id: string | null;
+  cost_type: string;
+  amount: number;
+  details: any | null;
+  billing_period: string;
+  recorded_at: string;
+}
+
+// -------------------- NOTIFICATIONS --------------------
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high';
+  read: boolean;
+  action_url: string | null;
+  metadata: any | null;
+  created_at: string;
+}
+
+// -------------------- VALIDATION --------------------
+
 export interface ValidationError {
   line: number;
   error: string;
   suggestion?: string;
 }
 
-// Preset Configurations
+// -------------------- PRESET CONFIGURATIONS --------------------
+
 export const HYPERPARAMETER_PRESETS: Record<PresetId, HyperparameterConfig> = {
   conservative: {
     base_model: 'mistralai/Mistral-7B-v0.1',
@@ -596,117 +683,158 @@ export const HYPERPARAMETER_PRESETS: Record<PresetId, HyperparameterConfig> = {
     lora_dropout: 0.1,
   },
 };
+
+// -------------------- GPU CONFIGURATIONS --------------------
+
+export const GPU_CONFIGURATIONS = {
+  'nvidia-a100-40gb': {
+    gpu_type: 'NVIDIA A100 40GB',
+    num_gpus: 1,
+    gpu_memory_gb: 40,
+    cost_per_gpu_hour: 2.50,
+  },
+  'nvidia-a100-80gb': {
+    gpu_type: 'NVIDIA A100 80GB',
+    num_gpus: 1,
+    gpu_memory_gb: 80,
+    cost_per_gpu_hour: 3.50,
+  },
+  'nvidia-h100': {
+    gpu_type: 'NVIDIA H100',
+    num_gpus: 1,
+    gpu_memory_gb: 80,
+    cost_per_gpu_hour: 5.00,
+  },
+} as const;
+
+export type GPUConfigurationId = keyof typeof GPU_CONFIGURATIONS;
 ```
 
 **Key Type Design Decisions:**
 
-1. **String Dates:** Timestamps stored as ISO strings (standard for Supabase)
-2. **Nullable Fields:** Proper `| null` for optional database columns
-3. **Enums as Union Types:** TypeScript union types for status fields
-4. **JSONB as Interfaces:** Structured types for JSONB columns
-5. **Preset Configuration:** Constant object for preset hyperparameter sets
-6. **Comment on storage_path:** Explicit reminder to never store URLs, only paths
+1. **String Dates**: All timestamps as `string` (ISO format from PostgreSQL TIMESTAMPTZ)
+2. **Nullable Fields**: Explicit `| null` for optional database fields
+3. **Storage Paths**: Comment reminder to never store full URLs, only paths
+4. **JSONB Types**: Strongly typed interfaces for JSONB fields (HyperparameterConfig, GPUConfig, etc.)
+5. **Preset Constants**: Export const objects for presets (used in UI forms)
+6. **Type Safety**: Union types for enums (`DatasetStatus`, `JobStatus`, `PresetId`)
+
+**Pattern Source**: Existing type patterns from `@/lib/types/*` in the codebase
 
 ---
 
-### Part C: Storage Buckets
+### Part 3: Storage Bucket Configuration
 
-**Create via Supabase Dashboard:**
+**Purpose:** Create two Supabase Storage buckets for dataset files and trained model artifacts.
+
+**Implementation Method:** Via Supabase Dashboard (not code)
 
 #### Bucket 1: `lora-datasets`
 
 **Configuration:**
-- **Bucket Name:** `lora-datasets`
-- **Public:** No (private bucket)
+- **Name:** `lora-datasets`
+- **Public Access:** ❌ No (private)
 - **File Size Limit:** 500 MB
 - **Allowed MIME Types:** 
   - `application/json`
   - `application/x-jsonlines`
+  - `text/plain`
 
-**Purpose:** Store training dataset JSONL files uploaded by users.
-
-**Bucket Policies:**
+**RLS Policies (to be added via Dashboard):**
 ```sql
 -- Users can upload to their own folder
-CREATE POLICY "Users can upload datasets"
+CREATE POLICY "Users can upload own datasets"
 ON storage.objects FOR INSERT
 WITH CHECK (
   bucket_id = 'lora-datasets' AND
-  auth.uid()::text = (storage.foldername(name))[1]
+  (storage.foldername(name))[1] = auth.uid()::text
 );
 
--- Users can read from their own folder
+-- Users can read their own files
 CREATE POLICY "Users can read own datasets"
 ON storage.objects FOR SELECT
 USING (
   bucket_id = 'lora-datasets' AND
-  auth.uid()::text = (storage.foldername(name))[1]
+  (storage.foldername(name))[1] = auth.uid()::text
 );
 
--- Users can delete from their own folder
+-- Users can delete their own files
 CREATE POLICY "Users can delete own datasets"
 ON storage.objects FOR DELETE
 USING (
   bucket_id = 'lora-datasets' AND
-  auth.uid()::text = (storage.foldername(name))[1]
+  (storage.foldername(name))[1] = auth.uid()::text
 );
+```
+
+**Folder Structure:**
+```
+lora-datasets/
+  {user_id}/
+    {dataset_id}/
+      dataset.jsonl
 ```
 
 #### Bucket 2: `lora-models`
 
 **Configuration:**
-- **Bucket Name:** `lora-models`
-- **Public:** No (private bucket)
+- **Name:** `lora-models`
+- **Public Access:** ❌ No (private)
 - **File Size Limit:** 5 GB
-- **Allowed MIME Types:**
+- **Allowed MIME Types:** 
   - `application/octet-stream`
   - `application/x-tar`
+  - `application/gzip`
   - `application/json`
 
-**Purpose:** Store trained model artifacts (model weights, configuration, training logs).
-
-**Bucket Policies:**
+**RLS Policies (to be added via Dashboard):**
 ```sql
 -- Users can upload to their own folder
-CREATE POLICY "Users can upload models"
+CREATE POLICY "Users can upload own models"
 ON storage.objects FOR INSERT
 WITH CHECK (
   bucket_id = 'lora-models' AND
-  auth.uid()::text = (storage.foldername(name))[1]
+  (storage.foldername(name))[1] = auth.uid()::text
 );
 
--- Users can read from their own folder
+-- Users can read their own files
 CREATE POLICY "Users can read own models"
 ON storage.objects FOR SELECT
 USING (
   bucket_id = 'lora-models' AND
-  auth.uid()::text = (storage.foldername(name))[1]
+  (storage.foldername(name))[1] = auth.uid()::text
 );
 
--- Users can delete from their own folder
+-- Users can delete their own files
 CREATE POLICY "Users can delete own models"
 ON storage.objects FOR DELETE
 USING (
   bucket_id = 'lora-models' AND
-  auth.uid()::text = (storage.foldername(name))[1]
+  (storage.foldername(name))[1] = auth.uid()::text
 );
 ```
 
-**Folder Structure Convention:**
+**Folder Structure:**
 ```
-lora-datasets/
-└── {user_id}/
-    └── {dataset_id}/
-        └── dataset.jsonl
-
 lora-models/
-└── {user_id}/
-    └── {job_id}/
-        ├── adapter_model.bin
-        ├── adapter_config.json
-        ├── training_args.json
-        └── training_log.jsonl
+  {user_id}/
+    {artifact_id}/
+      adapter_model.safetensors
+      adapter_config.json
+      training_logs.txt
+      metrics_chart.png
 ```
+
+**Setup Instructions:**
+
+1. Navigate to Supabase Dashboard → Storage
+2. Click "New bucket"
+3. Enter bucket name and configuration
+4. After creating bucket, go to "Policies" tab
+5. Click "New Policy" and add the RLS policies above
+6. Repeat for second bucket
+
+**Pattern Source**: Existing storage bucket patterns from the codebase
 
 ---
 
@@ -714,290 +842,203 @@ lora-models/
 
 ### Functional Requirements
 
-- [ ] **FR-1.1.1:** All 7 database tables created successfully
-- [ ] **FR-1.1.2:** All indexes created on appropriate columns
-- [ ] **FR-1.1.3:** RLS policies active and enforced on all user-facing tables
-- [ ] **FR-1.1.4:** Foreign key relationships established correctly
-- [ ] **FR-1.1.5:** `updated_at` triggers working on datasets, training_jobs, model_artifacts
-- [ ] **FR-1.1.6:** Storage bucket `lora-datasets` created with correct policies
-- [ ] **FR-1.1.7:** Storage bucket `lora-models` created with correct policies
-- [ ] **FR-1.1.8:** TypeScript interfaces compile without errors
-- [ ] **FR-1.1.9:** `HYPERPARAMETER_PRESETS` constant accessible and correctly typed
+- [ ] **7 database tables created successfully**:
+  - [ ] `datasets` table with 21 columns
+  - [ ] `training_jobs` table with 25 columns
+  - [ ] `metrics_points` table with 10 columns
+  - [ ] `model_artifacts` table with 14 columns
+  - [ ] `cost_records` table with 8 columns
+  - [ ] `notifications` table with 10 columns
+  - [ ] All foreign key constraints created
+
+- [ ] **Indexes created for query performance**:
+  - [ ] User-based indexes (3 tables)
+  - [ ] Status indexes (2 tables)
+  - [ ] Timestamp indexes (3 tables)
+  - [ ] Job-based indexes (2 tables)
+
+- [ ] **RLS policies active and tested**:
+  - [ ] Users can only view their own datasets
+  - [ ] Users can only view their own training jobs
+  - [ ] Users can only view their own model artifacts
+  - [ ] Admin access not required (no service role bypassing)
+
+- [ ] **Triggers functioning correctly**:
+  - [ ] `updated_at` automatically updates on row changes
+  - [ ] Triggers on `datasets`, `training_jobs`, `model_artifacts`
+
+- [ ] **Storage buckets configured**:
+  - [ ] `lora-datasets` bucket created with correct settings
+  - [ ] `lora-models` bucket created with correct settings
+  - [ ] RLS policies applied to both buckets
 
 ### Technical Requirements
 
 - [ ] No TypeScript errors in `src/lib/types/lora-training.ts`
+- [ ] No linter warnings
 - [ ] Migration runs successfully without errors
-- [ ] Migration is idempotent (can be run multiple times safely)
-- [ ] All table names, column names follow existing naming conventions (snake_case)
-- [ ] UUID generation uses `gen_random_uuid()` (Supabase standard)
-- [ ] Timestamp columns use `TIMESTAMPTZ` (timezone-aware)
-- [ ] JSONB columns used appropriately for structured flexible data
+- [ ] All type exports available for import
+- [ ] Type definitions match database schema exactly
 
 ### Integration Requirements
 
-- [ ] All tables successfully reference `auth.users(id)`
-- [ ] RLS policies correctly use `auth.uid()` function
-- [ ] Storage bucket policies reference `auth.uid()`
-- [ ] Migration file naming follows existing convention in `supabase/migrations/`
-- [ ] Type file location matches existing structure in `src/lib/types/`
+- [ ] All tables correctly reference `auth.users(id)` foreign key
+- [ ] RLS policies use `auth.uid()` from existing auth system
+- [ ] Storage buckets integrate with existing Supabase project
+- [ ] No conflicts with existing database tables
+- [ ] Migration follows existing naming convention
 
 ---
 
 ## 🧪 Testing & Validation
 
-### Step 1: Apply Migration
+### Manual Testing Steps
+
+#### 1. Database Migration Verification
 
 **Run the migration:**
 
 ```bash
 # If using Supabase CLI locally
-supabase db reset
+npx supabase migration up
 
-# Or apply specific migration
-supabase db push
+# Or apply via Supabase Dashboard:
+# Dashboard → Database → Migrations → Run new migration
 ```
 
-**Expected Output:** No errors, all tables created.
-
----
-
-### Step 2: Verify Tables Created
-
-**SQL Query:**
+**Verify tables exist:**
 
 ```sql
--- Check all tables exist
+-- Check all tables were created
 SELECT table_name 
 FROM information_schema.tables 
 WHERE table_schema = 'public' 
-  AND table_name IN (
-    'datasets',
-    'training_jobs',
-    'metrics_points',
-    'model_artifacts',
-    'cost_records',
-    'notifications'
-  );
+AND table_name IN ('datasets', 'training_jobs', 'metrics_points', 'model_artifacts', 'cost_records', 'notifications');
+
+-- Should return 6 rows
 ```
 
-**Expected Result:** 6 rows returned with all table names.
-
----
-
-### Step 3: Verify Indexes
-
-**SQL Query:**
+**Verify indexes:**
 
 ```sql
--- Check indexes created
-SELECT tablename, indexname 
+-- Check indexes exist
+SELECT indexname, tablename 
 FROM pg_indexes 
-WHERE schemaname = 'public' 
-  AND tablename IN (
-    'datasets',
-    'training_jobs',
-    'metrics_points',
-    'model_artifacts',
-    'cost_records',
-    'notifications'
-  )
+WHERE tablename IN ('datasets', 'training_jobs', 'metrics_points', 'model_artifacts', 'cost_records', 'notifications')
 ORDER BY tablename, indexname;
+
+-- Should return multiple indexes per table
 ```
 
-**Expected Result:** At least 11 indexes (3 for datasets, 3 for training_jobs, 2 for metrics_points, 2 for model_artifacts, 2 for cost_records, 2 for notifications).
-
----
-
-### Step 4: Verify RLS Policies
-
-**SQL Query:**
+**Verify RLS policies:**
 
 ```sql
 -- Check RLS is enabled
 SELECT tablename, rowsecurity 
 FROM pg_tables 
-WHERE schemaname = 'public' 
-  AND tablename IN (
-    'datasets',
-    'training_jobs',
-    'model_artifacts'
-  );
-```
+WHERE tablename IN ('datasets', 'training_jobs', 'model_artifacts')
+AND schemaname = 'public';
 
-**Expected Result:** All 3 tables should have `rowsecurity = true`.
+-- All should show rowsecurity = true
 
-**Check policy count:**
-
-```sql
 -- Check policies exist
-SELECT schemaname, tablename, policyname 
+SELECT tablename, policyname, cmd 
 FROM pg_policies 
-WHERE tablename IN (
-  'datasets',
-  'training_jobs',
-  'model_artifacts'
-)
-ORDER BY tablename, policyname;
+WHERE tablename IN ('datasets', 'training_jobs', 'model_artifacts');
+
+-- Should show SELECT, INSERT, UPDATE policies
 ```
 
-**Expected Result:** At least 6 policies (3 for datasets, 2 for training_jobs, 1 for model_artifacts).
+#### 2. TypeScript Type Verification
 
----
-
-### Step 5: Verify Foreign Keys
-
-**SQL Query:**
-
-```sql
--- Check foreign key constraints
-SELECT
-  tc.table_name,
-  kcu.column_name,
-  ccu.table_name AS foreign_table_name,
-  ccu.column_name AS foreign_column_name
-FROM information_schema.table_constraints AS tc
-JOIN information_schema.key_column_usage AS kcu
-  ON tc.constraint_name = kcu.constraint_name
-JOIN information_schema.constraint_column_usage AS ccu
-  ON ccu.constraint_name = tc.constraint_name
-WHERE tc.constraint_type = 'FOREIGN KEY'
-  AND tc.table_schema = 'public'
-  AND tc.table_name IN (
-    'datasets',
-    'training_jobs',
-    'metrics_points',
-    'model_artifacts',
-    'cost_records',
-    'notifications'
-  )
-ORDER BY tc.table_name;
-```
-
-**Expected Result:** All foreign keys present (user_id → auth.users, dataset_id → datasets, job_id → training_jobs, etc.).
-
----
-
-### Step 6: Verify Triggers
-
-**SQL Query:**
-
-```sql
--- Check triggers exist
-SELECT event_object_table, trigger_name 
-FROM information_schema.triggers 
-WHERE event_object_schema = 'public' 
-  AND event_object_table IN (
-    'datasets',
-    'training_jobs',
-    'model_artifacts'
-  );
-```
-
-**Expected Result:** 3 triggers (one for each table with updated_at).
-
----
-
-### Step 7: Verify Storage Buckets
-
-**Via Supabase Dashboard:**
-1. Navigate to Storage section
-2. Confirm `lora-datasets` bucket exists
-3. Confirm `lora-models` bucket exists
-4. Check bucket settings:
-   - Both should be private
-   - File size limits correct
-   - Allowed MIME types configured
-
-**Via SQL:**
-
-```sql
--- Check buckets exist
-SELECT id, name, public 
-FROM storage.buckets 
-WHERE name IN ('lora-datasets', 'lora-models');
-```
-
-**Expected Result:** 2 rows, both with `public = false`.
-
----
-
-### Step 8: Test TypeScript Types
-
-**Command:**
+**Check TypeScript compiles:**
 
 ```bash
-# Run TypeScript compiler
+cd src
 npx tsc --noEmit
+# Should show no errors
 ```
 
-**Expected Output:** No errors related to `src/lib/types/lora-training.ts`.
-
-**Test Import:**
-
-Create a temporary test file to verify imports work:
+**Test imports:**
 
 ```typescript
-// test-lora-types.ts
+// Create a test file: src/lib/types/__test_import.ts
 import { 
   Dataset, 
   TrainingJob, 
   HYPERPARAMETER_PRESETS 
-} from '@/lib/types/lora-training';
+} from './lora-training';
 
 const preset = HYPERPARAMETER_PRESETS.balanced;
-console.log(preset.learning_rate); // Should be 0.0002
+console.log('Imports work:', preset);
+
+// Run: npx ts-node src/lib/types/__test_import.ts
+// Should output: Imports work: { base_model: 'mistralai/Mistral-7B-v0.1', ... }
 ```
 
-Run:
+**Delete test file after verification**
 
-```bash
-npx tsx test-lora-types.ts
-```
+#### 3. Storage Bucket Verification
 
-**Expected Output:** `0.0002` (no type errors).
+**Check via Supabase Dashboard:**
+1. Navigate to Storage section
+2. Verify `lora-datasets` bucket exists
+3. Verify `lora-models` bucket exists
+4. Check RLS policies are applied to both
 
----
+**Test upload/download (optional):**
 
-### Step 9: Test RLS Policies (Optional but Recommended)
+```typescript
+// Test file: scripts/test-storage.ts
+import { createClient } from '@supabase/supabase-js';
 
-**Create a test user and verify isolation:**
-
-```sql
--- As admin, insert test records for different users
--- This would be done via your app normally, but for testing:
-
--- Insert a dataset for user1
-INSERT INTO datasets (user_id, name, storage_path, file_name, file_size)
-VALUES (
-  '00000000-0000-0000-0000-000000000001',
-  'User1 Dataset',
-  'user1/dataset1/data.jsonl',
-  'data.jsonl',
-  1024
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
--- Try to query as user1 (should see only their dataset)
--- This requires using Supabase client with user1's JWT token
+async function testStorage() {
+  // Test upload to lora-datasets
+  const { data, error } = await supabase.storage
+    .from('lora-datasets')
+    .upload('test-user-id/test.json', JSON.stringify({ test: true }));
+
+  console.log('Upload result:', data ? 'SUCCESS' : 'FAILED', error);
+}
+
+testStorage();
 ```
 
-**Expected Behavior:** Users can only see/modify their own records.
+#### 4. RLS Policy Testing
 
----
+**Test with authenticated user:**
+
+```sql
+-- Simulate authenticated user context
+SET request.jwt.claims = '{"sub": "test-user-uuid"}';
+
+-- Try to insert a dataset (should work)
+INSERT INTO datasets (user_id, name, storage_path, file_name, file_size)
+VALUES ('test-user-uuid', 'Test Dataset', 'test/path', 'test.json', 1000);
+
+-- Try to query (should only see own data)
+SELECT * FROM datasets;
+
+-- Try to query another user's data (should return empty)
+SELECT * FROM datasets WHERE user_id = 'other-user-uuid';
+```
 
 ### Expected Outputs
 
 After completing this prompt, you should have:
 
-- [ ] **Migration file** at `supabase/migrations/20241223_create_lora_training_tables.sql`
-- [ ] **7 database tables** created and queryable
-- [ ] **11+ indexes** created for query optimization
-- [ ] **RLS policies** active on user-facing tables
-- [ ] **3 triggers** for automatic timestamp updates
-- [ ] **Type definition file** at `src/lib/types/lora-training.ts`
-- [ ] **2 storage buckets** (`lora-datasets`, `lora-models`) created with policies
-- [ ] **No TypeScript errors** when compiling the types file
-- [ ] **All verification queries** passing
+- [ ] ✅ Migration file exists at `supabase/migrations/20241223_create_lora_training_tables.sql`
+- [ ] ✅ Types file exists at `src/lib/types/lora-training.ts`
+- [ ] ✅ 7 tables visible in Supabase Dashboard → Database → Tables
+- [ ] ✅ 2 buckets visible in Supabase Dashboard → Storage
+- [ ] ✅ RLS policies visible in table details
+- [ ] ✅ TypeScript compiles without errors
+- [ ] ✅ All types importable from `@/lib/types/lora-training`
 
 ---
 
@@ -1005,39 +1046,39 @@ After completing this prompt, you should have:
 
 ### New Files Created
 
-- [ ] `supabase/migrations/20241223_create_lora_training_tables.sql` - Complete database schema migration
-- [ ] `src/lib/types/lora-training.ts` - TypeScript type definitions for LoRA training domain
+- [ ] `supabase/migrations/20241223_create_lora_training_tables.sql` - Complete database schema
+- [ ] `src/lib/types/lora-training.ts` - TypeScript type definitions
+
+### Existing Files Modified
+
+**None** - This prompt only creates new files
 
 ### Database Changes
 
-- [ ] Table `datasets` created with 3 indexes and 3 RLS policies
-- [ ] Table `training_jobs` created with 3 indexes and 2 RLS policies
-- [ ] Table `metrics_points` created with 2 indexes
-- [ ] Table `model_artifacts` created with 2 indexes and 1 RLS policy
-- [ ] Table `cost_records` created with 2 indexes
-- [ ] Table `notifications` created with 2 indexes
-- [ ] Trigger `update_datasets_updated_at` created
-- [ ] Trigger `update_training_jobs_updated_at` created
-- [ ] Trigger `update_model_artifacts_updated_at` created
+- [ ] Table `datasets` created with 21 columns, 3 indexes, 3 RLS policies
+- [ ] Table `training_jobs` created with 25 columns, 3 indexes, 2 RLS policies
+- [ ] Table `metrics_points` created with 10 columns, 2 indexes
+- [ ] Table `model_artifacts` created with 14 columns, 2 indexes, 1 RLS policy
+- [ ] Table `cost_records` created with 8 columns, 2 indexes
+- [ ] Table `notifications` created with 10 columns, 2 indexes
 - [ ] Function `update_updated_at_column()` created
+- [ ] 3 triggers created for automatic timestamp updates
+- [ ] All foreign keys to `auth.users(id)` established
+- [ ] Cross-table foreign key: `training_jobs.artifact_id → model_artifacts.id`
 
-### Storage Changes
+### Storage Buckets
 
-- [ ] Bucket `lora-datasets` created with policies (500 MB limit, private)
-- [ ] Bucket `lora-models` created with policies (5 GB limit, private)
+- [ ] Bucket `lora-datasets` created (500MB limit, private)
+- [ ] Bucket `lora-models` created (5GB limit, private)
+- [ ] RLS policies applied to both buckets
 
-### TypeScript Exports
+### API Endpoints
 
-- [ ] Type `DatasetStatus` exported
-- [ ] Type `JobStatus` exported
-- [ ] Type `PresetId` exported
-- [ ] Interface `Dataset` exported
-- [ ] Interface `TrainingJob` exported
-- [ ] Interface `HyperparameterConfig` exported
-- [ ] Interface `GPUConfig` exported
-- [ ] Interface `CurrentMetrics` exported
-- [ ] Interface `ValidationError` exported
-- [ ] Constant `HYPERPARAMETER_PRESETS` exported
+**None** - This is a foundation prompt (database layer only)
+
+### Components
+
+**None** - This is a foundation prompt (database layer only)
 
 ---
 
@@ -1045,157 +1086,112 @@ After completing this prompt, you should have:
 
 ### For Next Prompt in This Section
 
-**Section Complete** - This is the final prompt in Section E01.
+**Section Complete** - This is the only prompt in Section E01.
 
-This prompt's deliverables will be used by **all subsequent sections** for:
-- **Database operations:** All sections will query and modify these tables
-- **Type safety:** All sections will import types from `lora-training.ts`
-- **Storage:** Sections E02 and E05 will upload files to the buckets
+This section's deliverables (database tables, types, and storage buckets) will be used by **all subsequent sections** for:
+- Storing dataset uploads (Section E02)
+- Creating training jobs (Section E03)
+- Recording real-time metrics (Section E04)
+- Managing model artifacts (Section E05)
+- Tracking costs (Section E06)
+- Sending notifications (Section E07)
 
 ### For Next Section
 
-**Next Section:** E02: Dataset Management
+**Next Section:** E02 - Dataset Management
 
-Section E02 will build upon this foundation:
-- **Uses `datasets` table** for storing dataset metadata
-- **Uses `lora-datasets` bucket** for storing JSONL files
-- **Imports `Dataset` interface** for type-safe API responses
-- **Uses RLS policies** to ensure user data isolation
-- Will create:
-  - Dataset upload API endpoint
-  - Dataset validation edge function
-  - Dataset list and detail pages
+The next section will build upon this foundation by creating:
+- API endpoints to interact with `datasets` table
+- Upload handlers using `lora-datasets` bucket
+- Validation logic to populate dataset statistics
+- UI components to display datasets
+
+**Key Deliverables E02 Will Use:**
+- `datasets` table for CRUD operations
+- `Dataset`, `DatasetStatus` types from `@/lib/types/lora-training`
+- `lora-datasets` storage bucket for file uploads
+- `validation_errors` JSONB field for validation feedback
 
 ---
 
 ## ⚠️ Important Reminders
 
-### 1. Follow the Spec Exactly
+1. **Follow the Spec Exactly:** All SQL and TypeScript code provided comes from the integrated specification. Implement it as written—do not modify table names, column types, or field names.
 
-All SQL and TypeScript code provided in this prompt comes from the integrated specification. Implement it **exactly as written**:
-- Don't change table names or column names
-- Don't modify data types
-- Don't alter RLS policy logic
-- Don't skip indexes or triggers
+2. **Reuse Existing Infrastructure:** This prompt extends existing Supabase infrastructure:
+   - ✅ Use existing `auth.users` table (don't create new auth)
+   - ✅ Use existing Supabase client patterns
+   - ✅ Follow existing migration file naming conventions
+   - ✅ Match existing RLS policy patterns
 
-### 2. Reuse Existing Infrastructure
+3. **Storage Best Practices:**
+   - ✅ Store only **paths** in database, never full URLs
+   - ✅ Generate signed URLs on-demand using Supabase Storage API
+   - ✅ Use user_id in folder structure for RLS enforcement
 
-Don't recreate what already exists:
-- ✅ Use existing `auth.users` table
-- ✅ Use existing `auth.uid()` function in RLS policies
-- ✅ Follow existing migration naming convention
-- ✅ Follow existing TypeScript file organization
+4. **Type Safety:**
+   - ✅ All database fields must have corresponding TypeScript types
+   - ✅ JSONB fields need strongly-typed interfaces
+   - ✅ Use union types for status enums
+   - ✅ Mark nullable fields explicitly (`| null`)
 
-### 3. Storage Path Convention
+5. **Testing:**
+   - ✅ Run migration and verify tables exist
+   - ✅ Test RLS policies with different user contexts
+   - ✅ Verify TypeScript compilation
+   - ✅ Confirm storage buckets accessible
 
-**CRITICAL:** Always store **paths**, never URLs:
-```typescript
-// ✅ CORRECT
-storage_path: 'user123/dataset456/data.jsonl'
+6. **Migration Safety:**
+   - ✅ Use `BEGIN` and `COMMIT` for transactional migration
+   - ✅ Use `IF NOT EXISTS` for idempotency
+   - ✅ Test migration locally before applying to production
 
-// ❌ WRONG
-storage_path: 'https://xxx.supabase.co/storage/v1/object/...'
-```
-
-URLs can change (domain, CDN, signed tokens), but paths are stable.
-
-### 4. RLS Policy Testing
-
-After creating the tables, **test RLS policies** to ensure:
-- Users can only see their own data
-- Users cannot modify other users' data
-- Proper error messages if unauthorized access attempted
-
-### 5. Migration Safety
-
-The migration uses:
-- `CREATE TABLE IF NOT EXISTS` - safe to run multiple times
-- `BEGIN` and `COMMIT` - atomic transaction
-- Proper foreign key constraints with appropriate cascade rules
-
-### 6. TypeScript Type Accuracy
-
-Ensure TypeScript interfaces **exactly match** the database schema:
-- Nullable fields use `| null`
-- Timestamp fields use `string` (ISO format from Supabase)
-- JSONB fields have structured interfaces where possible
-
-### 7. No API or UI Yet
-
-This prompt is **pure data layer**. Don't create:
-- API routes
-- React components
-- Pages
-- Hooks
-
-Those come in subsequent sections that build on this foundation.
+7. **Don't Skip Steps:**
+   - ✅ Create both database migration AND TypeScript types
+   - ✅ Configure both storage buckets
+   - ✅ Apply RLS policies to tables AND buckets
+   - ✅ Verify everything works before proceeding
 
 ---
 
 ## 📚 Reference Materials
 
-### Files from Existing Codebase
+### Files from Previous Work
 
-#### Authentication
-- `@/lib/supabase-server` - Server-side Supabase client
-- `@/lib/auth-service` - Auth utility functions
-- Pattern: `requireAuth()` for protected routes
+**None** - This is the foundation section (E01). No previous sections exist.
 
-#### Database
-- Existing migrations in `supabase/migrations/`
-- Pattern: `YYYYMMDD_description.sql` naming
-- Pattern: UUID primary keys, TIMESTAMPTZ timestamps
+### Existing Infrastructure to Reference
 
-#### TypeScript Types
-- Existing types in `src/lib/types/`
-- Pattern: One file per domain area
-- Pattern: Interfaces exported, not classes
+#### Authentication Patterns
+- **Location:** `src/lib/supabase-server.ts`
+- **Pattern:** `requireAuth()` for protected routes
+- **Pattern:** `auth.uid()` in RLS policies
 
-### Infrastructure Patterns
+#### Database Client Patterns
+- **Location:** `src/lib/supabase-server.ts`
+- **Pattern:** `createServerSupabaseClient()` for database queries
+- **Usage:** Server-side API routes and Server Components
 
-**Database:**
-- Primary keys: `UUID DEFAULT gen_random_uuid()`
-- Timestamps: `TIMESTAMPTZ DEFAULT NOW()`
-- User references: `REFERENCES auth.users(id) ON DELETE CASCADE`
-- RLS: `auth.uid() = user_id`
+#### Migration Workflow
+- **Location:** `supabase/migrations/`
+- **Pattern:** Timestamped files: `YYYYMMDD_description.sql`
+- **Existing Files:** Reference other migrations for patterns
 
-**TypeScript:**
-- Dates as strings (ISO format)
-- Union types for enums
-- `| null` for nullable fields
-- JSONB as structured interfaces
+#### Storage Patterns
+- **Environment Variables:**
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY` (for admin operations)
 
-**Storage:**
-- Private buckets for user data
-- Folder structure: `{user_id}/{resource_id}/filename`
-- Store paths, not URLs
-- RLS policies using `storage.foldername()`
+#### Type Patterns
+- **Location:** `src/lib/types/`
+- **Pattern:** One file per domain (e.g., `database.ts`, `auth.ts`)
+- **Export:** Named exports for interfaces and types
 
 ---
 
-**Ready to implement Section E01, Prompt P01!**
+**Ready to implement Section E01, Prompt P01!** 🚀
 
-This is a foundational data layer implementation. Take your time, verify each step, and ensure all verification queries pass before considering this prompt complete.
-
----
-
-## Section Completion Checklist
-
-After completing all prompts in this section (only P01):
-
-- [ ] All 7 database tables exist and are queryable
-- [ ] All indexes created
-- [ ] All RLS policies active and tested
-- [ ] All triggers functional
-- [ ] TypeScript types file compiles without errors
-- [ ] Both storage buckets created with correct policies
-- [ ] Migration is idempotent (can run multiple times safely)
-- [ ] Foreign key relationships working correctly
-- [ ] No TypeScript errors in the codebase
-- [ ] All verification SQL queries pass
-- [ ] Ready to proceed to Section E02 (Dataset Management)
+This is the foundation of the LoRA Training Module. After completing this prompt, you'll have a complete data layer ready for all subsequent features.
 
 ---
-
-**End of Section E01 Execution Prompts**
-

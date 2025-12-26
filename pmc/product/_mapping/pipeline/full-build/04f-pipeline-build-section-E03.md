@@ -2,8 +2,8 @@
 
 **Product**: PIPELINE  
 **Section**: 3 - Training Configuration  
-**Generated**: 2025-12-25  
-**Source**: 04e-pipeline-integrated-extension-spec_v1b.md
+**Generated**: 2025-12-26  
+**Source**: 04e-pipeline-integrated-extension-spec_v1.md
 
 ---
 

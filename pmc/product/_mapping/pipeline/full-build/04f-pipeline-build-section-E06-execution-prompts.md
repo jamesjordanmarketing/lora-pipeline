@@ -2,9 +2,9 @@
 
 **Product:** PIPELINE  
 **Section:** 6 - Cost Tracking & Notifications  
-**Generated:** 2025-12-24  
+**Generated:** 2025-12-26  
 **Total Prompts:** 1  
-**Estimated Total Time:** 3-5 hours  
+**Estimated Total Time:** 4 hours  
 **Source Section File:** 04f-pipeline-build-section-E06.md
 
 ---
@@ -15,7 +15,12 @@ Track training costs in real-time and notify users of important events throughou
 
 **User Value**: Transparent cost tracking and timely notifications keep users informed and in control
 
-This section implements two simple API endpoints that expose data already being collected throughout the training lifecycle. Cost records and notifications are created by earlier sections (3-5), and this section provides the read/query interfaces.
+**What This Section Implements**:
+- Cost analytics API with aggregation by type and time period
+- Notifications API for fetching and managing user notifications
+- Integration with existing cost records and notifications created in previous sections
+
+**Key Insight**: Cost tracking and notifications have already been integrated throughout Sections 3-5. This section adds APIs to **query** and **manage** that data, not create it.
 
 ---
 
@@ -23,12 +28,10 @@ This section implements two simple API endpoints that expose data already being 
 
 This section has been divided into **1 progressive prompt**:
 
-1. **Prompt P01: Cost & Notification APIs** (3-5h)
+1. **Prompt P01: Cost & Notifications APIs** (4h)
    - Features: FR-6.1 (Cost Dashboard API), FR-6.2 (Notifications API)
-   - Key Deliverables: 
-     - `GET /api/costs` - cost analytics with aggregation
-     - `GET /api/notifications` - list notifications
-     - `PATCH /api/notifications/[id]/read` - mark as read
+   - Key Deliverables: 3 API routes for cost analytics and notification management
+   - Dependencies: Sections E01-E05 (database tables and existing cost/notification creation)
 
 ---
 
@@ -36,62 +39,66 @@ This section has been divided into **1 progressive prompt**:
 
 ### Dependencies from Previous Sections
 
-This section relies on data created by earlier sections:
-
 #### Section E01: Foundation & Authentication
-- **Tables**: `lora_cost_records`, `lora_notifications`
-- **Auth**: `requireAuth()` from `@/lib/supabase-server`
-- **Database Client**: `createServerSupabaseClient()`
+- Table: `lora_cost_records` (already created)
+- Table: `lora_notifications` (already created)
+- Auth pattern: `requireAuth()` from `@/lib/supabase-server`
+- Database client: `createServerSupabaseClient()`
 
-#### Section E03: Training Configuration
-- **Cost Records**: Created when jobs are queued with estimated costs
-
-#### Section E04: Training Execution & Monitoring
-- **Cost Records**: Updated during job execution with actual costs
-- **Notifications**: Created for job lifecycle events (started, failed, completed)
-
-#### Section E05: Model Artifacts & Delivery
-- **Notifications**: Created when artifacts are ready for download
+#### Section E02-E05: Cost & Notification Creation
+- **Cost records** are being created during:
+  - Section 3: Job creation (estimated cost)
+  - Section 4: Job execution (current cost tracking)
+  - Section 4: Job completion (final cost)
+- **Notifications** are being created during:
+  - Section 3: Job queued
+  - Section 4: Job started, job failed, progress milestones
+  - Section 5: Model artifact ready
 
 ### Provides for Next Sections
 
-This section completes the core training pipeline. Future enhancements could add:
-- UI components for cost dashboard visualization
-- UI components for notification bell/dropdown
-- Real-time notification updates via WebSockets
-- Cost alerting and budget management
+This is primarily a **read-only querying layer** for existing data:
+- Cost analytics API can be consumed by future dashboard UI enhancements
+- Notifications API enables future real-time notification features
+- Both APIs follow existing patterns and can be extended
 
 ---
 
 ## Dependency Flow (This Section)
 
 ```
-Section E01 (Tables) → Section E06-P01 (Read APIs)
-    ↓
-Section E03-E05 (Write Cost/Notification Records)
-    ↓
-Section E06-P01 (Query & Display)
+Section E01 (Database)
+  ↓
+  lora_cost_records table
+  lora_notifications table
+  ↓
+Sections E03-E05 (Data Creation)
+  ↓
+  Cost records inserted during training lifecycle
+  Notifications inserted for all key events
+  ↓
+Section E06 - P01 (This Section)
+  ↓
+  GET /api/costs (aggregate and analyze)
+  GET /api/notifications (fetch with filters)
+  PATCH /api/notifications/[id]/read (mark as read)
 ```
-
-**Note**: This section is purely read-only. All data is written by earlier sections.
 
 ---
 
-# PROMPT 1: Cost & Notification APIs
+# PROMPT 1: Cost & Notifications APIs
 
-**Generated:** 2025-12-24  
+**Generated:** 2025-12-26  
 **Section:** 6 - Cost Tracking & Notifications  
 **Prompt:** 1 of 1 in this section  
-**Estimated Time:** 3-5 hours  
-**Prerequisites:** 
-- Section E01: Database tables (`lora_cost_records`, `lora_notifications`)
-- Section E03-E05: Cost records and notifications being created
+**Estimated Time:** 4 hours  
+**Prerequisites:** Sections E01-E05 complete (database tables exist, cost/notification records being created)
 
 ---
 
 ## 🎯 Mission Statement
 
-Implement read-only API endpoints for querying cost analytics and user notifications. These APIs aggregate and expose data that's already being collected throughout the training lifecycle, providing users with transparent cost tracking and timely notifications about their training jobs.
+Implement read-only API endpoints for querying cost analytics and managing notifications. These APIs provide aggregated cost data for budget tracking and enable users to view and mark notifications as read. This completes the training lifecycle by giving users visibility into costs incurred and important system events.
 
 ---
 
@@ -99,13 +106,15 @@ Implement read-only API endpoints for querying cost analytics and user notificat
 
 ### This Section's Goal
 
-Track training costs in real-time and notify users of important events throughout the training lifecycle. This section provides the query interfaces for data already being written by earlier sections.
+Enable transparent cost tracking and timely notifications to keep users informed and in control throughout the training process.
 
 ### This Prompt's Scope
 
 This is **Prompt 1 of 1** in Section E06. It implements:
-- FR-6.1: Cost Dashboard API (aggregate cost data for analytics)
-- FR-6.2: Notifications API (fetch and manage notifications)
+- **FR-6.1**: Cost Dashboard API (GET /api/costs)
+- **FR-6.2**: Notifications API (GET /api/notifications, PATCH /api/notifications/[id]/read)
+
+**Note**: This section is **read-only** - it queries existing data created by previous sections. Cost records and notifications are already being created throughout the training lifecycle in Sections 3-5.
 
 ---
 
@@ -114,35 +123,75 @@ This is **Prompt 1 of 1** in Section E06. It implements:
 ### From Previous Sections
 
 #### Section E01: Foundation & Authentication
+
 **Database Tables We'll Query:**
-- `lora_cost_records` - Stores cost data for training jobs
-  - Schema: `id`, `user_id`, `job_id`, `cost_type`, `amount`, `details`, `billing_period`, `recorded_at`
-  - Used for: Aggregating costs by period, type, and job
+- `lora_cost_records` - Cost tracking table
+  - Columns: `id`, `user_id`, `job_id`, `cost_type`, `amount`, `details`, `billing_period`, `recorded_at`
+  - Already populated by training job execution
   
-- `lora_notifications` - Stores user notifications
-  - Schema: `id`, `user_id`, `type`, `title`, `message`, `priority`, `read`, `action_url`, `metadata`, `created_at`
-  - Used for: Fetching user notifications with unread count
+- `lora_notifications` - User notifications table
+  - Columns: `id`, `user_id`, `type`, `title`, `message`, `priority`, `read`, `action_url`, `metadata`, `created_at`
+  - Already populated throughout training lifecycle
 
-**Auth We'll Use:**
-- `requireAuth()` from `@/lib/supabase-server` - Authenticate all API requests
-- `createServerSupabaseClient()` - Database client for queries
+**Authentication Pattern We'll Use:**
+- `requireAuth()` from `@/lib/supabase-server` - Existing auth middleware
+- `createServerSupabaseClient()` - Database client pattern
 
-#### Section E03: Training Configuration
-**Cost Records Created:**
-- Initial estimated cost recorded when job is created (status: 'queued')
+**Type Definitions Available:**
+```typescript
+// From @/lib/types/lora-training.ts (Section E01)
+interface CostRecord {
+  id: string;
+  user_id: string;
+  job_id: string | null;
+  cost_type: string;
+  amount: number;
+  details: any;
+  billing_period: string;
+  recorded_at: string;
+}
 
-#### Section E04: Training Execution & Monitoring
-**Cost Records Created:**
-- Cost records updated during job execution
-- Compute costs tracked per training step
-- Notifications created for job lifecycle events:
-  - `job_started` - When training begins
-  - `job_failed` - When training fails
-  - `job_cancelled` - When user cancels
+interface Notification {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  message: string;
+  priority: 'low' | 'medium' | 'high';
+  read: boolean;
+  action_url: string | null;
+  metadata: any;
+  created_at: string;
+}
+```
 
-#### Section E05: Model Artifacts & Delivery
-**Notifications Created:**
-- `artifact_ready` - When model is ready for download
+#### Sections E03-E05: Cost & Notification Creation
+
+**Where Cost Records Are Created:**
+- Section 3 (`POST /api/jobs`): Initial `estimated_total_cost` stored in job
+- Section 4 (Edge Function): `current_cost` updated during training
+- Section 4 (Edge Function): `final_cost` recorded on completion
+- Cost records inserted into `lora_cost_records` throughout job lifecycle
+
+**Where Notifications Are Created:**
+- Section 3: "Training Job Queued" notification
+- Section 4: "Training Started" notification
+- Section 4: "Training Failed" notification (on errors)
+- Section 5: "Model Ready for Download" notification
+
+**Integration Pattern:**
+All notifications inserted with:
+```typescript
+await supabase.from('lora_notifications').insert({
+  user_id: job.user_id,
+  type: 'job_started', // or other type
+  title: 'Training Started',
+  message: 'Your training job has started...',
+  priority: 'medium',
+  action_url: `/training/jobs/${job.id}`,
+  metadata: { job_id: job.id },
+});
+```
 
 ### From Previous Prompts (This Section)
 
@@ -155,22 +204,22 @@ This is the first (and only) prompt in Section E06. No previous prompts in this 
 ### Feature FR-6.1: Cost Dashboard API
 
 **Type:** API Endpoint  
-**Strategy:** EXTENSION - using existing Supabase patterns
+**Strategy:** EXTENSION - using existing Supabase patterns and database tables
 
 #### Description
 
-Aggregate cost data for analytics and budget tracking. Provide filtering by time period, cost breakdown by type, and chart data for visualization.
+Aggregate cost data for analytics and budget tracking. Query `lora_cost_records` table with flexible date range filtering and provide aggregated views by cost type and date.
 
 #### What Already Exists (Don't Rebuild)
 
-- ✅ `lora_cost_records` table (from Section E01)
-- ✅ Cost records being created throughout Sections E03-E05
-- ✅ Supabase Auth and database client patterns
-- ✅ API response format (`{ success, data }` or `{ error, details }`)
+- ✅ `lora_cost_records` table (Section E01)
+- ✅ Cost records being created during training (Sections E03-E05)
+- ✅ Authentication pattern (`requireAuth()`)
+- ✅ API response format (`{ success: true, data }`)
 
 #### What We're Building (New in This Prompt)
 
-- 🆕 `src/app/api/costs/route.ts` - GET endpoint for cost analytics
+- 🆕 `src/app/api/costs/route.ts` - Cost analytics API endpoint
 
 #### Implementation Details
 
@@ -179,25 +228,24 @@ Aggregate cost data for analytics and budget tracking. Provide filtering by time
 **Endpoint:** `GET /api/costs`
 
 **Query Parameters:**
-- `period` - Time period filter: `week`, `month`, `year` (default: `month`)
-- `start_date` - Custom date range start (ISO 8601 format)
-- `end_date` - Custom date range end (ISO 8601 format)
+- `period`: `week` | `month` | `year` (default: `month`)
+- `start_date`: ISO date string (optional, overrides period)
+- `end_date`: ISO date string (optional, overrides period)
 
 **Response Schema:**
-
 ```typescript
 {
   success: true,
   data: {
-    total_cost: number,              // Total cost for period
-    cost_by_type: {                  // Breakdown by cost type
+    total_cost: number,           // Sum of all costs in period
+    cost_by_type: {               // Costs aggregated by type
       [cost_type: string]: number
     },
-    chart_data: Array<{              // Data for charts
+    chart_data: Array<{           // Daily cost data for charts
       date: string,
       amount: number
     }>,
-    records: Array<CostRecord>       // Individual cost records
+    records: Array<CostRecord>    // Raw cost records
   }
 }
 ```
@@ -295,14 +343,14 @@ export async function GET(request: NextRequest) {
 }
 ```
 
-**Key Points:**
-- Uses: `requireAuth()` from Section E01
-- Queries: `lora_cost_records` table (created in Section E01)
-- Returns: Aggregated cost data with breakdown by type and date
-- Date filtering: Flexible period filters or custom date ranges
-- Performance: Efficient aggregation in application layer (could be moved to DB for large datasets)
-
 **Pattern Source**: Infrastructure Inventory Section 4 (API Architecture)
+
+**Key Points:**
+- Uses: `requireAuth()` for authentication (from Section E01)
+- Queries: `lora_cost_records` table (created in Section E01)
+- Aggregates: Total cost, cost by type, daily costs for charts
+- Supports: Flexible date range filtering (predefined periods or custom ranges)
+- Returns: Standard API response format (`{ success, data }`)
 
 ---
 
@@ -313,19 +361,19 @@ export async function GET(request: NextRequest) {
 
 #### Description
 
-Fetch and manage user notifications. Provide listing with unread filtering and mark-as-read functionality.
+Fetch and manage user notifications. Provide endpoints to list notifications (with optional unread-only filter) and mark individual notifications as read.
 
 #### What Already Exists (Don't Rebuild)
 
-- ✅ `lora_notifications` table (from Section E01)
-- ✅ Notifications being created throughout Sections E03-E05
-- ✅ Supabase Auth and database client patterns
+- ✅ `lora_notifications` table (Section E01)
+- ✅ Notifications being created throughout training lifecycle (Sections E03-E05)
+- ✅ Authentication pattern (`requireAuth()`)
 - ✅ API response format
 
 #### What We're Building (New in This Prompt)
 
-- 🆕 `src/app/api/notifications/route.ts` - GET endpoint for listing notifications
-- 🆕 `src/app/api/notifications/[id]/read/route.ts` - PATCH endpoint for marking as read
+- 🆕 `src/app/api/notifications/route.ts` - List notifications endpoint
+- 🆕 `src/app/api/notifications/[id]/read/route.ts` - Mark as read endpoint
 
 #### Implementation Details
 
@@ -334,11 +382,10 @@ Fetch and manage user notifications. Provide listing with unread filtering and m
 **Endpoint:** `GET /api/notifications`
 
 **Query Parameters:**
-- `unread` - Filter to unread only: `true` or `false` (default: false = all)
-- `limit` - Number of notifications to return (default: 20, max: 50)
+- `unread`: `true` | `false` (optional, filter unread only)
+- `limit`: number (optional, default: 20)
 
 **Response Schema:**
-
 ```typescript
 {
   success: true,
@@ -413,14 +460,28 @@ export async function GET(request: NextRequest) {
 }
 ```
 
+**Pattern Source**: Infrastructure Inventory Section 4 (API Architecture)
+
+**Key Points:**
+- Uses: `requireAuth()` for authentication
+- Queries: `lora_notifications` table
+- Returns: List of notifications + unread count
+- Filters: Optional unread-only mode
+- Limits: Configurable result limit (default 20)
+
+---
+
 **File 2:** `src/app/api/notifications/[id]/read/route.ts`
 
 **Endpoint:** `PATCH /api/notifications/[id]/read`
 
-**Response Schema:**
+**Request Body:** None
 
+**Response Schema:**
 ```typescript
-{ success: true }
+{
+  success: true
+}
 ```
 
 **Implementation:**
@@ -466,14 +527,14 @@ export async function PATCH(
 }
 ```
 
-**Key Points:**
-- Uses: `requireAuth()` from Section E01
-- Queries: `lora_notifications` table (created in Section E01)
-- Returns: Notifications list with unread count
-- Update: Marks individual notifications as read
-- Security: User can only access their own notifications (enforced by RLS and query filter)
-
 **Pattern Source**: Infrastructure Inventory Section 4 (API Architecture)
+
+**Key Points:**
+- Uses: `requireAuth()` for authentication
+- Updates: `lora_notifications` table (`read = true`)
+- Security: Verifies `user_id` matches to prevent unauthorized access
+- Returns: Simple success response
+- Idempotent: Safe to call multiple times
 
 ---
 
@@ -481,20 +542,23 @@ export async function PATCH(
 
 ### Functional Requirements
 
-- [ ] **FR-6.1**: Cost Dashboard API returns aggregated cost data
-  - [ ] Supports period filters: `week`, `month`, `year`
-  - [ ] Supports custom date range with `start_date` and `end_date`
-  - [ ] Returns total cost for period
-  - [ ] Returns cost breakdown by type
-  - [ ] Returns chart data grouped by day
-  - [ ] Returns individual cost records
+**FR-6.1: Cost Dashboard API**
+- [ ] `GET /api/costs` returns cost data for authenticated users
+- [ ] Supports `period` parameter: `week`, `month`, `year`
+- [ ] Supports custom date ranges via `start_date` and `end_date`
+- [ ] Returns aggregated total cost
+- [ ] Returns cost breakdown by type
+- [ ] Returns daily chart data for visualization
+- [ ] Returns raw cost records
 
-- [ ] **FR-6.2**: Notifications API provides notification management
-  - [ ] Returns user's notifications with pagination (limit)
-  - [ ] Supports filtering to unread only
-  - [ ] Returns unread count
-  - [ ] Mark as read endpoint updates notification status
-  - [ ] Users can only access their own notifications
+**FR-6.2: Notifications API**
+- [ ] `GET /api/notifications` returns user's notifications
+- [ ] Supports `unread=true` filter for unread-only
+- [ ] Supports `limit` parameter for pagination
+- [ ] Returns unread count separately
+- [ ] Orders notifications by most recent first
+- [ ] `PATCH /api/notifications/[id]/read` marks notification as read
+- [ ] Update endpoint enforces user ownership (security)
 
 ### Technical Requirements
 
@@ -503,17 +567,18 @@ export async function PATCH(
 - [ ] Follows existing API patterns from Sections E02-E05
 - [ ] All imports resolve correctly
 - [ ] Code matches specification exactly
-- [ ] Proper error handling for database errors
-- [ ] Consistent response format (`{ success, data }` or `{ error, details }`)
+- [ ] Uses existing `requireAuth()` pattern consistently
+- [ ] Uses existing `createServerSupabaseClient()` pattern
+- [ ] Response format matches existing APIs (`{ success, data }`)
 
 ### Integration Requirements
 
-- [ ] Successfully authenticates using `requireAuth()` from Section E01
-- [ ] Successfully queries `lora_cost_records` table
-- [ ] Successfully queries `lora_notifications` table
-- [ ] RLS policies enforce user data isolation
-- [ ] Date filtering works correctly for all period options
-- [ ] Aggregation calculations are accurate
+- [ ] Successfully queries `lora_cost_records` table (from Section E01)
+- [ ] Successfully queries `lora_notifications` table (from Section E01)
+- [ ] Returns cost records created during training (Sections E03-E05)
+- [ ] Returns notifications created during training (Sections E03-E05)
+- [ ] Authentication works with existing Supabase Auth system
+- [ ] RLS policies automatically enforce user data isolation
 
 ---
 
@@ -522,22 +587,10 @@ export async function PATCH(
 ### Manual Testing Steps
 
 1. **Cost API Testing**
-   
-   Test default period (month):
+
+   Test with default period (month):
    ```bash
    curl http://localhost:3000/api/costs \
-     -H "Cookie: [auth-cookie]"
-   ```
-   
-   Test custom date range:
-   ```bash
-   curl "http://localhost:3000/api/costs?start_date=2024-01-01&end_date=2024-12-31" \
-     -H "Cookie: [auth-cookie]"
-   ```
-   
-   Test week period:
-   ```bash
-   curl "http://localhost:3000/api/costs?period=week" \
      -H "Cookie: [auth-cookie]"
    ```
    
@@ -546,35 +599,83 @@ export async function PATCH(
    {
      "success": true,
      "data": {
-       "total_cost": 45.32,
+       "total_cost": 45.23,
        "cost_by_type": {
          "compute": 42.50,
-         "storage": 2.82
+         "storage": 2.73
        },
        "chart_data": [
-         { "date": "2024-12-01", "amount": 15.20 },
-         { "date": "2024-12-02", "amount": 30.12 }
+         { "date": "2025-12-20", "amount": 15.20 },
+         { "date": "2025-12-21", "amount": 18.50 },
+         { "date": "2025-12-22", "amount": 11.53 }
        ],
        "records": [...]
      }
    }
    ```
 
-2. **Notifications API Testing**
+   Test with custom date range:
+   ```bash
+   curl "http://localhost:3000/api/costs?start_date=2025-12-01&end_date=2025-12-31" \
+     -H "Cookie: [auth-cookie]"
+   ```
+
+   Test with different periods:
+   ```bash
+   # Week
+   curl "http://localhost:3000/api/costs?period=week" \
+     -H "Cookie: [auth-cookie]"
    
-   Get all notifications:
+   # Year
+   curl "http://localhost:3000/api/costs?period=year" \
+     -H "Cookie: [auth-cookie]"
+   ```
+
+2. **Notifications API Testing**
+
+   Test list all notifications:
    ```bash
    curl http://localhost:3000/api/notifications \
      -H "Cookie: [auth-cookie]"
    ```
    
-   Get unread only:
+   Expected response:
+   ```json
+   {
+     "success": true,
+     "data": {
+       "notifications": [
+         {
+           "id": "...",
+           "user_id": "...",
+           "type": "job_started",
+           "title": "Training Started",
+           "message": "Your training job has started...",
+           "priority": "medium",
+           "read": false,
+           "action_url": "/training/jobs/...",
+           "metadata": { "job_id": "..." },
+           "created_at": "2025-12-26T10:30:00Z"
+         }
+       ],
+       "unread_count": 5
+     }
+   }
+   ```
+
+   Test unread-only filter:
    ```bash
    curl "http://localhost:3000/api/notifications?unread=true" \
      -H "Cookie: [auth-cookie]"
    ```
-   
-   Mark notification as read:
+
+   Test with custom limit:
+   ```bash
+   curl "http://localhost:3000/api/notifications?limit=10" \
+     -H "Cookie: [auth-cookie]"
+   ```
+
+   Test mark as read:
    ```bash
    curl -X PATCH http://localhost:3000/api/notifications/[notification-id]/read \
      -H "Cookie: [auth-cookie]"
@@ -583,51 +684,71 @@ export async function PATCH(
    Expected response:
    ```json
    {
-     "success": true,
-     "data": {
-       "notifications": [...],
-       "unread_count": 3
-     }
+     "success": true
    }
    ```
 
 3. **Database Verification**
-   
+
    Verify cost records exist:
    ```sql
-   SELECT * FROM lora_cost_records 
-   WHERE user_id = '[your-user-id]'
-   ORDER BY recorded_at DESC
-   LIMIT 10;
+   SELECT 
+     count(*) as total_records,
+     sum(amount) as total_cost,
+     cost_type
+   FROM lora_cost_records
+   WHERE user_id = '[user-id]'
+   GROUP BY cost_type;
    ```
-   
+
    Verify notifications exist:
    ```sql
-   SELECT * FROM lora_notifications 
-   WHERE user_id = '[your-user-id]'
-   ORDER BY created_at DESC
-   LIMIT 10;
+   SELECT 
+     count(*) as total_notifications,
+     sum(case when read = false then 1 else 0 end) as unread_count,
+     type
+   FROM lora_notifications
+   WHERE user_id = '[user-id]'
+   GROUP BY type;
    ```
 
 4. **Integration Testing**
+
+   Complete flow test:
+   ```bash
+   # 1. Create training job (Section 3)
+   curl -X POST http://localhost:3000/api/jobs -d '{"dataset_id":"...","preset_id":"balanced",...}'
    
-   - Complete a training job (from Section E03-E04)
-   - Verify cost records are created
-   - Call `/api/costs` to see aggregated costs
-   - Verify notifications are created for job events
-   - Call `/api/notifications` to see notifications
-   - Mark a notification as read
-   - Verify unread count decreases
+   # 2. Wait for job to start (Section 4 creates notifications)
+   
+   # 3. Check notifications
+   curl http://localhost:3000/api/notifications?unread=true
+   # Should see "Training Started" notification
+   
+   # 4. Wait for job to complete
+   
+   # 5. Check costs
+   curl http://localhost:3000/api/costs?period=week
+   # Should see compute and storage costs
+   
+   # 6. Mark notification as read
+   curl -X PATCH http://localhost:3000/api/notifications/[id]/read
+   
+   # 7. Verify unread count decreased
+   curl http://localhost:3000/api/notifications
+   # unread_count should be lower
+   ```
 
 ### Expected Outputs
 
 After completing this prompt, you should have:
-- [ ] All files created at specified paths
+- [ ] All 3 API route files created at specified paths
 - [ ] Application runs without errors
-- [ ] All API endpoints testable and working
-- [ ] Cost aggregation accurate
-- [ ] Notifications queried successfully
-- [ ] Mark as read functionality works
+- [ ] All API endpoints return expected response formats
+- [ ] Cost aggregation calculations are accurate
+- [ ] Notification filtering works correctly
+- [ ] Mark-as-read functionality updates database
+- [ ] User data isolation enforced by RLS policies
 
 ---
 
@@ -637,28 +758,23 @@ After completing this prompt, you should have:
 
 - [ ] `src/app/api/costs/route.ts` - Cost analytics API
 - [ ] `src/app/api/notifications/route.ts` - Notifications list API
-- [ ] `src/app/api/notifications/[id]/read/route.ts` - Mark as read API
+- [ ] `src/app/api/notifications/[id]/read/route.ts` - Mark notification as read
 
 ### Existing Files Modified
 
-None - this prompt only creates new API routes.
+No existing files need modification. This section only adds new API routes.
 
 ### Database Changes
 
-None - this prompt only reads from existing tables.
+No database changes required. This section uses existing tables:
+- `lora_cost_records` (already exists from Section E01)
+- `lora_notifications` (already exists from Section E01)
 
 ### API Endpoints
 
-- [ ] `GET /api/costs` - Get cost analytics with aggregation
-  - Query params: `period` (week/month/year), `start_date`, `end_date`
-  - Returns: Total cost, breakdown by type, chart data, records
-
-- [ ] `GET /api/notifications` - Get user notifications
-  - Query params: `unread` (true/false), `limit` (number)
-  - Returns: Notifications array, unread count
-
+- [ ] `GET /api/costs` - Cost analytics with date filtering
+- [ ] `GET /api/notifications` - List notifications with filters
 - [ ] `PATCH /api/notifications/[id]/read` - Mark notification as read
-  - Returns: Success status
 
 ---
 
@@ -666,24 +782,22 @@ None - this prompt only reads from existing tables.
 
 ### For Next Prompt in This Section
 
-**Section Complete:** This is the final prompt in Section E06.
+**Section Complete:** This is the final (and only) prompt in Section E06.
 
 ### For Next Section
 
-**Next Section:** E07 (if applicable) or Section Complete
+**Next Section:** E07 (if applicable) or complete integration testing
 
-This section completes the core training pipeline APIs. The cost and notification data is now queryable and ready for UI integration. Future enhancements could include:
+The APIs created in this section enable:
+- Future dashboard UI enhancements for cost visualization
+- Real-time notification features (WebSocket upgrades, etc.)
+- Budget tracking and cost alerting features
+- Notification center UI components
 
-- UI components for cost dashboard with charts
-- UI components for notification bell/dropdown
-- Real-time notification updates
-- Cost alerting and budget management
-- Export functionality for cost reports
-
-**Integration Points for Future UI:**
-- Cost dashboard page will call `GET /api/costs`
-- Notification bell will call `GET /api/notifications?unread=true`
-- Notification dropdown will call `PATCH /api/notifications/[id]/read`
+**Key Deliverables from This Section (available for use):**
+- Cost analytics API for budget tracking
+- Notifications API for user engagement
+- Complete data access layer for cost and notification management
 
 ---
 
@@ -692,25 +806,27 @@ This section completes the core training pipeline APIs. The cost and notificatio
 1. **Follow the Spec Exactly:** All code provided in this prompt comes from the integrated specification. Implement it as written.
 
 2. **Reuse Existing Infrastructure:** Don't recreate what already exists. Import and use:
-   - `requireAuth()` from `@/lib/supabase-server` (Section E01)
-   - `createServerSupabaseClient()` from `@/lib/supabase-server` (Section E01)
-   - Existing API response format pattern
-   - Existing error handling pattern
+   - Supabase Auth via `requireAuth()` from `@/lib/supabase-server`
+   - Supabase Client via `createServerSupabaseClient()`
+   - Existing API response format: `{ success: true, data }` or `{ error, details }`
 
-3. **Data Already Exists:** This section only reads data. Cost records and notifications are created by Sections E03-E05. If no data appears:
-   - Verify earlier sections are working correctly
-   - Check that training jobs are creating cost records
-   - Check that notifications are being inserted
+3. **Read-Only Nature:** This section is primarily read-only. It queries data created by previous sections:
+   - Cost records created in Sections 3-4 during training execution
+   - Notifications created in Sections 3-5 throughout lifecycle
+   - Don't try to create new cost/notification records here
 
-4. **Pattern Consistency:** Match existing patterns:
-   - API responses: `{ success: true, data }` or `{ error, details }`
-   - File organization: Follow existing structure
-   - Error handling: Log errors, return meaningful messages
-   - Query patterns: Use Supabase client consistently
+4. **Pattern Consistency:** Match existing patterns from previous sections:
+   - API structure follows Section E02-E05 patterns
+   - Authentication uses same `requireAuth()` pattern
+   - Response format matches existing APIs
+   - Error handling follows established conventions
 
-5. **Don't Skip Steps:** Implement all endpoints listed in this prompt before moving to the next section.
+5. **Security:** RLS policies on tables automatically enforce user data isolation. Always include `.eq('user_id', user.id)` in queries for defense in depth.
 
-6. **Security:** RLS policies on both tables ensure users can only access their own data. The API routes also filter by `user_id` for defense in depth.
+6. **Testing:** Verify that APIs return data created by previous sections. If no data appears, ensure:
+   - Training jobs have been created (Section 3)
+   - Jobs have run (Section 4)
+   - Cost records and notifications were inserted during execution
 
 ---
 
@@ -719,35 +835,57 @@ This section completes the core training pipeline APIs. The cost and notificatio
 ### Files from Previous Work
 
 #### Section E01: Foundation & Authentication
-- `supabase/migrations/20241223_create_lora_training_tables.sql` - Database schema
-- `src/lib/types/lora-training.ts` - TypeScript interfaces
-- `src/lib/supabase-server.ts` - Auth and database utilities
+- `src/lib/supabase-server.ts` - Authentication helpers (`requireAuth()`, `createServerSupabaseClient()`)
+- `src/lib/types/lora-training.ts` - Type definitions (can add CostRecord and Notification interfaces if needed)
+- `supabase/migrations/20241223_create_lora_training_tables.sql` - Database schema reference
 
-#### Section E03: Training Configuration
-- `src/app/api/jobs/route.ts` - Example of API pattern with cost records
-
-#### Section E04: Training Execution & Monitoring
-- `supabase/functions/process-training-jobs/index.ts` - Creates cost records and notifications
-
-#### Section E05: Model Artifacts & Delivery
-- `supabase/functions/create-model-artifacts/index.ts` - Creates artifact_ready notifications
+#### Sections E02-E05: API Patterns
+- `src/app/api/datasets/route.ts` - Example of GET list endpoint with filtering
+- `src/app/api/jobs/route.ts` - Example of POST create and GET list endpoints
+- Pattern to follow: Authentication → Query → Aggregate → Return
 
 ### Infrastructure Patterns
 
-- **Authentication:** `requireAuth()` pattern for all API routes
-- **Database:** Supabase client pattern with RLS policies
-- **API:** Route handler pattern with error handling
-- **Response Format:** `{ success: true, data }` or `{ error, details }`
+**Authentication:**
+```typescript
+const { user, response } = await requireAuth(request);
+if (response) return response;
+```
+
+**Database Query:**
+```typescript
+const supabase = createServerSupabaseClient();
+const { data, error } = await supabase
+  .from('table_name')
+  .select('*')
+  .eq('user_id', user.id);
+```
+
+**API Response Success:**
+```typescript
+return NextResponse.json({
+  success: true,
+  data: { ... },
+});
+```
+
+**API Response Error:**
+```typescript
+return NextResponse.json(
+  { error: 'Error message', details: error.message },
+  { status: 500 }
+);
+```
 
 ### Database Schema Reference
 
-**lora_cost_records:**
+**lora_cost_records table:**
 ```sql
 CREATE TABLE lora_cost_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   job_id UUID REFERENCES lora_training_jobs(id) ON DELETE SET NULL,
-  cost_type VARCHAR(50) NOT NULL,
+  cost_type VARCHAR(50) NOT NULL,        -- 'compute', 'storage', etc.
   amount DECIMAL(10, 2) NOT NULL,
   details JSONB,
   billing_period DATE NOT NULL,
@@ -755,15 +893,15 @@ CREATE TABLE lora_cost_records (
 );
 ```
 
-**lora_notifications:**
+**lora_notifications table:**
 ```sql
 CREATE TABLE lora_notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  type VARCHAR(50) NOT NULL,
+  type VARCHAR(50) NOT NULL,              -- 'job_queued', 'job_started', etc.
   title VARCHAR(200) NOT NULL,
   message TEXT NOT NULL,
-  priority VARCHAR(20) DEFAULT 'medium',
+  priority VARCHAR(20) DEFAULT 'medium',  -- 'low', 'medium', 'high'
   read BOOLEAN DEFAULT FALSE,
   action_url TEXT,
   metadata JSONB,
@@ -773,22 +911,42 @@ CREATE TABLE lora_notifications (
 
 ---
 
+**Ready to implement Section E06, Prompt P01!**
+
+---
+
 ## Section Completion Checklist
 
-After completing all prompts in this section:
+After completing this prompt (and this section):
 
-- [ ] All API endpoints implemented and tested
-- [ ] Cost aggregation returns accurate data
-- [ ] Notifications can be queried and marked as read
-- [ ] Authentication working on all endpoints
-- [ ] RLS policies enforcing data isolation
-- [ ] Date filtering working for all period options
-- [ ] No TypeScript errors
+### Implementation Complete
+- [ ] All 3 API routes created
+- [ ] All routes follow existing patterns
+- [ ] TypeScript compiles without errors
 - [ ] No linter warnings
-- [ ] Integration with previous sections verified
-- [ ] Ready to build UI components (future work)
+
+### Functionality Verified
+- [ ] Cost API returns aggregated data
+- [ ] Cost API supports date filtering
+- [ ] Cost API calculates totals correctly
+- [ ] Notifications API returns user's notifications
+- [ ] Notifications API supports unread filter
+- [ ] Mark-as-read endpoint updates notification
+- [ ] All endpoints enforce authentication
+
+### Integration Tested
+- [ ] Cost API returns records from Sections 3-5
+- [ ] Notifications API returns notifications from Sections 3-5
+- [ ] RLS policies enforce user data isolation
+- [ ] API responses match expected format
+- [ ] Error handling works for edge cases
+
+### Ready for Next Steps
+- [ ] APIs can be consumed by future UI components
+- [ ] Cost data ready for dashboard visualization
+- [ ] Notification system ready for real-time features
+- [ ] Section E06 complete and ready to proceed
 
 ---
 
 **End of Section E06 Execution Prompts**
-

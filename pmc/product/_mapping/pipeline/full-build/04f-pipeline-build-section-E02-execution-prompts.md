@@ -2,9 +2,9 @@
 
 **Product:** PIPELINE  
 **Section:** 2 - Dataset Management  
-**Generated:** 2025-12-25  
+**Generated:** December 26, 2025  
 **Total Prompts:** 1  
-**Estimated Total Time:** 4-5 hours  
+**Estimated Total Time:** 5 hours  
 **Source Section File:** 04f-pipeline-build-section-E02.md
 
 ---
@@ -13,13 +13,13 @@
 
 Enable users to upload, validate, and manage conversation datasets for LoRA training.
 
-**User Value**: Users can upload conversation datasets, validate formats, view statistics, and manage their dataset library.
+**User Value**: Users can upload conversation datasets, validate formats, view statistics, and manage their dataset library
 
-**What This Section Implements:**
-- Dataset upload with Supabase Storage presigned URLs
-- Background validation using Edge Functions
-- Dataset listing with filters and search
-- Complete dataset management UI
+**Implementation Approach**: This section builds upon the database foundation from Section E01, adding:
+- API routes for dataset upload with presigned URLs (Supabase Storage)
+- Edge Function for background validation
+- React Query hooks for data fetching
+- UI components and pages for dataset management
 
 ---
 
@@ -27,9 +27,14 @@ Enable users to upload, validate, and manage conversation datasets for LoRA trai
 
 This section has been divided into **1 progressive prompt**:
 
-1. **Prompt P01: Complete Dataset Management** (4-5h)
-   - Features: FR-2.1 (Upload with Presigned URLs), FR-2.2 (Validation)
-   - Key Deliverables: API routes, Edge Function, React hooks, Components, Pages
+1. **Prompt P01: Dataset Upload, Validation & Management UI** (5h)
+   - Features: FR-2.1 (Dataset Upload), FR-2.2 (Dataset Validation)
+   - Key Deliverables:
+     - API routes: POST/GET /api/datasets, POST /api/datasets/[id]/confirm
+     - Edge Function: validate-datasets
+     - React hooks: useDatasets, useCreateDataset, useConfirmDatasetUpload, useDeleteDataset
+     - Components: DatasetCard
+     - Page: /datasets (listing with filters)
 
 ---
 
@@ -37,73 +42,76 @@ This section has been divided into **1 progressive prompt**:
 
 ### Dependencies from Previous Sections
 
-#### Section E01: Foundation & Authentication
-**Database Tables We'll Use:**
-- `datasets` table - Store dataset metadata and validation results
-- `notifications` table - Notify users when validation completes
-
-**Storage Buckets We'll Use:**
-- `lora-datasets` bucket - Store uploaded dataset files
-
-**Types We'll Use:**
-- `Dataset`, `CreateDatasetInput`, `DatasetStatus` from `@/lib/types/lora-training.ts`
-
-**Authentication:**
-- `requireAuth()` from `@/lib/supabase-server` - Protect API routes
-- `createServerSupabaseClient()` - Query database
-- `createServerSupabaseAdminClient()` - Generate signed URLs
+**From Section E01 (Foundation & Authentication):**
+- Database tables: `datasets` table with full schema
+- TypeScript types: `Dataset`, `DatasetStatus`, `CreateDatasetSchema` from `@/lib/types/lora-training`
+- Storage buckets: `lora-datasets` bucket (configured in Supabase)
+- Auth infrastructure: `requireAuth()` from `@/lib/supabase-server`
 
 ### Provides for Next Sections
 
-**For Section E03 (Training Configuration):**
-- API endpoint: `GET /api/datasets` - Fetch ready datasets for training
-- React hook: `useDatasets()` - Query datasets in UI
-- Type: `Dataset` interface with validation status
+**For Section E03 (Training Job Configuration):**
+- Complete dataset management system
+- Dataset validation and statistics
+- API endpoints for querying ready datasets
+- UI components for dataset selection
 
-**For Section E04 (Job Execution):**
-- Dataset validation status - Ensure only validated datasets can be used
-- Dataset statistics - Use for job planning (training pairs, tokens)
+**For Section E04 (Training Execution):**
+- Validated datasets ready for training
+- Dataset statistics for training preparation
+- Storage path references for training jobs
 
 ---
 
 ## Dependency Flow (This Section)
 
 ```
-E02-P01 (Dataset Upload & Validation)
-  ├─ API Routes (POST, GET)
-  ├─ Edge Function (validation)
-  ├─ React Hooks (data fetching)
-  ├─ Components (DatasetCard)
-  └─ Page (datasets list)
+E01 (Database + Types)
+  ↓
+E02-P01 (Dataset Upload API)
+  ↓
+E02-P01 (Validation Edge Function)
+  ↓
+E02-P01 (React Hooks + UI)
 ```
+
+**Note:** All features in a single prompt since they form a cohesive vertical slice (5 hours total).
 
 ---
 
-# PROMPT 1: Complete Dataset Management
+# PROMPT 1: Dataset Upload, Validation & Management UI
 
-**Generated:** 2025-12-25  
+**Generated:** December 26, 2025  
 **Section:** 2 - Dataset Management  
 **Prompt:** 1 of 1 in this section  
-**Estimated Time:** 4-5 hours  
-**Prerequisites:** Section E01 - Foundation & Authentication
+**Estimated Time:** 5 hours  
+**Prerequisites:** Section E01 complete (database schema, types, storage buckets)
 
 ---
 
 ## 🎯 Mission Statement
 
-Implement a complete dataset management system that allows users to upload large dataset files directly to Supabase Storage, automatically validate formats using Edge Functions, and manage their dataset library through an intuitive UI. This is the foundation for all training jobs, ensuring data quality before training begins.
+Implement a complete dataset management system that allows users to upload large dataset files directly to Supabase Storage, automatically validate them in the background using Edge Functions, and manage their dataset library through a modern UI. This builds the foundation for the training pipeline by ensuring all datasets are properly validated and ready for LoRA training.
 
 ---
 
 ## 📦 Section Context
 
 ### This Section's Goal
-Enable users to upload, validate, and manage conversation datasets for LoRA training.
+
+Enable users to upload, validate, and manage conversation datasets for LoRA training. Users should be able to:
+- Upload dataset files up to 500MB using presigned URLs
+- Have datasets automatically validated for format correctness
+- View statistics (training pairs, tokens, etc.) after validation
+- Browse and filter their dataset library
+- Prepare datasets for training jobs
 
 ### This Prompt's Scope
+
 This is **Prompt 1 of 1** in Section E02. It implements:
-- FR-2.1: Dataset Upload with Presigned URLs
-- FR-2.2: Dataset Validation
+- **FR-2.1**: Dataset Upload with Presigned URLs
+- **FR-2.2**: Dataset Validation (Edge Function)
+- Complete UI for dataset management
 
 ---
 
@@ -113,40 +121,28 @@ This is **Prompt 1 of 1** in Section E02. It implements:
 
 #### Section E01: Foundation & Authentication
 
-**Database Tables We'll Query:**
-- `datasets` table (created in E01 migration)
-  - Schema: id, user_id, name, status, storage_path, file_name, validation_errors, etc.
-  - We'll INSERT new records on upload
-  - We'll SELECT for listing user's datasets
-  - We'll UPDATE after validation completes
-
-- `notifications` table (created in E01 migration)
-  - Schema: id, user_id, type, title, message, priority, action_url
-  - We'll INSERT notifications when validation completes
+**Database Tables We'll Use:**
+- `datasets` table - Full schema created in E01
+  - Columns: id, user_id, name, description, format, status, storage_bucket, storage_path, file_name, file_size, total_training_pairs, total_validation_pairs, total_tokens, training_ready, validated_at, validation_errors, sample_data, etc.
+  - RLS policies: Users can only access their own datasets
+  - We'll INSERT new records, UPDATE status/validation results, SELECT for listing
 
 **Storage Buckets We'll Use:**
 - `lora-datasets` bucket (created in E01)
-  - Private bucket for user dataset files
-  - We'll generate presigned upload URLs
-  - Edge Function will download files for validation
+  - Purpose: Store uploaded dataset files
+  - Configuration: Private, 500MB limit, JSONL files
+  - We'll generate presigned upload URLs and download files for validation
 
-**Types We'll Reuse:**
+**TypeScript Types We'll Reuse:**
 - `Dataset` interface from `@/lib/types/lora-training.ts`
 - `DatasetStatus` type: 'uploading' | 'validating' | 'ready' | 'error'
+- `CreateDatasetSchema` for validation (from types file)
 - `ValidationError` interface for error reporting
 
-**Authentication Patterns:**
-- `requireAuth()` - Pattern for protecting API routes
-- `createServerSupabaseClient()` - Pattern for database queries
-- `createServerSupabaseAdminClient()` - Pattern for admin operations (signing URLs)
-
-**UI Components Available:**
-- All 47+ shadcn/ui components from `/components/ui/`
-- `DashboardLayout` for page structure
-
-**Data Fetching Patterns:**
-- React Query with `useQuery` and `useMutation`
-- Standard response format: `{ success: true, data }` or `{ error, details }`
+**Authentication Functions We'll Import:**
+- `requireAuth()` from `@/lib/supabase-server` - Protects API routes
+- `createServerSupabaseClient()` from `@/lib/supabase-server` - Database queries
+- `createServerSupabaseAdminClient()` from `@/lib/supabase-server` - Storage signing operations
 
 ### From Previous Prompts (This Section)
 
@@ -158,59 +154,39 @@ This is the first prompt in Section E02. No previous prompts in this section.
 
 ### Feature FR-2.1: Dataset Upload with Presigned URLs
 
-**Type:** Storage Integration + API  
+**Type:** Storage Integration + API Routes  
 **Strategy:** EXTENSION - building on existing Supabase Storage infrastructure
 
 #### Description
-Allow users to upload large dataset files (up to 500MB) directly to Supabase Storage using presigned upload URLs. This avoids routing files through the Next.js server and provides better performance for large uploads.
+
+Allow users to upload large dataset files (up to 500MB) directly to Supabase Storage using presigned upload URLs. This avoids sending large files through our API server and provides a secure, scalable upload mechanism.
 
 #### What Already Exists (Don't Rebuild)
-- ✅ Supabase Storage configured (from E01)
-- ✅ `lora-datasets` storage bucket created
-- ✅ `datasets` table in database
-- ✅ `requireAuth()` authentication helper
-- ✅ React Query provider configured
+
+- ✅ Supabase Storage infrastructure
+- ✅ `lora-datasets` storage bucket (created in E01)
+- ✅ `datasets` database table with full schema
+- ✅ Authentication system (`requireAuth()`)
+- ✅ TypeScript types (`Dataset`, `DatasetStatus`)
 
 #### What We're Building (New in This Prompt)
-- 🆕 `src/app/api/datasets/route.ts` - API routes for dataset CRUD
-- 🆕 `src/app/api/datasets/[id]/confirm/route.ts` - Trigger validation
-- 🆕 `src/app/api/datasets/[id]/route.ts` - Get single dataset
-- 🆕 `src/hooks/use-datasets.ts` - React Query hooks
-- 🆕 `src/components/datasets/DatasetCard.tsx` - Display dataset
-- 🆕 `src/app/(dashboard)/datasets/page.tsx` - List datasets page
+
+- 🆕 `src/app/api/datasets/route.ts` - API routes for dataset creation and listing
+- 🆕 `src/app/api/datasets/[id]/confirm/route.ts` - Confirm upload and trigger validation
+- 🆕 `src/hooks/use-datasets.ts` - React Query hooks for data fetching
 
 #### Implementation Details
 
-##### API Route: Create Dataset & Generate Upload URL
+##### API Route: Create Dataset + Generate Upload URL
 
 **File:** `src/app/api/datasets/route.ts`
 
-**Endpoint:** `POST /api/datasets`
-
-**Request Schema:**
-```typescript
-{
-  name: string;          // Dataset name
-  description?: string;  // Optional description
-  format?: string;       // Default: 'brightrun_lora_v4'
-  file_name: string;     // Original filename
-  file_size: number;     // File size in bytes
-}
-```
-
-**Response Schema:**
-```typescript
-{
-  success: true;
-  data: {
-    dataset: Dataset;       // Created dataset record
-    uploadUrl: string;      // Presigned upload URL (1 hour expiry)
-    storagePath: string;    // Path where file will be stored
-  }
-}
-```
+**Endpoints:** 
+- `POST /api/datasets` - Create dataset record and generate presigned upload URL
+- `GET /api/datasets` - List user's datasets with pagination and filters
 
 **Implementation:**
+
 ```typescript
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/supabase-server';
@@ -391,107 +367,21 @@ export async function GET(request: NextRequest) {
 
 **Key Points:**
 - Uses `requireAuth()` from Section E01 for authentication
-- Uses `createServerSupabaseAdminClient()` for signing operations
-- Stores only `storage_path` in database, NOT URLs (on-demand URL generation)
-- Validates file size before creating record
-- Rolls back dataset creation if URL generation fails
-- Returns presigned URL valid for 1 hour
+- Never stores URLs in database - only `storage_path`
+- Uses admin client (`createServerSupabaseAdminClient()`) for signing operations
+- Follows existing API response format: `{ success, data }` or `{ error, details }`
+- Includes rollback logic if upload URL generation fails
 
----
-
-##### API Route: Get Single Dataset
-
-**File:** `src/app/api/datasets/[id]/route.ts`
-
-**Endpoint:** `GET /api/datasets/[id]`
-
-**Implementation:**
-```typescript
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, createServerSupabaseClient } from '@/lib/supabase-server';
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { user, response } = await requireAuth(request);
-    if (response) return response;
-
-    const supabase = await createServerSupabaseClient();
-    const { data: dataset, error } = await supabase
-      .from('datasets')
-      .select('*')
-      .eq('id', params.id)
-      .eq('user_id', user.id)
-      .single();
-
-    if (error || !dataset) {
-      return NextResponse.json(
-        { error: 'Dataset not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: { dataset },
-    });
-  } catch (error) {
-    console.error('Unexpected error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { user, response } = await requireAuth(request);
-    if (response) return response;
-
-    const supabase = await createServerSupabaseClient();
-    
-    // Soft delete
-    const { error } = await supabase
-      .from('datasets')
-      .update({ deleted_at: new Date().toISOString() })
-      .eq('id', params.id)
-      .eq('user_id', user.id);
-
-    if (error) {
-      return NextResponse.json(
-        { error: 'Failed to delete dataset', details: error.message },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Unexpected error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
-```
-
----
-
-##### API Route: Confirm Upload (Trigger Validation)
+##### API Route: Confirm Upload
 
 **File:** `src/app/api/datasets/[id]/confirm/route.ts`
 
 **Endpoint:** `POST /api/datasets/[id]/confirm`
 
-**Purpose:** Client calls this after successfully uploading file to trigger validation
+**Purpose:** Mark upload as complete and trigger validation
 
 **Implementation:**
+
 ```typescript
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth, createServerSupabaseClient } from '@/lib/supabase-server';
@@ -504,20 +394,21 @@ export async function POST(
     const { user, response } = await requireAuth(request);
     if (response) return response;
 
+    const datasetId = params.id;
+
+    // Update dataset status to trigger validation
     const supabase = await createServerSupabaseClient();
-    
-    // Update status to 'validating'
     const { data: dataset, error } = await supabase
       .from('datasets')
       .update({ status: 'validating' })
-      .eq('id', params.id)
-      .eq('user_id', user.id)
+      .eq('id', datasetId)
+      .eq('user_id', user.id)  // Ensure user owns this dataset
       .select()
       .single();
 
     if (error || !dataset) {
       return NextResponse.json(
-        { error: 'Dataset not found or failed to update' },
+        { error: 'Dataset not found or access denied' },
         { status: 404 }
       );
     }
@@ -536,70 +427,157 @@ export async function POST(
 }
 ```
 
----
+##### React Query Hooks
 
-##### Add Missing Type Definition
+**File:** `src/hooks/use-datasets.ts`
 
-**File:** `src/lib/types/lora-training.ts` (ADD to existing file)
+**Hooks:** useDatasets, useDataset, useCreateDataset, useConfirmDatasetUpload, useDeleteDataset
 
-**Add this export:**
+**Implementation:**
+
 ```typescript
-// Add to existing file
-export interface CreateDatasetInput {
-  name: string;
-  description?: string;
-  format?: 'brightrun_lora_v4' | 'brightrun_lora_v3';
-  file_name: string;
-  file_size: number;
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import type { Dataset, CreateDatasetInput } from '@/lib/types/lora-training';
+
+export function useDatasets(filters?: { status?: string; search?: string }) {
+  return useQuery({
+    queryKey: ['datasets', filters],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (filters?.status) params.set('status', filters.status);
+      if (filters?.search) params.set('search', filters.search);
+      
+      const response = await fetch(`/api/datasets?${params.toString()}`);
+      if (!response.ok) throw new Error('Failed to fetch datasets');
+      return response.json();
+    },
+    staleTime: 30 * 1000, // 30 seconds (from existing config)
+  });
 }
 
-// Zod schema for validation
-import { z } from 'zod';
+export function useDataset(id: string | null) {
+  return useQuery({
+    queryKey: ['datasets', id],
+    queryFn: async () => {
+      const response = await fetch(`/api/datasets/${id}`);
+      if (!response.ok) throw new Error('Failed to fetch dataset');
+      return response.json();
+    },
+    enabled: !!id,
+  });
+}
 
-export const CreateDatasetSchema = z.object({
-  name: z.string().min(1).max(200),
-  description: z.string().optional(),
-  format: z.enum(['brightrun_lora_v4', 'brightrun_lora_v3']).optional(),
-  file_name: z.string().min(1).max(255),
-  file_size: z.number().positive(),
-});
+export function useCreateDataset() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateDatasetInput) => {
+      const response = await fetch('/api/datasets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to create dataset');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['datasets'] });
+      toast.success('Dataset created successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+}
+
+export function useConfirmDatasetUpload() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (datasetId: string) => {
+      const response = await fetch(`/api/datasets/${datasetId}/confirm`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to confirm upload');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['datasets'] });
+      toast.success('Validation started');
+    },
+    onError: (error: Error) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+}
+
+export function useDeleteDataset() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/datasets/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete dataset');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['datasets'] });
+      toast.success('Dataset deleted');
+    },
+    onError: (error: Error) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+}
 ```
+
+**Pattern Source:** Infrastructure Inventory Section 6 - State & Data Fetching
+
+**Key Points:**
+- Uses React Query (existing pattern in codebase)
+- Automatic cache invalidation with `invalidateQueries`
+- Toast notifications using `sonner` (existing toast library)
+- Follows existing hook naming conventions
 
 ---
 
 ### Feature FR-2.2: Dataset Validation
 
-**Type:** Background Processing (Edge Function)  
+**Type:** Background Processing (Edge Function) + UI Components  
 **Strategy:** EXTENSION - using Supabase Edge Functions instead of BullMQ
 
 #### Description
-Automatically validate uploaded datasets for format correctness, calculate statistics (training pairs, tokens), and update the database with results. Uses Edge Functions with Cron scheduling to process datasets in the background.
+
+Automatically validate uploaded datasets for format correctness in the background. Parse JSONL files, validate structure, calculate statistics (training pairs, tokens), and update the database with validation results. Users can view validation status and statistics in the UI.
 
 #### What Already Exists (Don't Rebuild)
-- ✅ Edge Functions infrastructure (Supabase)
-- ✅ `datasets` table with validation fields
-- ✅ `notifications` table for user alerts
+
+- ✅ Supabase Edge Functions infrastructure
+- ✅ Dataset table with validation columns
+- ✅ Storage bucket with uploaded files
+- ✅ shadcn/ui components (Card, Badge, Button, Input, Select, etc.)
 
 #### What We're Building (New in This Prompt)
-- 🆕 `supabase/functions/validate-datasets/index.ts` - Validation Edge Function
+
+- 🆕 `supabase/functions/validate-datasets/index.ts` - Edge Function for validation
+- 🆕 `src/components/datasets/DatasetCard.tsx` - Dataset display component
+- 🆕 `src/app/(dashboard)/datasets/page.tsx` - Datasets listing page
 
 #### Implementation Details
 
-##### Edge Function: Dataset Validation
+##### Edge Function: Validate Datasets
 
 **File:** `supabase/functions/validate-datasets/index.ts`
 
-**Trigger:** Cron schedule (every 1 minute) or manual invocation
-
-**Purpose:** 
-- Fetch datasets with status 'validating'
-- Download and parse JSONL files
-- Validate BrightRun LoRA v4 format
-- Calculate statistics (pairs, tokens, samples)
-- Update database with results
-- Create notifications for users
+**Purpose:** Background validation triggered by Cron (every 1 minute)
 
 **Implementation:**
+
 ```typescript
 import { createClient } from '@supabase/supabase-js';
 
@@ -725,135 +703,29 @@ Deno.serve(async (req) => {
 ```bash
 # Deploy Edge Function
 supabase functions deploy validate-datasets
+
+# Configure Cron Trigger in Supabase Dashboard:
+# - Function: validate-datasets
+# - Schedule: * * * * * (every 1 minute)
 ```
 
-**Cron Configuration:**
-Configure in Supabase Dashboard → Edge Functions → Cron Jobs:
-- Function: `validate-datasets`
-- Schedule: `* * * * *` (every 1 minute)
-- This will automatically process datasets marked as 'validating'
+**Key Points:**
+- Runs every minute via Cron trigger
+- Downloads files from storage for validation
+- Parses JSONL format (one JSON object per line)
+- Validates conversation structure (conversation_id, turns array)
+- Calculates statistics (training pairs, tokens)
+- Updates database with results
+- Creates notification on success
 
----
-
-##### React Hooks for Data Fetching
-
-**File:** `src/hooks/use-datasets.ts`
-
-**Purpose:** React Query hooks for dataset operations
-
-**Implementation:**
-```typescript
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import type { Dataset, CreateDatasetInput } from '@/lib/types/lora-training';
-
-export function useDatasets(filters?: { status?: string; search?: string }) {
-  return useQuery({
-    queryKey: ['datasets', filters],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (filters?.status) params.set('status', filters.status);
-      if (filters?.search) params.set('search', filters.search);
-      
-      const response = await fetch(`/api/datasets?${params.toString()}`);
-      if (!response.ok) throw new Error('Failed to fetch datasets');
-      return response.json();
-    },
-    staleTime: 30 * 1000, // 30 seconds (from existing config)
-  });
-}
-
-export function useDataset(id: string | null) {
-  return useQuery({
-    queryKey: ['datasets', id],
-    queryFn: async () => {
-      const response = await fetch(`/api/datasets/${id}`);
-      if (!response.ok) throw new Error('Failed to fetch dataset');
-      return response.json();
-    },
-    enabled: !!id,
-  });
-}
-
-export function useCreateDataset() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: CreateDatasetInput) => {
-      const response = await fetch('/api/datasets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to create dataset');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['datasets'] });
-      toast.success('Dataset created successfully');
-    },
-    onError: (error: Error) => {
-      toast.error(`Error: ${error.message}`);
-    },
-  });
-}
-
-export function useConfirmDatasetUpload() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (datasetId: string) => {
-      const response = await fetch(`/api/datasets/${datasetId}/confirm`, {
-        method: 'POST',
-      });
-      if (!response.ok) throw new Error('Failed to confirm upload');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['datasets'] });
-      toast.success('Validation started');
-    },
-    onError: (error: Error) => {
-      toast.error(`Error: ${error.message}`);
-    },
-  });
-}
-
-export function useDeleteDataset() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const response = await fetch(`/api/datasets/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) throw new Error('Failed to delete dataset');
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['datasets'] });
-      toast.success('Dataset deleted');
-    },
-    onError: (error: Error) => {
-      toast.error(`Error: ${error.message}`);
-    },
-  });
-}
-```
-
-**Pattern Source:** Infrastructure Inventory Section 6 - State & Data Fetching
-
----
-
-##### Component: Dataset Card
+##### UI Component: Dataset Card
 
 **File:** `src/components/datasets/DatasetCard.tsx`
 
-**Purpose:** Display individual dataset with status badge and actions
+**Purpose:** Display dataset information with status badge and actions
 
 **Implementation:**
+
 ```typescript
 'use client';
 
@@ -927,21 +799,21 @@ export function DatasetCard({ dataset, onSelect, onDelete }: DatasetCardProps) {
 
 **Pattern Source:** Infrastructure Inventory Section 5 - Component Library
 
-**Uses shadcn/ui components:**
-- `Card`, `CardContent`, `CardHeader`, `CardTitle`, `CardDescription`
-- `Badge`
-- `Button`
-- Icons from `lucide-react`
+**Key Points:**
+- Uses shadcn/ui components (Card, Badge, Button) from existing library
+- Status-based color coding
+- Conditional display of statistics
+- Action buttons (View Details, Start Training)
+- Follows existing component patterns
 
----
-
-##### Page: Datasets List
+##### Page: Datasets Listing
 
 **File:** `src/app/(dashboard)/datasets/page.tsx`
 
-**Purpose:** Main datasets listing page with search and filters
+**Purpose:** Display user's datasets with search and filters
 
 **Implementation:**
+
 ```typescript
 'use client';
 
@@ -952,7 +824,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Search, Database } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DatasetsPage() {
@@ -1005,6 +877,7 @@ export default function DatasetsPage() {
             placeholder="Search datasets..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            icon={<Search className="h-4 w-4" />}
           />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -1050,12 +923,14 @@ export default function DatasetsPage() {
 }
 ```
 
-**Pattern Source:** Infrastructure Inventory Section 5 - Component Library, Section 6 - Data Fetching
+**Pattern Source:** Infrastructure Inventory Section 5 - Component Library
 
-**Uses:**
-- React Query hooks from `use-datasets.ts`
-- shadcn/ui components (Button, Input, Select, Skeleton, etc.)
-- Existing DashboardLayout (from route group)
+**Key Points:**
+- Uses hooks from this prompt (`useDatasets`, `useDeleteDataset`)
+- Loading states with Skeleton components
+- Empty state with helpful message
+- Grid layout for dataset cards
+- Search and status filtering
 
 ---
 
@@ -1064,48 +939,53 @@ export default function DatasetsPage() {
 ### Functional Requirements
 
 **FR-2.1: Dataset Upload**
-- [ ] User can create dataset record via API
-- [ ] Presigned upload URL is generated (1 hour expiry)
-- [ ] File size validation (max 500MB) works
+- [ ] User can create dataset record via POST /api/datasets
+- [ ] Presigned upload URL generated with 1-hour expiry
+- [ ] File size limit enforced (500MB max)
 - [ ] Dataset record created with status 'uploading'
-- [ ] Storage path (not URL) is stored in database
-- [ ] User can upload file directly to Supabase Storage
-- [ ] Upload confirmation triggers validation
+- [ ] Storage path stored in database (NOT URL)
+- [ ] User can list datasets via GET /api/datasets with pagination
+- [ ] Filters work (status, search by name)
 
 **FR-2.2: Dataset Validation**
-- [ ] Edge Function fetches datasets with status 'validating'
-- [ ] Downloads and parses JSONL files correctly
-- [ ] Validates BrightRun LoRA v4 format structure
-- [ ] Calculates statistics (training pairs, tokens, avg)
-- [ ] Updates database with validation results
-- [ ] Creates notification on successful validation
-- [ ] Handles validation errors gracefully
+- [ ] Edge Function deploys successfully
+- [ ] Cron trigger configured (every 1 minute)
+- [ ] Validation processes datasets in 'validating' status
+- [ ] JSONL format parsed correctly
+- [ ] Conversation structure validated (conversation_id, turns)
+- [ ] Statistics calculated (training pairs, tokens)
+- [ ] Database updated with validation results
+- [ ] Notification created on successful validation
+- [ ] Error handling for invalid formats
 
 **UI Requirements**
-- [ ] Datasets list page shows all user's datasets
-- [ ] Search filter works
-- [ ] Status filter works
-- [ ] Dataset cards display correct information
-- [ ] Status badges show correct colors
-- [ ] Empty state displays correctly
+- [ ] DatasetCard component renders correctly
+- [ ] Status badges display with correct colors
+- [ ] Statistics shown for ready datasets
+- [ ] Datasets page displays all user's datasets
+- [ ] Search and filters work
+- [ ] Empty state displays when no datasets
+- [ ] Loading states show skeletons
 
 ### Technical Requirements
 
 - [ ] No TypeScript errors
 - [ ] No linter warnings
-- [ ] Follows existing auth patterns from E01
-- [ ] Follows existing API response format
-- [ ] Uses React Query correctly
-- [ ] Uses shadcn/ui components correctly
 - [ ] All imports resolve correctly
+- [ ] Follows existing patterns:
+  - API response format: `{ success, data }` or `{ error, details }`
+  - React Query hooks with proper cache invalidation
+  - shadcn/ui components
+  - Authentication with `requireAuth()`
 
 ### Integration Requirements
 
-- [ ] Successfully uses `requireAuth()` from E01
+- [ ] Successfully imports `Dataset` type from E01
 - [ ] Successfully queries `datasets` table from E01
-- [ ] Successfully inserts into `notifications` table from E01
+- [ ] Successfully uses `requireAuth()` from E01
 - [ ] Successfully uses Supabase Storage from E01
-- [ ] Successfully uses type definitions from E01
+- [ ] Storage operations use admin client for signing
+- [ ] RLS policies enforced (users only see own datasets)
 
 ---
 
@@ -1113,17 +993,18 @@ export default function DatasetsPage() {
 
 ### Manual Testing Steps
 
-#### 1. API Testing - Create Dataset
+#### 1. API Testing: Create Dataset
 
 ```bash
 # Test dataset creation
 curl -X POST http://localhost:3000/api/datasets \
   -H "Content-Type: application/json" \
+  -H "Cookie: your-auth-cookie" \
   -d '{
     "name": "Test Dataset",
     "description": "Test description",
     "file_name": "test.jsonl",
-    "file_size": 1024
+    "file_size": 1024000
   }'
 
 # Expected response:
@@ -1132,38 +1013,42 @@ curl -X POST http://localhost:3000/api/datasets \
 #   "data": {
 #     "dataset": { ... },
 #     "uploadUrl": "https://...",
-#     "storagePath": "..."
+#     "storagePath": "user-id/dataset-id/test.jsonl"
 #   }
 # }
 ```
 
-#### 2. API Testing - List Datasets
+#### 2. Storage Testing: Upload File
 
 ```bash
-# Test listing datasets
-curl http://localhost:3000/api/datasets
+# Upload file to presigned URL
+curl -X PUT "<uploadUrl-from-previous-step>" \
+  -H "Content-Type: application/octet-stream" \
+  --data-binary "@test-dataset.jsonl"
 
-# Test with filters
-curl "http://localhost:3000/api/datasets?status=ready&search=test"
+# Expected: 200 OK
 ```
 
-#### 3. Database Verification
+#### 3. API Testing: Confirm Upload
+
+```bash
+# Trigger validation
+curl -X POST http://localhost:3000/api/datasets/<dataset-id>/confirm \
+  -H "Cookie: your-auth-cookie"
+
+# Expected: Dataset status changes to 'validating'
+```
+
+#### 4. Database Verification
 
 ```sql
 -- Verify dataset created
-SELECT id, name, status, storage_path, created_at 
-FROM datasets 
-WHERE deleted_at IS NULL;
+SELECT id, name, status, storage_path, file_size
+FROM datasets
+WHERE user_id = 'your-user-id';
 
--- Verify RLS works (run as authenticated user)
-SELECT * FROM datasets WHERE user_id = auth.uid();
+-- Expected: One row with status 'validating'
 ```
-
-#### 4. Storage Verification
-
-- Navigate to Supabase Dashboard → Storage → `lora-datasets`
-- Verify file appears after upload
-- Verify file path matches `storage_path` in database
 
 #### 5. Edge Function Testing
 
@@ -1171,42 +1056,45 @@ SELECT * FROM datasets WHERE user_id = auth.uid();
 # Deploy Edge Function
 supabase functions deploy validate-datasets
 
-# Test manually
+# Manually invoke (for testing)
 supabase functions invoke validate-datasets
 
-# Check logs
-supabase functions logs validate-datasets
+# Expected: Datasets with status 'validating' processed
 ```
 
 #### 6. UI Testing
 
-- Navigate to: `http://localhost:3000/datasets`
-- Expected: Datasets list page displays
-- Verify: Search and filter controls present
-- Verify: Empty state shows if no datasets
-- Test: Search functionality
-- Test: Status filter dropdown
-- Test: Dataset cards render correctly with status badges
+1. Navigate to: `http://localhost:3000/datasets`
+2. Expected behavior:
+   - Datasets page loads
+   - Datasets displayed in grid
+   - Status badges show correct colors
+   - Search and filters work
+3. Verify:
+   - Loading states show skeletons
+   - Empty state displays if no datasets
+   - Dataset cards clickable
 
-#### 7. End-to-End Upload Flow
+#### 7. Integration Testing
 
-1. Create dataset record via API
-2. Get presigned upload URL
-3. Upload file to URL using `curl` or Postman
-4. Confirm upload: `POST /api/datasets/{id}/confirm`
-5. Wait 1 minute for validation Edge Function
-6. Verify status changed to 'ready' or 'error'
-7. Check notification created in `notifications` table
+1. Complete upload flow end-to-end
+2. Verify dataset moves through statuses: uploading → validating → ready
+3. Check notification created when ready
+4. Verify statistics displayed in UI
 
 ### Expected Outputs
 
 After completing this prompt, you should have:
-- [ ] All API endpoints responding correctly
-- [ ] Edge Function deployed and running on Cron
-- [ ] UI pages rendering without errors
-- [ ] Complete upload-to-validation flow working
-- [ ] Datasets visible in listing page
-- [ ] Search and filters functional
+
+- [ ] API route file: `src/app/api/datasets/route.ts` (POST, GET handlers)
+- [ ] API route file: `src/app/api/datasets/[id]/confirm/route.ts` (POST handler)
+- [ ] Hooks file: `src/hooks/use-datasets.ts` (5 hooks)
+- [ ] Edge Function: `supabase/functions/validate-datasets/index.ts`
+- [ ] Component: `src/components/datasets/DatasetCard.tsx`
+- [ ] Page: `src/app/(dashboard)/datasets/page.tsx`
+- [ ] Application runs without errors
+- [ ] All features testable and working
+- [ ] Edge Function deployed with Cron trigger
 
 ---
 
@@ -1214,52 +1102,49 @@ After completing this prompt, you should have:
 
 ### New Files Created
 
-**API Routes:**
-- [ ] `src/app/api/datasets/route.ts` - POST (create), GET (list)
-- [ ] `src/app/api/datasets/[id]/route.ts` - GET (single), DELETE
-- [ ] `src/app/api/datasets/[id]/confirm/route.ts` - POST (trigger validation)
-
-**Edge Functions:**
-- [ ] `supabase/functions/validate-datasets/index.ts` - Background validation
-
-**React Hooks:**
-- [ ] `src/hooks/use-datasets.ts` - Data fetching hooks
-
-**Components:**
-- [ ] `src/components/datasets/DatasetCard.tsx` - Dataset display card
-
-**Pages:**
-- [ ] `src/app/(dashboard)/datasets/page.tsx` - Datasets list page
+- [ ] `src/app/api/datasets/route.ts` - Create and list datasets API
+- [ ] `src/app/api/datasets/[id]/confirm/route.ts` - Confirm upload API
+- [ ] `src/hooks/use-datasets.ts` - React Query hooks
+- [ ] `supabase/functions/validate-datasets/index.ts` - Validation Edge Function
+- [ ] `src/components/datasets/DatasetCard.tsx` - Dataset card component
+- [ ] `src/app/(dashboard)/datasets/page.tsx` - Datasets listing page
 
 ### Existing Files Modified
 
-- [ ] `src/lib/types/lora-training.ts` - Add `CreateDatasetInput` interface and `CreateDatasetSchema`
+None (all files are new in this section)
 
 ### Database Changes
 
-- [ ] No new tables (using tables from E01)
-- [ ] Verify `datasets` table has correct indexes
-- [ ] Verify RLS policies work correctly
+No schema changes (using tables from E01)
+
+**Operations:**
+- INSERT into `datasets` table
+- UPDATE `datasets` status and validation results
+- SELECT from `datasets` with filters and pagination
+- INSERT into `notifications` table
+
+### Storage Operations
+
+- Generate presigned upload URL via `createSignedUploadUrl()`
+- Download files for validation via `storage.from().download()`
 
 ### API Endpoints
 
-- [ ] `POST /api/datasets` - Create dataset + get upload URL
+- [ ] `POST /api/datasets` - Create dataset and get upload URL
 - [ ] `GET /api/datasets` - List datasets with pagination
-- [ ] `GET /api/datasets/[id]` - Get single dataset
-- [ ] `DELETE /api/datasets/[id]` - Soft delete dataset
-- [ ] `POST /api/datasets/[id]/confirm` - Trigger validation
+- [ ] `POST /api/datasets/[id]/confirm` - Confirm upload and trigger validation
 
 ### Edge Functions
 
-- [ ] `validate-datasets` - Deployed and configured with Cron
+- [ ] `validate-datasets` - Background validation (Cron: every 1 minute)
 
 ### Components
 
-- [ ] `DatasetCard` - Displays dataset with status
+- [ ] `DatasetCard` - Dataset display card
 
 ### Pages
 
-- [ ] `/datasets` - List all datasets with search/filter
+- [ ] `/datasets` - Datasets listing with filters
 
 ---
 
@@ -1271,15 +1156,21 @@ After completing this prompt, you should have:
 
 ### For Next Section
 
-**Next Section:** E03: Training Configuration
+**Next Section:** E03: Training Job Configuration
 
-The next section will build upon:
-- `GET /api/datasets` endpoint to fetch ready datasets
-- `useDatasets()` hook to display datasets in UI
-- `Dataset` type with validation status
-- Dataset statistics (training_pairs, total_tokens) for job planning
+The next section will build upon this section's deliverables:
 
-Section E03 will allow users to select a validated dataset and configure training hyperparameters.
+**From This Section:**
+- Dataset listing API (`GET /api/datasets`) - Used to select datasets for training
+- Dataset validation system - Ensures only ready datasets can be used
+- Dataset statistics (training pairs, tokens) - Used to estimate training time/cost
+- Dataset type definitions - Reused in training job creation
+
+**What Next Section Will Add:**
+- Training job creation API
+- Hyperparameter presets and configuration UI
+- GPU selection and cost estimation
+- Training job listing and monitoring
 
 ---
 
@@ -1288,38 +1179,44 @@ Section E03 will allow users to select a validated dataset and configure trainin
 1. **Follow the Spec Exactly:** All code provided in this prompt comes from the integrated specification. Implement it as written.
 
 2. **Reuse Existing Infrastructure:** Don't recreate what already exists. Import and use:
-   - `requireAuth()` from `@/lib/supabase-server`
-   - `createServerSupabaseClient()` for database queries
-   - `createServerSupabaseAdminClient()` for signing operations
-   - shadcn/ui components from `@/components/ui/*`
-   - React Query for data fetching
-   - Existing type definitions from `@/lib/types/lora-training`
+   - Database: `datasets` table from Section E01
+   - Types: `Dataset`, `DatasetStatus` from `@/lib/types/lora-training`
+   - Auth: `requireAuth()` from `@/lib/supabase-server`
+   - Storage: `lora-datasets` bucket from E01
+   - Components: All shadcn/ui components from `@/components/ui/*`
+   - Data fetching: React Query (already configured)
 
-3. **Storage Best Practices:**
-   - **NEVER** store URLs in database - store only `storage_path`
-   - Generate signed URLs on-demand via API routes
-   - Use admin client for signing operations
-   - Set appropriate expiry (3600 seconds = 1 hour)
-
-4. **Integration Points:** When importing from previous work, add comments:
+3. **Integration Points:** When importing from previous work, add comments:
    ```typescript
    // From Section E01 - database schema
-   import { Dataset } from '@/lib/types/lora-training';
+   import { Dataset, DatasetStatus } from '@/lib/types/lora-training';
    
    // From Section E01 - authentication
    import { requireAuth } from '@/lib/supabase-server';
    ```
 
-5. **Pattern Consistency:** Match existing patterns:
+4. **Pattern Consistency:** Match existing patterns:
    - API responses: `{ success: true, data }` or `{ error, details }`
-   - File organization: API routes in `src/app/api/`
-   - Component structure: Client components with `'use client'`
-   - Hooks in `src/hooks/`
+   - React Query: `staleTime: 30 * 1000` for list queries
+   - Toast notifications: `toast.success()` and `toast.error()`
+   - Component structure: Use shadcn/ui patterns
+
+5. **Storage Best Practices:**
+   - NEVER store URLs in database - only `storage_path`
+   - Generate signed URLs on-demand via admin client
+   - Set appropriate expiry (3600 seconds = 1 hour for uploads)
+   - Use `createSignedUploadUrl()` for client uploads
+   - Use `download()` for Edge Function validation
 
 6. **Edge Function Deployment:**
-   - Deploy via Supabase CLI: `supabase functions deploy validate-datasets`
-   - Configure Cron in Supabase Dashboard
-   - Test with: `supabase functions invoke validate-datasets`
+   ```bash
+   # Deploy function
+   supabase functions deploy validate-datasets
+   
+   # Configure Cron in Supabase Dashboard:
+   # Function: validate-datasets
+   # Schedule: * * * * * (every 1 minute)
+   ```
 
 7. **Don't Skip Steps:** Implement all features listed in this prompt before moving to the next section.
 
@@ -1332,65 +1229,72 @@ Section E03 will allow users to select a validated dataset and configure trainin
 #### Section E01: Foundation & Authentication
 
 **Database Schema:**
-- `supabase/migrations/20241223_create_lora_training_tables.sql` - All tables including `datasets`
+- Table: `datasets` - Stores dataset metadata
+- Columns: id, user_id, name, description, format, status, storage_bucket, storage_path, file_name, file_size, total_training_pairs, total_tokens, training_ready, validated_at, validation_errors, sample_data, created_at, updated_at
 
-**Type Definitions:**
-- `src/lib/types/lora-training.ts` - Dataset, ValidationError, and related types
+**TypeScript Types:**
+- `src/lib/types/lora-training.ts`:
+  - `Dataset` interface
+  - `DatasetStatus` type
+  - `CreateDatasetInput` type (for validation)
+  - `ValidationError` interface
 
-**Authentication Helpers:**
-- `@/lib/supabase-server` - requireAuth(), createServerSupabaseClient(), createServerSupabaseAdminClient()
+**Authentication:**
+- `@/lib/supabase-server`:
+  - `requireAuth()` - Protects API routes, returns user
+  - `createServerSupabaseClient()` - For database queries
+  - `createServerSupabaseAdminClient()` - For storage signing
 
-**Storage Buckets:**
-- `lora-datasets` bucket (private, 500MB limit)
+**Storage:**
+- Bucket: `lora-datasets` - For dataset file storage
 
 ### Infrastructure Patterns
 
-**From Existing Codebase:**
-
-**Authentication:**
+**Authentication Pattern:**
 ```typescript
 const { user, response } = await requireAuth(request);
 if (response) return response;
+// user is now authenticated
 ```
 
-**Database Query:**
+**Database Query Pattern:**
 ```typescript
 const supabase = await createServerSupabaseClient();
-const { data, error } = await supabase.from('table').select();
+const { data, error } = await supabase
+  .from('table_name')
+  .select('*')
+  .eq('user_id', user.id);
 ```
 
-**Storage Signing:**
+**Storage Signing Pattern:**
 ```typescript
-const admin = createServerSupabaseAdminClient();
-const { data } = await admin.storage
-  .from('bucket')
+const supabaseAdmin = createServerSupabaseAdminClient();
+const { data, error } = await supabaseAdmin.storage
+  .from('bucket-name')
   .createSignedUploadUrl(path);
 ```
 
-**API Response Format:**
+**API Response Pattern:**
 ```typescript
+// Success
 return NextResponse.json({
   success: true,
   data: { ... }
 });
 
-// Error format
+// Error
 return NextResponse.json({
   error: 'Error message',
-  details: 'Additional details'
+  details: 'Detailed explanation'
 }, { status: 400 });
 ```
 
-**React Query Pattern:**
+**React Query Hook Pattern:**
 ```typescript
-export function useResource() {
+export function useExample() {
   return useQuery({
-    queryKey: ['resource'],
-    queryFn: async () => {
-      const response = await fetch('/api/resource');
-      if (!response.ok) throw new Error('Failed');
-      return response.json();
-    },
+    queryKey: ['example'],
+    queryFn: async () => { ... },
     staleTime: 30 * 1000,
   });
 }
@@ -1401,24 +1305,3 @@ export function useResource() {
 **Ready to implement Section E02, Prompt P01!**
 
 ---
-
-## Section Completion Checklist
-
-After completing all prompts in this section:
-
-- [ ] All 2 features implemented (FR-2.1, FR-2.2)
-- [ ] All API routes created and tested
-- [ ] Edge Function deployed and running
-- [ ] All React hooks working
-- [ ] All components rendering correctly
-- [ ] Datasets page accessible at `/datasets`
-- [ ] Complete upload flow tested end-to-end
-- [ ] No TypeScript errors
-- [ ] No linter warnings
-- [ ] Integration with Section E01 verified
-- [ ] Ready to proceed to Section E03
-
----
-
-**End of Section E02 Execution Prompts**
-

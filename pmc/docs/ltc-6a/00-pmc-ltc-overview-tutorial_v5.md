@@ -81,13 +81,16 @@ Step 04a (FIGMA Wireframes) - ITERATIVE PER SECTION
 Step 04b (Task Breakdown) - OPTIONAL
   └─ Script → Prompts → AI Agent → Task planning outputs
 
-Step 04c-04f (Two-Stage Pipeline) - INTEGRATION & SEGMENTATION
-  ├─ 04c: Integration Analysis (one-time per codebase)
-  │   └─ AI Agent → Infrastructure Inventory + Extension Strategy + Implementation Guide
-  ├─ 04e: Stage 1 Merge (~5-10 seconds)
-  │   └─ Script → Integrated Extension Spec (infrastructure transformed)
-  └─ 04f: Stage 2 Segment (~10-20 seconds)
-      └─ Script → 20-30 Progressive Execution Prompts
+Step 04 (Integrated Spec to Execution Prompts) - TWO SCRIPTS + MANUAL AI
+  ├─ Prerequisites: 04e integrated extension spec (from merge step)
+  ├─ Script 1 (04f-v1): Split into section files (~5-10 seconds)
+  │   └─ Output: 7 section files (E01-E07) + INDEX.md
+  ├─ Script 2 (04g-v1): Generate meta-prompts (~5-10 seconds)
+  │   └─ Output: Meta-prompt file per section
+  └─ Manual AI Execution (per section):
+      ├─ Copy meta-prompt + section file → AI Agent
+      ├─ AI generates execution prompts
+      └─ Execute prompts progressively (P01 → P02 → P03 → ...)
 ```
 
 ---
@@ -599,268 +602,137 @@ node 04b-generate-FR-wireframe-segments_v1.js "Project Name" project-abbreviatio
 
 ---
 
-### 2.7 Step 04c-04f: Two-Stage Spec Integration & Segmentation Pipeline
+### 2.7 Step 04: Integrated Spec to Execution Prompts (Two Scripts + Manual AI)
 
-**Purpose:** Transform a structured specification into execution-ready progressive prompts by merging integration knowledge with feature requirements.
+**Purpose:** Transform integrated specifications into execution-ready section prompts.
 
-#### Overview
-
-This two-stage pipeline solves the challenge of how to implement features from a generic specification using existing codebase infrastructure. The pipeline:
-
-1. **Stage 1 (Merge - 04e)**: Transforms generic infrastructure references (Prisma, NextAuth, S3) into existing codebase patterns (Supabase)
-2. **Stage 2 (Segment - 04f)**: Breaks the integrated specification into progressive execution prompts with proper dependencies
-
-**Use Case:**
-- You have a structured specification (from 04a/04b) with generic infrastructure
-- You have an existing codebase with specific infrastructure (Supabase, etc.)
-- You need progressive implementation prompts that use your existing infrastructure
+**Prerequisites:**
+- Integrated spec from 04e merge step (e.g., `04e-pipeline-integrated-extension-spec_v1.md`)
 
 ---
 
-#### Step 04c: Integration Analysis (One-Time Setup)
+#### Quick Start (3 Steps)
 
-**Purpose:** Analyze existing codebase and document infrastructure patterns.
-
-**Input Files:**
-- Your existing production codebase directory (e.g., `src/`)
-- `04c-pipeline-structured-from-wireframe_v1.md` (structured spec from 04a/04b)
-
-**Process:**
-Uses `04d-integrate-existing-codebase_v1.md` meta-prompt to generate three integration documents:
-
-1. **Infrastructure Inventory** (`04d-infrastructure-inventory_v1.md`)
-   - Documents what EXISTS in codebase to USE
-   - Authentication patterns (e.g., Supabase Auth with `requireAuth()`)
-   - Database patterns (e.g., Supabase Client with direct queries)
-   - Storage patterns (e.g., Supabase Storage with on-demand signed URLs)
-   - API patterns (e.g., consistent response formats)
-   - Component patterns (e.g., shadcn/ui components)
-   - 47+ available components, hooks, utilities
-
-2. **Extension Strategy** (`04d-extension-strategy_v1.md`)
-   - How features map to existing infrastructure
-   - What to CREATE NEW (tables, APIs, pages, components)
-   - What NOT to create (existing infrastructure)
-   - Technology substitutions (Prisma→Supabase, NextAuth→Supabase Auth)
-
-3. **Implementation Guide** (`04d-implementation-guide_v1.md`)
-   - Exact code patterns to follow
-   - Complete database migrations with RLS policies
-   - Complete API route implementations
-   - Complete component implementations
-   - Phase-by-phase implementation instructions
-
-**Output Structure:**
-```
-product/_mapping/pipeline/
-├── _run-prompts/
-│   ├── 04d-infrastructure-inventory_v1.md      # What exists in codebase
-│   ├── 04d-extension-strategy_v1.md            # How features use infrastructure
-│   └── 04d-implementation-guide_v1.md          # Exact code patterns
-```
-
-**What to Do:**
-1. **Run the integration meta-prompt** (one-time per codebase):
-   - Copy `04d-integrate-existing-codebase_v1.md` to AI agent
-   - Provide your codebase directory and structured spec
-   - AI generates all three integration documents
-
-2. **Save outputs**:
-   - Save to `_run-prompts/` directory as shown above
-   - These documents become inputs for Stage 1 (Merge)
-
-**Note:** This is a one-time analysis. Once you have these documents, you can reuse them for multiple specifications on the same codebase.
-
----
-
-#### Step 04e: Stage 1 - Merge (Integration)
-
-**Purpose:** Merge structured specification with integration knowledge to produce an integrated extension specification.
-
-Uses `04e-merge-integration-spec_v1.js` script for automated transformation:
-
-**Input Files:**
-- `04c-pipeline-structured-from-wireframe_v1.md` (structured spec)
-- `04d-infrastructure-inventory_v1.md` (from Step 04c)
-- `04d-extension-strategy_v1.md` (from Step 04c)
-- `04d-implementation-guide_v1.md` (from Step 04c)
-
-**Process:**
-1. **Infrastructure Transformation**
-   - Replaces Prisma → Supabase Client patterns
-   - Replaces NextAuth → Supabase Auth patterns
-   - Replaces AWS S3 → Supabase Storage patterns
-   - Replaces BullMQ/Redis → Supabase Edge Functions + Cron
-   - Replaces SWR → React Query patterns
-
-2. **Section Processing**
-   - Processes all 7 sections sequentially
-   - Extracts features (WHAT to build)
-   - Applies existing infrastructure patterns (HOW to build)
-   - Adds integration notes and dependencies
-
-**Output:**
-- `04e-integrated-extension-spec_v1.md` (~150 KB)
-  - All sections marked "INTEGRATED"
-  - Generic infrastructure replaced with existing patterns
-  - Ready for Stage 2 segmentation
-
-**Usage:**
 ```bash
 cd pmc/product/_tools
 
-node 04e-merge-integration-spec_v1.js \
-  --spec "../_mapping/pipeline/04c-pipeline-structured-from-wireframe_v1.md" \
-  --inventory "../_mapping/pipeline/_run-prompts/04d-infrastructure-inventory_v1.md" \
-  --strategy "../_mapping/pipeline/_run-prompts/04d-extension-strategy_v1.md" \
-  --guide "../_mapping/pipeline/_run-prompts/04d-implementation-guide_v1.md" \
-  --output "../_mapping/pipeline/04e-integrated-extension-spec_v1.md"
+# Step 1: Split integrated spec into section files (~5-10 seconds)
+node 04f-segment-integrated-spec_v1.js "LoRA Pipeline" pipeline
+
+# Step 2: Generate meta-prompts for each section (~5-10 seconds)
+node 04g-generate-section-meta-prompts_v1.js "LoRA Pipeline" pipeline
 ```
 
-**Execution Time:** ~5-10 seconds
+**Step 3: Use meta-prompts to generate execution prompts** (manual AI execution per section):
 
-**What to Do After Running:**
-1. **Verify output file exists**: `04e-integrated-extension-spec_v1.md`
-2. **Quick validation**:
-   ```bash
-   # Count sections (should be 7)
-   grep -c "## SECTION.*INTEGRATED" 04e-integrated-extension-spec_v1.md
-   
-   # Check infrastructure transformed (should be minimal/contextual references)
-   grep -i "prisma\|nextauth" 04e-integrated-extension-spec_v1.md | head -5
-   ```
-3. **Ready for Stage 2**: Proceed to Step 04f
+For each section (E01-E07):
+1. **Open meta-prompt file**: `04f-{product}-build-section-E01-meta-prompts.md`
+2. **Copy to AI agent**: Paste meta-prompt + section file into Claude/ChatGPT
+3. **AI generates**: Execution prompts with progressive implementation steps
+4. **Save output**: As `04f-{product}-build-section-E01-execution-prompts.md`
+5. **Execute prompts**: Follow progressive order (P01 → P02 → P03...) to implement section
 
 ---
 
-#### Step 04f: Stage 2 - Segment (Progressive Prompts)
+#### What Each Script Does
 
-**Purpose:** Break integrated specification into progressive execution prompts with proper dependencies.
+**Script 1: `04f-segment-integrated-spec_v1.js`** (Section Splitter)
+- **Inputs**: Integrated extension spec file
+- **Outputs**: 7 individual section files (E01-E07) + INDEX.md
+- **Interactive prompts**: 
+  - Asks for integrated spec path (default: `04e-pipeline-integrated-extension-spec_v1.md`)
+  - Validates file exists (shows TRUE/FALSE)
+  - Can provide custom path or quit (q)
+- **Time**: ~5-10 seconds
 
-Uses `04f-segment-integrated-spec_v1.js` script for automated segmentation:
+**Script 2: `04g-generate-section-meta-prompts_v1.js`** (Meta-Prompt Generator)
+- **Inputs**: Section files from Script 1
+- **Outputs**: Meta-prompt file for each section (E01-meta-prompts.md, E02-meta-prompts.md, etc.)
+- **Interactive prompts**:
+  - Asks for section files directory (default: `full-build/`)
+  - Validates directory exists (shows TRUE/FALSE)
+  - Asks for meta-prompt template path
+  - Can provide custom paths or quit (q)
+- **Time**: ~5-10 seconds
 
-**Input Files:**
-- `04e-integrated-extension-spec_v1.md` (from Step 04e)
+---
 
-**Process:**
-1. **Layer-Based Grouping**
-   - Groups features by implementation layer:
-     - **Database**: Migrations, tables, RLS policies
-     - **API**: Routes, endpoints, services
-     - **UI**: Components, pages
-     - **Integration**: Hooks, state management, navigation
+#### Output File Structure
 
-2. **Dependency Tracking**
-   - **Intra-section** (within section): Database → API → UI → Integration
-   - **Inter-section** (between sections): E01 → E02 → E03 → ... → E07
-   - Each prompt references what came before
-
-3. **Context Injection**
-   - Infrastructure patterns included in each prompt
-   - Previous prompts' outputs referenced
-   - Previous sections' outputs referenced
-   - Acceptance criteria per layer
-   - Validation steps included
-
-**Output Structure:**
 ```
-product/_mapping/pipeline/_execution-prompts/
-├── EXECUTION-INDEX.md                    # Execution guide with order
-├── 04f-execution-E01-P01.md              # Section 1, Prompt 1 (Database)
-├── 04f-execution-E01-P02.md              # Section 1, Prompt 2 (API)
-├── 04f-execution-E01-P03.md              # Section 1, Prompt 3 (UI)
-├── 04f-execution-E01-P04.md              # Section 1, Prompt 4 (Integration)
-├── 04f-execution-E02-P01.md              # Section 2, Prompt 1 (Database)
-├── 04f-execution-E02-P02.md              # Section 2, Prompt 2 (API)
-└── ... (20-30 prompts total for all 7 sections)
+product/_mapping/pipeline/full-build/
+├── INDEX.md                                           # Navigation guide
+├── 04f-{product}-build-section-E01.md                 # Script 1 output: Section file
+├── 04f-{product}-build-section-E01-meta-prompts.md    # Script 2 output: Meta-prompt
+├── 04f-{product}-build-section-E01-execution-prompts.md  # Manual AI: Final prompts
+├── 04f-{product}-build-section-E02.md
+├── 04f-{product}-build-section-E02-meta-prompts.md
+├── 04f-{product}-build-section-E02-execution-prompts.md
+└── ... (repeat for sections E03-E07)
 ```
 
-**Usage:**
-```bash
-cd pmc/product/_tools
+---
 
-node 04f-segment-integrated-spec_v1.js \
-  --input "../_mapping/pipeline/04e-integrated-extension-spec_v1.md" \
-  --output-dir "../_mapping/pipeline/_execution-prompts/"
+#### How to Use Output Files
+
+**Section Files** (from Script 1):
+- Contains complete section specification
+- Includes features, requirements, infrastructure patterns
+- Use as reference when executing prompts
+- Location: `full-build/04f-{product}-build-section-E[NN].md`
+
+**Meta-Prompt Files** (from Script 2):
+- Instructions for AI to generate execution prompts
+- Section-specific context and dependencies
+- Statistics (features count, estimated hours)
+- Location: `full-build/04f-{product}-build-section-E[NN]-meta-prompts.md`
+
+**Execution Prompt Files** (from manual AI execution):
+- Progressive prompts (P01, P02, P03...) for implementation
+- Layer-based grouping (Database → API → UI → Integration)
+- Acceptance criteria and validation steps
+- Dependency tracking between prompts
+- Location: `full-build/04f-{product}-build-section-E[NN]-execution-prompts.md`
+
+---
+
+#### Execution Pattern
+
+**For Each Section (E01 through E07):**
+
+1. **Generate execution prompts** (once per section):
+   - Open: `04f-{product}-build-section-E01-meta-prompts.md`
+   - Copy meta-prompt + section file → Paste into AI agent
+   - Save AI output → `04f-{product}-build-section-E01-execution-prompts.md`
+
+2. **Execute prompts progressively** (implement features):
+   - Open execution prompts file
+   - Run Prompt P01 → Complete → Validate
+   - Run Prompt P02 → Complete → Validate
+   - Continue until all prompts in section are complete
+
+3. **Move to next section**:
+   - Complete ALL prompts in E01 before starting E02
+   - Each section builds on previous sections
+   - Follow dependency order: E01 → E02 → E03 → ... → E07
+
+**Complete Flow:**
 ```
-
-**Execution Time:** ~10-20 seconds
-
-**What to Do After Running:**
-1. **Open execution index**: `_execution-prompts/EXECUTION-INDEX.md`
-2. **Review execution order**: Understand progressive dependencies
-3. **Start with first prompt**: `04f-execution-E01-P01.md`
-4. **Execute progressively**:
-   - Complete all acceptance criteria
-   - Run validation steps
-   - Move to next prompt in order
-
-**Execution Pattern:**
-```
-E01-P01 (Database)  →  E01-P02 (API)  →  E01-P03 (UI)  →  E01-P04 (Integration)
+Section E01:
+  Generate execution prompts (AI) → P01 → P02 → P03 → P04 (all complete)
     ↓
-E02-P01 (Database)  →  E02-P02 (API)  →  E02-P03 (UI)  →  E02-P04 (Integration)
+Section E02:
+  Generate execution prompts (AI) → P01 → P02 → P03 → P04 (all complete)
     ↓
-E03-P01 (Database)  →  ... and so on for all sections
+... continue through E07
 ```
 
 ---
 
-#### Complete Pipeline Workflow (04c-04f)
+#### Full Tutorial
 
-**One-Time Setup (per codebase):**
-```bash
-# Step 04c: Analyze codebase (manual - run meta-prompt in AI)
-# Generates: 04d-infrastructure-inventory_v1.md
-#           04d-extension-strategy_v1.md
-#           04d-implementation-guide_v1.md
-```
-
-**For Each New Specification:**
-```bash
-cd pmc/product/_tools
-
-# Step 04e: Merge (Stage 1) - ~5-10 seconds
-node 04e-merge-integration-spec_v1.js \
-  --spec "../_mapping/pipeline/04c-pipeline-structured-from-wireframe_v1.md" \
-  --inventory "../_mapping/pipeline/_run-prompts/04d-infrastructure-inventory_v1.md" \
-  --strategy "../_mapping/pipeline/_run-prompts/04d-extension-strategy_v1.md" \
-  --guide "../_mapping/pipeline/_run-prompts/04d-implementation-guide_v1.md" \
-  --output "../_mapping/pipeline/04e-integrated-extension-spec_v1.md"
-
-# Step 04f: Segment (Stage 2) - ~10-20 seconds
-node 04f-segment-integrated-spec_v1.js \
-  --input "../_mapping/pipeline/04e-integrated-extension-spec_v1.md" \
-  --output-dir "../_mapping/pipeline/_execution-prompts/"
-
-# Total time: ~15-30 seconds
-```
-
-**Then Execute Prompts:**
-1. Open `_execution-prompts/EXECUTION-INDEX.md`
-2. Execute each prompt in order (E01-P01 → E01-P02 → ... → E07-P04)
-3. Complete acceptance criteria and validation for each
-4. Progressive implementation with full context
-
-**Key Benefits:**
-- **Extension-First**: Builds on existing infrastructure, not separate app
-- **Progressive**: Clear dependency order for implementation
-- **Context-Rich**: Each prompt is self-contained with all needed context
-- **Validated**: Acceptance criteria and validation steps included
-- **Fast**: 15-30 seconds to generate all prompts
-
-**Documentation:**
-- **Quick Start**: `pmc/product/_tools/QUICK-START.md`
-- **Complete Guide**: `pmc/product/_mapping/pipeline/PIPELINE-USAGE-GUIDE.md`
-- **Implementation Summary**: `pmc/product/_mapping/pipeline/IMPLEMENTATION-COMPLETE.md`
-
-**Validation:**
-```bash
-# Verify everything is ready
-cd pmc/product/_tools
-node validate-pipeline.js
-# Should show: ✅ VALIDATION PASSED - Ready to run pipeline!
-```
+For complete step-by-step instructions with examples, see:
+- **Detailed Tutorial**: [pmc/docs/ltc-6a/04-detailed-integrated-spec-tutorial_v1.md](../../docs/ltc-6a/04-detailed-integrated-spec-tutorial_v1.md)
 
 ## 3. Document Hierarchy and Purpose
 
@@ -947,13 +819,14 @@ graph TD
 | `03-generate-functional-requirements.js` | 03 | Enhanced FR generation (3a + 3b) | Overview, User Stories, User Journey, templates | FR prompts (3 phases) |
 | `04a-generate-FIGMA-wireframe-prompts_v1.js` | 04a | FIGMA wireframe prompt generation | Functional Requirements, FIGMA template | Figma-ready prompts per section |
 | `04b-generate-FR-wireframe-segments_v1.js` | 04b | Task-oriented wireframe prompts | Functional Requirements, task templates | Task breakdown prompts |
-| `04e-merge-integration-spec_v1.js` | 04e | Stage 1: Merge spec with integration | Structured spec, 3 integration docs | Integrated extension spec |
-| `04f-segment-integrated-spec_v1.js` | 04f | Stage 2: Generate execution prompts | Integrated extension spec | 20-30 progressive prompts |
-| `validate-pipeline.js` | 04* | Validate pipeline prerequisites | All input files | Validation report |
+| `04f-segment-integrated-spec_v1.js` | 04f | Split integrated spec into sections | Integrated extension spec | Section files (E01-E07) + INDEX.md |
+| `04g-generate-section-meta-prompts_v1.js` | 04g | Generate meta-prompts per section | Section files, meta-prompt template | Meta-prompts per section |
 
-**Deprecated Scripts** (moved to `archive/`):
+**Deprecated Scripts** (moved to `archive/` or don't use):
 - `01-02-generate-product-specs.js` - Split into `01-generate-overview.js` + `02a-generate-user-story-spec.js` for operational consistency
 - `04-generate-FR-wireframe-segments_v4.js` - Replaced by `04a-generate-FIGMA-wireframe-prompts_v1.js` (Figma focus) and `04b-generate-FR-wireframe-segments_v1.js` (task focus)
+- `04f-segment-integrated-spec_v3.js` - Replaced by `04f-segment-integrated-spec_v1.js` (section splitter)
+- `04f-segment-integrated-spec_v4.js` - Replaced by `04g-generate-section-meta-prompts_v1.js` (meta-prompt generator)
 #### Key Configuration Files
 - `seed-story-config.json`: Seed generation configuration
 - `config/prompts-config.json`: Product spec generation configuration
@@ -1034,25 +907,20 @@ graph TD
    node 04b-generate-FR-wireframe-segments_v1.js "Project Name" abbrev
    # → Execute prompts for development task planning
    
-   # Step 04c-04f: Two-Stage Pipeline (Integration & Segmentation)
-   # ONE-TIME per codebase: Run 04d integration meta-prompt in AI to generate:
-   #   - 04d-infrastructure-inventory_v1.md
-   #   - 04d-extension-strategy_v1.md
-   #   - 04d-implementation-guide_v1.md
+   # Step 04: Integrated Spec to Execution Prompts (After 04e merge is complete)
+   # Script 1: Split into section files (~5-10 seconds)
+   node 04f-segment-integrated-spec_v1.js "Project Name" abbrev
    
-   # FOR EACH SPEC: Run two-stage pipeline (~15-30 seconds total)
-   node 04e-merge-integration-spec_v1.js \
-     --spec "../_mapping/pipeline/04c-pipeline-structured-from-wireframe_v1.md" \
-     --inventory "../_mapping/pipeline/_run-prompts/04d-infrastructure-inventory_v1.md" \
-     --strategy "../_mapping/pipeline/_run-prompts/04d-extension-strategy_v1.md" \
-     --guide "../_mapping/pipeline/_run-prompts/04d-implementation-guide_v1.md" \
-     --output "../_mapping/pipeline/04e-integrated-extension-spec_v1.md"
+   # Script 2: Generate meta-prompts per section (~5-10 seconds)
+   node 04g-generate-section-meta-prompts_v1.js "Project Name" abbrev
    
-   node 04f-segment-integrated-spec_v1.js \
-     --input "../_mapping/pipeline/04e-integrated-extension-spec_v1.md" \
-     --output-dir "../_mapping/pipeline/_execution-prompts/"
-   
-   # → Execute generated prompts progressively (E01-P01 → E01-P02 → ... → E07-P04)
+   # Manual AI Execution (for each section E01-E07):
+   #   1. Open meta-prompt file (e.g., 04f-{product}-build-section-E01-meta-prompts.md)
+   #   2. Copy meta-prompt + section file → Paste into AI agent
+   #   3. AI generates execution prompts
+   #   4. Save as execution prompts file
+   #   5. Execute prompts progressively (P01 → P02 → P03 → ...)
+   ```
    ```
 
 3. **Validation Phase**
@@ -1233,31 +1101,33 @@ pmc/product/_mapping/
                 └── ... (20-30 total prompts)
 ```
 
-## 9. Recent Enhancements (v5.0.0)
+## 9. Recent Enhancements (v5.1.0)
 
-### Two-Stage Spec Integration & Segmentation Pipeline (Steps 04c-04f)
+### Integrated Spec to Execution Prompts Workflow (Step 04)
 
-**New in Version 5.0.0** (December 23, 2025):
+**Updated in Version 5.1.0** (December 26, 2025):
 
-The PMC system now includes a sophisticated two-stage pipeline that transforms generic structured specifications into execution-ready progressive prompts:
+The PMC system now provides a streamlined workflow for transforming integrated specifications into execution-ready progressive prompts:
 
 **Key Features:**
-- **Extension-First Approach**: Automatically transforms specifications to extend existing codebases rather than comparing for compatibility
-- **Infrastructure Substitution**: Replaces generic patterns (Prisma, NextAuth, S3) with existing codebase patterns (Supabase)
-- **Progressive Execution**: Generates 20-30 prompts with clear dependency tracking (Database → API → UI → Integration)
-- **Context-Rich Prompts**: Each prompt includes all necessary infrastructure patterns, previous outputs, and validation steps
-- **Fast Generation**: Complete pipeline runs in 15-30 seconds
+- **Two-Script Automation**: Section splitting (~5-10s) and meta-prompt generation (~5-10s)
+- **Section-Based Organization**: Each section (E01-E07) managed as independent files
+- **Meta-Prompt Driven**: AI generates optimal execution prompts based on customized meta-prompts
+- **Progressive Implementation**: Clear P01 → P02 → P03 execution order with dependencies
+- **Interactive Validation**: Scripts display TRUE/FALSE for file existence with custom path options
+
+**Scripts:**
+- `04f-segment-integrated-spec_v1.js` - Splits integrated spec into section files
+- `04g-generate-section-meta-prompts_v1.js` - Generates meta-prompts for each section
 
 **Benefits:**
-- Eliminates manual specification transformation
-- Ensures consistency with existing codebase patterns
-- Provides clear implementation roadmap
-- Reduces implementation errors through validation
+- Fast automated processing (~10-20 seconds total for both scripts)
+- Clear human operator instructions for using scripts and output files
+- Section-by-section implementation with proper dependency tracking
+- Complete context in each execution prompt for accurate implementation
 
 **Documentation:**
-- Complete usage guide: `pmc/product/_mapping/pipeline/PIPELINE-USAGE-GUIDE.md`
-- Quick start: `pmc/product/_tools/QUICK-START.md`
-- Implementation summary: `pmc/product/_mapping/pipeline/IMPLEMENTATION-COMPLETE.md`
+- Complete usage guide: [pmc/docs/ltc-6a/04-detailed-integrated-spec-tutorial_v1.md](04-detailed-integrated-spec-tutorial_v1.md)
 
 ---
 
@@ -1278,6 +1148,13 @@ The PMC system now includes a sophisticated two-stage pipeline that transforms g
 ---
 
 ## 11. Version History
+
+**v5.1.0** (December 26, 2025)
+- Updated Step 04 (section 2.7) to focus on human operator workflow
+- Renamed scripts for clarity: 04f-v1 (section splitter), 04g-v1 (meta-prompt generator)
+- Simplified documentation to emphasize script usage and output files
+- Updated tool reference guide and deprecated scripts list
+- Streamlined execution instructions for integrated spec to execution prompts pipeline
 
 **v5.0.0** (December 23, 2025)
 - Added Two-Stage Spec Integration & Segmentation Pipeline (Steps 04c-04f)
