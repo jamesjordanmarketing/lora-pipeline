@@ -840,3 +840,16 @@ Starting from an integrated specification, you've created:
 **Document Version**: 1.0  
 **Last Updated**: December 26, 2025  
 **Status**: Complete and Ready for Use
+
+
+
+
+- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\04a-generate-FIGMA-wireframe-prompts_v1.js`
+- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\04b-generate-FIGMA-wireframe-combined-prompt_v1.js`
+- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\04c-generate-structured-spec-prompt.js`
+- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\04c-wireframe-to-app-progression-prompts_v1.js`
+- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\04d-generate-FR-wireframe-segments_v1-deprecated.js`
+- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\04d-generate-wireframe-integration-plan_v1.js`
+- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\04e-merge-integration-spec_v2.js`
+- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\04f-segment-integrated-spec_v1.js`
+- `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\pmc\product\_tools\04g-generate-section-meta-prompts_v1.js`
