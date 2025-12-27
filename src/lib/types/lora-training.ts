@@ -34,6 +34,7 @@ export interface Dataset {
   training_ready: boolean;
   validated_at: string | null;
   validation_errors: ValidationError[] | null;
+  error_message: string | null;
   sample_data: any | null;
   created_at: string;
   updated_at: string;
