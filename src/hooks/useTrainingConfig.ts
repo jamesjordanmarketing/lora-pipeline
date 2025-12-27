@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
 /**
  * Hook for cost estimation with debouncing
@@ -32,7 +32,6 @@ export function useEstimateCost() {
  */
 export function useCreateTrainingJob() {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   return useMutation({
     mutationFn: async (config: any) => {
@@ -51,17 +50,10 @@ export function useCreateTrainingJob() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['training-jobs'] });
-      toast({
-        title: 'Success',
-        description: 'Training job created and queued for processing',
-      });
+      toast.success('Training job created and queued for processing');
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
+      toast.error(error.message || 'Failed to create training job');
     },
   });
 }
