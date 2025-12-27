@@ -101,10 +101,10 @@ export function useTrainingJob(jobId: string | null) {
       return response.json();
     },
     enabled: !!jobId,
-    refetchInterval: (query) => {
+    refetchInterval: (query: any) => {
       // Poll every 5 seconds if job is active
       // In React Query v5, refetchInterval callback receives the query object
-      const responseData = query.state.data as any;
+      const responseData = query.state?.data;
       const status = responseData?.data?.status;
       return status === 'running' || status === 'queued' || status === 'initializing' 
         ? 5000 
