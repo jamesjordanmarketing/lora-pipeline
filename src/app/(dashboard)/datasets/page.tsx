@@ -19,11 +19,11 @@ import type { Dataset } from '@/lib/types/lora-training';
 
 export default function DatasetsPage() {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const { data, isLoading, error } = useDatasets({ 
     search: search || undefined,
-    status: statusFilter || undefined,
+    status: statusFilter === 'all' ? undefined : statusFilter,
   });
   const { mutate: deleteDataset } = useDeleteDataset();
 
@@ -103,7 +103,7 @@ export default function DatasetsPage() {
             <SelectValue placeholder="All statuses" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All statuses</SelectItem>
+            <SelectItem value="all">All statuses</SelectItem>
             <SelectItem value="uploading">Uploading</SelectItem>
             <SelectItem value="validating">Validating</SelectItem>
             <SelectItem value="ready">Ready</SelectItem>
@@ -146,11 +146,11 @@ export default function DatasetsPage() {
           <Database className="h-12 w-12 mx-auto text-gray-400 mb-4" />
           <h3 className="text-lg font-semibold mb-2">No datasets yet</h3>
           <p className="text-gray-500 mb-4">
-            {search || statusFilter 
+            {search || (statusFilter && statusFilter !== 'all')
               ? 'No datasets match your filters. Try adjusting your search criteria.'
               : 'Upload your first dataset to start training LoRA models.'}
           </p>
-          {!search && !statusFilter && (
+          {!search && (!statusFilter || statusFilter === 'all') && (
             <Link href="/datasets/new">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
