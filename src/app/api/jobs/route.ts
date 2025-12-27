@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     const { dataset_id, preset_id, gpu_config, hyperparameters, estimated_cost } = validation.data;
 
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
 
     // From Section E02 - verify dataset exists, belongs to user, and is ready for training
     const { data: dataset, error: datasetError } = await supabase
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
     const { user, response } = await requireAuth(request);
     if (response) return response;
 
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
     const { searchParams } = new URL(request.url);
     
     const page = parseInt(searchParams.get('page') || '1');

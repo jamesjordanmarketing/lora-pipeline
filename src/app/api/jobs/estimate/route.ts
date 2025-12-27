@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
 
     const { dataset_id, gpu_config, hyperparameters } = validation.data;
 
-    const supabase = createServerSupabaseClient();
+    const supabase = await createServerSupabaseClient();
 
     // From Section E02 - fetch dataset statistics for accurate duration estimation
     const { data: dataset, error: datasetError } = await supabase
