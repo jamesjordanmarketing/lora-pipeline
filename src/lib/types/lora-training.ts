@@ -3,6 +3,8 @@
 // TypeScript Type Definitions
 // ============================================
 
+import { z } from 'zod';
+
 // -------------------- ENUMS --------------------
 
 export type DatasetStatus = 'uploading' | 'validating' | 'ready' | 'error';
@@ -265,3 +267,18 @@ export const GPU_CONFIGURATIONS = {
 
 export type GPUConfigurationId = keyof typeof GPU_CONFIGURATIONS;
 
+// -------------------- ZOD VALIDATION SCHEMAS --------------------
+
+/**
+ * Schema for creating a new dataset
+ * Used in POST /api/datasets
+ */
+export const CreateDatasetSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(255),
+  description: z.string().optional(),
+  format: z.enum(['brightrun_lora_v4', 'brightrun_lora_v3']).default('brightrun_lora_v4'),
+  file_name: z.string().min(1, 'File name is required'),
+  file_size: z.number().int().positive().max(500 * 1024 * 1024, 'File size must be less than 500MB'),
+});
+
+export type CreateDatasetInput = z.infer<typeof CreateDatasetSchema>;
