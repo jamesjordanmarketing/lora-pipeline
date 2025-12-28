@@ -113,3 +113,33 @@ export function useTrainingJob(jobId: string | null) {
   });
 }
 
+/**
+ * Hook for cancelling jobs
+ * From Section E04 - Training Execution & Monitoring
+ */
+export function useCancelJob() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (jobId: string) => {
+      const response = await fetch(`/api/jobs/${jobId}/cancel`, {
+        method: 'POST',
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.details || error.error || 'Cancellation failed');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (_, jobId) => {
+      queryClient.invalidateQueries({ queryKey: ['training-job', jobId] });
+      queryClient.invalidateQueries({ queryKey: ['training-jobs'] });
+      toast.success('Training job cancelled successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to cancel job');
+    },
+  });
+}

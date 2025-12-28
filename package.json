@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "description": "Bright Run LoRA Training Data Platform - Root workspace. Vercel builds from src/ directory.",
+  "scripts": {
+    "supabase": "supabase",
+    "sb:deploy": "supabase functions deploy",
+    "sb:deploy:jobs": "supabase functions deploy process-training-jobs",
+    "sb:logs": "supabase functions logs process-training-jobs --follow"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.80.0",
     "ajv": "^8.17.1",
@@ -10,5 +16,8 @@
     "jsonrepair": "^3.13.1",
     "pg": "^8.16.3",
     "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "supabase": "^2.70.5"
   }
 }

@@ -137,3 +137,87 @@ Execution Prompts (04f-E[XX]-P[YY])
 ---
 
 **Status**: COMPLETE
+
+---
+---
+
+# Task 3: E04 RunPod Architecture Analysis & Implementation
+
+## Problem Analysis
+
+The user needs to implement a complete LoRA training pipeline that connects their Vercel-hosted Next.js application to RunPod for GPU-accelerated training of Qwen3-Next-80B-A3B models. Key questions include:
+
+1. Serverless vs Private Pod for training
+2. How LoRA training actually works (frozen base + adapters)
+3. Best architecture for Qwen 80B training
+4. How to obtain GPU_CLUSTER_API_URL and GPU_CLUSTER_API_KEY
+5. Cost optimization strategies
+6. Technical requirements for training large MoE models
+
+### Key Findings from Research
+
+1. **Serverless vs Pods**: Use **Pods** for multi-hour training jobs (cheaper), **Serverless** for inference/deployment (autoscaling)
+2. **LoRA Works on Qwen3-80B**: Confirmed via PEFT library, ms-swift framework, and community success reports
+3. **Architecture**: Vercel → RunPod Serverless Custom Worker → Network Volume (cached model) → Supabase Storage
+4. **API Credentials**: Created by deploying custom Docker image as RunPod Serverless Endpoint
+5. **Cost**: Pods ~$1.99-2.39/hr (H100), Serverless ~$3.35-4.18/hr but only charges during processing
+
+### Conflicting Guidance Resolution
+
+- **Gemini**: Recommended Serverless for training (auto-shutdown benefit)
+- **Perplexity**: Recommended Pods for training (cheaper for long jobs)
+- **Resolution**: Both are VALID approaches. For **automated pipelines**, Serverless is better (zero idle cost risk, programmatic triggering). For **interactive/experimental** work, Pods are cheaper.
+
+## TODO Items
+
+- [x] Read and analyze input file (04f-pipeline-build-section-E04-runpod-scope-input_v1.md)
+- [x] Read Gemini architecture guide
+- [x] Read Perplexity architecture guide
+- [x] Explore current codebase for training infrastructure
+- [x] Search web for current RunPod pricing, Qwen LoRA support, serverless vs pods
+- [x] Analyze existing training job infrastructure in codebase
+- [x] Resolve conflicting guidance from multiple sources
+- [x] Write Deliverable 1: Detailed Analysis (non-ML-engineer readable)
+- [x] Write Deliverable 2: Implementation Instructions (RunPod ops + agent prompt)
+
+---
+
+## DELIVERABLES
+
+### Deliverable 1
+**File**: `pmc/product/_mapping/pipeline/full-build/04f-pipeline-build-section-E04.5-runpod-analysis.md`
+- Full analysis answering all 10 questions
+- Written for non-ML engineers
+- Reconciles conflicting guidance
+- Provides clear recommendations
+
+### Deliverable 2
+**File**: `pmc/product/_mapping/pipeline/full-build/04f-pipeline-build-section-E04.5-runpod-instructions.md`
+- Section 1: Manual RunPod setup steps for human engineer
+- Section 2: Autonomous coding agent prompt for implementation
+
+---
+
+**Status**: COMPLETE
+
+### Summary of Deliverables
+
+| Deliverable | Location | Content |
+|-------------|----------|---------|
+| **Analysis Document** | `04f-pipeline-build-section-E04.5-runpod-analysis.md` | Complete answers to all 10 questions, conflicting guidance resolution, codebase analysis |
+| **Implementation Guide** | `04f-pipeline-build-section-E04.5-runpod-instructions.md` | Section 1: Manual RunPod setup steps; Section 2: Autonomous agent prompt |
+
+### Key Findings Summary
+
+1. **Architecture Decision:** Use RunPod Serverless Custom Workers for automated training pipeline
+2. **LoRA on Qwen3-80B:** Confirmed working with QLoRA (4-bit quantization) via PEFT library
+3. **Cost Optimization:** Serverless eliminates idle cost risk; ~$13-14 per 4-hour training run
+4. **Missing Components:** Docker image, RunPod endpoint deployment, API credentials in .env.local
+
+### Next Steps for Human Engineer
+
+1. Create Network Volume and pre-download Qwen model
+2. Build Docker image from agent-generated code
+3. Deploy Serverless Endpoint
+4. Copy credentials to .env.local and Supabase secrets
+5. Test end-to-end with small dataset
