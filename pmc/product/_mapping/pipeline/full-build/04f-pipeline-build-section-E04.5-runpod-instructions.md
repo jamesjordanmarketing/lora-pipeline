@@ -1,8 +1,10 @@
 # LoRA Training Pipeline: RunPod Implementation Instructions
 
-**Date:** December 27, 2025
-**Status:** Implementation Specification
+**Date:** December 28, 2025
+**Status:** Implementation Specification - Updated with Verified Commands
 **Purpose:** Step-by-step instructions for setting up RunPod training infrastructure
+
+**Model:** Qwen/Qwen3-Next-80B-A3B-Instruct (instruction-tuned, strong reasoning, fits A100 with 4-bit QLoRA)
 
 ---
 
@@ -29,7 +31,7 @@ Before starting, ensure you have:
 
 ## Phase 1: Create Network Volume (Model Cache)
 
-**Purpose:** Store the Qwen 80B model weights to avoid re-downloading on each training run.
+**Purpose:** Store the Qwen3-Next-80B-A3B-Instruct model weights (~80GB) to avoid re-downloading on each training run.
 
 ### Step 1.1: Create the Volume
 
@@ -52,31 +54,45 @@ Before starting, ensure you have:
    - **Network Volume:** Select `qwen-model-cache`
 3. Deploy and wait for pod to start
 4. Click **Connect** → **Web Terminal**
-5. Run these commands:
+5. Run these commands in the RunPod Web Terminal:
 
 ```bash
-# Install huggingface-cli
+# Install huggingface_hub (if not already installed)
 pip install huggingface_hub
 
-# Login to Hugging Face
-huggingface-cli login
-# (paste your HF token when prompted)
-
-# Download Qwen model to the mounted volume
-python -c "
+# Download Qwen model to the mounted volume (with progress bars)
+cat << 'EOF' > /tmp/download_qwen.py
 from huggingface_hub import snapshot_download
-snapshot_download(
-    'Qwen/Qwen3-Next-80B-A3B',
-    local_dir='/runpod-volume/models/Qwen3-Next-80B-A3B',
-    local_dir_use_symlinks=False,
-    resume_download=True
-)
-"
+
+print("Starting Qwen model download...")
+print("Model: Qwen/Qwen3-Next-80B-A3B-Instruct")
+print("Destination: /workspace/models/Qwen3-Next-80B-A3B-Instruct")
+print("-" * 60)
+
+try:
+    snapshot_download(
+        'Qwen/Qwen3-Next-80B-A3B-Instruct',
+        local_dir='/workspace/models/Qwen3-Next-80B-A3B-Instruct',
+        resume_download=True,
+        token='YOUR_HF_TOKEN_HERE'  # Replace with your Hugging Face token
+    )
+    print("\n" + "=" * 60)
+    print("Download complete!")
+    print("=" * 60)
+except Exception as e:
+    print(f"\nError: {e}")
+    print("You can re-run this command to resume the download.")
+EOF
+python3 /tmp/download_qwen.py
 ```
 
-6. Wait for download to complete (~50-100GB, may take 30-60 minutes)
-7. Verify: `ls -la /runpod-volume/models/`
-8. **Terminate the pod** (you're done with it)
+**Note:** The download will show progress bars automatically for each file. You'll see download speed, percentage complete, and estimated time remaining.
+
+6. Wait for download to complete (~80GB, may take 30-60 minutes depending on connection speed)
+7. Verify download: `ls -lh /workspace/models/Qwen3-Next-80B-A3B-Instruct/`
+   - You should see multiple `.safetensors` files and config files
+   - Total size should be ~80GB
+8. **Terminate the pod** (you're done with it - the model is now cached in the network volume)
 
 ---
 
@@ -87,16 +103,33 @@ snapshot_download(
 Create a new directory on your local machine:
 
 ```bash
+# Go to your projects directory (one level up from lora-pipeline)
+cd C:\Users\james\Master\BrightHub\BRun
 mkdir brightrun-trainer
 cd brightrun-trainer
 ```
 
-Create these files (the coding agent will generate the actual code):
+### Step 2.2: Generate the Code
+
+You need to create these 5 files with actual code:
 
 1. `handler.py` - RunPod serverless handler
-2. `train_lora.py` - Training script
+2. `train_lora.py` - Training script with QLoRA implementation
 3. `Dockerfile` - Container definition
 4. `requirements.txt` - Python dependencies
+5. `status_manager.py` - Job status tracking
+
+**Two ways to get the code:**
+
+**Method A (If using GitHub Copilot/Claude in VS Code):**
+- Ask your AI agent: "Generate 5 production-ready Docker worker files in C:\Users\james\Master\BrightHub\BRun\brightrun-trainer\ using the specification between the ==== and ++++ markers in Section 2 of this file. Create: handler.py (RunPod serverless handler), train_lora.py (QLoRA training with 4-bit quantization), Dockerfile (linux/amd64), requirements.txt (pinned versions), and status_manager.py (job status tracking). Use model path /workspace/models/Qwen3-Next-80B-A3B-Instruct."
+- The AI will create all files directly in your directory
+
+**Method B (If using ChatGPT/Claude web interface):**
+- Copy the entire "AUTONOMOUS AGENT PROMPT" from Section 2 below (lines ~283-520)
+- Paste it into a new chat with ChatGPT-4 or Claude
+- The AI will generate all 5 files
+- Copy each file's code into your local files
 
 ### Step 2.2: Build the Docker Image
 
@@ -135,14 +168,15 @@ docker push yourdockerhub/brightrun-trainer:v1
 | **Docker Command** | (leave empty - uses Dockerfile CMD) |
 | **Container Disk** | `20 GB` |
 | **Volume Disk** | `0 GB` (we use Network Volume) |
-| **Volume Mount Path** | `/runpod-volume` |
+| **Volume Mount Path** | `/workspace` |
 
 4. Add **Environment Variables**:
 
 | Key | Value |
 |-----|-------|
-| `HF_HOME` | `/runpod-volume/.cache/huggingface` |
-| `TRANSFORMERS_CACHE` | `/runpod-volume/models` |
+| `HF_HOME` | `/workspace/.cache/huggingface` |
+| `TRANSFORMERS_CACHE` | `/workspace/models` |
+| `MODEL_PATH` | `/workspace/models/Qwen3-Next-80B-A3B-Instruct` |
 | `SUPABASE_URL` | `https://your-project.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | `eyJ...your-key` |
 
@@ -162,7 +196,7 @@ docker push yourdockerhub/brightrun-trainer:v1
 |-------|-------|
 | **Endpoint Name** | `brightrun-lora-trainer` |
 | **Template** | Select `BrightRun LoRA Trainer` |
-| **GPU** | `NVIDIA H100 80GB PCIe` |
+| **GPU** | `NVIDIA A100 80GB PCIe` (or H100 if available) |
 | **Active Workers** | `0` |
 | **Max Workers** | `2` |
 | **Idle Timeout** | `60` seconds |
@@ -267,9 +301,11 @@ Expected response:
 
 | Issue | Solution |
 |-------|----------|
+| "404 Repository Not Found" during download | Verify exact model name on HuggingFace. Use `Qwen/Qwen3-Next-80B-A3B-Instruct` (not the base or GGUF versions) |
+| Download shows no progress | Wait 10-20 seconds - progress bars appear once files start downloading |
 | Endpoint shows "Unhealthy" | Check Docker logs in RunPod console |
 | "No GPU available" | Try a different GPU type or datacenter |
-| Model loading fails | Verify Network Volume is attached and model exists |
+| Model loading fails | Verify Network Volume is attached and model exists at `/workspace/models/Qwen3-Next-80B-A3B-Instruct` |
 | Timeout errors | Increase execution timeout in endpoint settings |
 | OOM (Out of Memory) | Ensure you're using QLoRA 4-bit quantization |
 
@@ -282,6 +318,10 @@ Copy and paste the following prompt to an autonomous coding agent (Claude, GPT-4
 ---
 
 ## AUTONOMOUS AGENT PROMPT
+
+====================
+**START OF DOCKER WORKER SPECIFICATION**
+====================
 
 ```markdown
 # Task: Implement RunPod LoRA Training Worker
@@ -304,7 +344,7 @@ The following components exist and expect specific API contracts:
   "job_id": "uuid-string",
   "dataset_url": "https://signed-supabase-url/dataset.jsonl",
   "hyperparameters": {
-    "base_model": "Qwen/Qwen3-Next-80B-A3B",
+    "base_model": "Qwen/Qwen3-Next-80B-A3B-Instruct",
     "learning_rate": 0.0002,
     "batch_size": 8,
     "num_epochs": 5,
@@ -377,7 +417,7 @@ runpod.serverless.start({"handler": handler})
 ### 2. `runpod-worker/train_lora.py`
 
 Training script that:
-- Loads base model from `/runpod-volume/models/` (with 4-bit quantization)
+- Loads base model from `/workspace/models/` (with 4-bit quantization)
 - Downloads dataset from provided signed URL
 - Configures LoRA adapters using PEFT
 - Runs training with progress callbacks
@@ -509,6 +549,10 @@ Write all files with complete, production-ready code. Include:
 
 Do NOT create placeholder code. All functions must be fully implemented.
 ```
+
+++++++++++++++++++++
+**END OF DOCKER WORKER SPECIFICATION**
+++++++++++++++++++++
 
 ---
 
