@@ -135,7 +135,7 @@ You need to create these 5 files with actual code:
 
 ```bash
 # Build for Linux (RunPod requirement)
-docker build --platform linux/amd64 -t yourdockerhub/brightrun-trainer:v1 .
+docker build --platform linux/amd64 -t brighthub/brightrun-trainer:v1 .
 
 # Test locally (optional)
 docker run --rm yourdockerhub/brightrun-trainer:v1 python -c "import runpod; print('OK')"

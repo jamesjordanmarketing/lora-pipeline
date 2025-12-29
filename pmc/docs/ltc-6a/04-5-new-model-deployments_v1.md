@@ -742,6 +742,182 @@ training_args = TrainingArguments(
 
 ---
 
+## SSH Key Setup for Running Pods
+
+**Use Case**: When you need to upload files to an **already-running RunPod pod** using SCP (e.g., uploading Docker worker files after generating them locally)
+
+**Background**: If your pod is already running when you add your SSH key to RunPod account settings, the key won't be automatically injected into the pod. You need to manually inject it via the web terminal.
+
+### Step-by-Step: Enable SSH Access on Running Pod
+
+#### Step 1: Get Your Local SSH Public Key
+
+On your **local machine** (Windows with Git Bash/WSL, macOS, or Linux), run:
+
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+
+**Example output**:
+```
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK7tX6a3E+OMqahKJICS4n5 james@jamesjordanmarketing.com
+```
+
+**Copy the entire output** - this is your public key (starts with `ssh-ed25519`, followed by key data, followed by email/comment).
+
+**Note**: If you don't have an ed25519 key, generate one first:
+```bash
+ssh-keygen -t ed25519 -C "your-email@example.com"
+# Press Enter for default location (~/.ssh/id_ed25519)
+# Press Enter for no passphrase (or set a passphrase if preferred)
+```
+
+#### Step 2: Open RunPod Web Terminal
+
+1. Go to RunPod Console → **Pods**
+2. Find your running pod
+3. Click **Connect** → **Web Terminal**
+4. Wait for terminal to connect
+
+#### Step 3: Inject SSH Public Key into Pod
+
+In the **RunPod web terminal**, run these commands:
+
+```bash
+# Replace the entire string in quotes with YOUR public key from Step 1
+export PUBLIC_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIK7tX6a3E+OMqahKJICS4n5 james@jamesjordanmarketing.com"
+
+# Create .ssh directory if it doesn't exist
+mkdir -p ~/.ssh
+
+# Write public key to authorized_keys (overwrites existing keys)
+echo "$PUBLIC_KEY" > ~/.ssh/authorized_keys
+
+# Set correct permissions (required for SSH to work)
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+```
+
+**Important**: 
+- Use `>` (overwrites) not `>>` (appends) if you're fixing a mismatched key
+- The `chmod` commands are **critical** - SSH will reject keys with incorrect permissions
+
+#### Step 4: Get Pod SSH Connection Details
+
+In the RunPod dashboard, click on your pod and find the **SSH over exposed TCP** section.
+
+**Example**:
+```
+ssh root@203.57.40.107 -p 10032 -i ~/.ssh/id_ed25519
+```
+
+From this, extract:
+- **IP Address**: `203.57.40.107`
+- **Port**: `10032`
+
+#### Step 5: Upload Files via SCP
+
+On your **local machine**, run the SCP command to upload files:
+
+```bash
+scp -P 10032 -i ~/.ssh/id_ed25519 \
+  "C:\Users\james\Master\BrightHub\BRun\brightrun-trainer\handler.py" \
+  "C:\Users\james\Master\BrightHub\BRun\brightrun-trainer\train_lora.py" \
+  "C:\Users\james\Master\BrightHub\BRun\brightrun-trainer\status_manager.py" \
+  "C:\Users\james\Master\BrightHub\BRun\brightrun-trainer\Dockerfile" \
+  "C:\Users\james\Master\BrightHub\BRun\brightrun-trainer\requirements.txt" \
+  root@203.57.40.107:/workspace/brightrun-trainer/
+```
+
+**Replace**:
+- `10032` → Your pod's SSH port
+- `203.57.40.107` → Your pod's IP address
+- File paths → Your local file locations
+- `/workspace/brightrun-trainer/` → Target directory on pod
+
+**Windows Path Note**: If using PowerShell and backslash continuation doesn't work, put the entire command on one line.
+
+#### Step 6: Verify Upload
+
+Test SSH connection and verify files:
+
+```bash
+ssh root@203.57.40.107 -p 10032 -i ~/.ssh/id_ed25519 "ls -la /workspace/brightrun-trainer/"
+```
+
+Expected output:
+```
+total 1065
+drwxr-xr-x  2 root root    4096 Dec 28 17:20 .
+drwxr-xr-x 10 root root    4096 Dec 28 16:45 ..
+-rw-r--r--  1 root root    1234 Dec 28 17:20 Dockerfile
+-rw-r--r--  1 root root   15678 Dec 28 17:20 handler.py
+-rw-r--r--  1 root root     567 Dec 28 17:20 requirements.txt
+-rw-r--r--  1 root root   12345 Dec 28 17:20 status_manager.py
+-rw-r--r--  1 root root   45678 Dec 28 17:20 train_lora.py
+```
+
+✅ **Success** - All 5 files uploaded and ready for Docker build!
+
+### Troubleshooting
+
+#### Problem: SCP Still Asks for Password
+
+**Cause**: SSH keys don't match (private key on local machine doesn't match public key on pod)
+
+**Solution**: 
+1. Verify you copied the **entire** public key output (including `ssh-ed25519` prefix and email suffix)
+2. Re-run Step 3 with the correct public key
+3. Use `>` not `>>` to **overwrite** the old key
+4. Verify key was written: `cat ~/.ssh/authorized_keys` in RunPod terminal
+
+#### Problem: Permission Denied (publickey)
+
+**Cause**: Incorrect file permissions on `~/.ssh/authorized_keys`
+
+**Solution**: Re-run the `chmod` commands:
+```bash
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+```
+
+#### Problem: "No such file or directory" on Upload
+
+**Cause**: Target directory doesn't exist on pod
+
+**Solution**: Create directory first via web terminal:
+```bash
+mkdir -p /workspace/brightrun-trainer
+```
+
+#### Problem: Connection Refused
+
+**Cause**: Pod's SSH port may have changed or pod restarted
+
+**Solution**: 
+1. Check RunPod dashboard for updated port/IP
+2. If pod restarted, you may need to re-inject SSH key (Steps 2-3)
+
+### Alternative: Fresh Pod Creation (Easier Method)
+
+If you're repeatedly having SSH issues with a running pod, it's often **faster** to:
+
+1. **Terminate the current pod** (model cache in network volume is safe)
+2. **Create a new pod** with the network volume attached
+3. SSH keys added to your RunPod account **before pod creation** will be automatically injected
+4. No manual key injection needed
+
+**When to Use**:
+- Multiple failed SSH attempts
+- Pod has been running for days and accumulated configuration drift
+- You just added SSH key to RunPod account settings
+
+**When NOT to Use**:
+- Pod has hours of download progress (would lose progress)
+- Pod is actively training a job (would interrupt job)
+
+---
+
 ## Summary: Repeatable vs One-Time
 
 ### You'll Follow the Full E04.5 Guide:
