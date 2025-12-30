@@ -13,7 +13,16 @@
 ## 🔄 Version 2.0 Changes
 
 **Updated to reflect deployed infrastructure:**
+- ✅ RunPod Endpoint: See `.secrets/deployment-secrets.md` for actual endpoint URL
+- ✅ RunPod API Key: See `.secrets/deployment-secrets.md` for actual API key
+- ✅ Docker Image: `brighthub/brightrun-trainer:v1` (deployed to Docker Hub)
+- ✅ Supabase Project: See `.secrets/deployment-secrets.md` for project details
+- ✅ Table names corrected (no `lora_` prefix): `model_artifacts`, `training_jobs`, `metrics_points`, etc.
+- ✅ Edge Function `process-training-jobs` confirmed deployed (Section E04)
+- ✅ Storage bucket: `lora-models` (confirmed exists for model artifacts)
 
+> **🔐 SECURITY NOTE**: All sensitive credentials (API keys, endpoints) are stored in `.secrets/deployment-secrets.md` (gitignored).  
+> Agents implementing this section: Reference that file for actual values when deploying.
 
 ---
 
@@ -252,8 +261,9 @@ const supabase = createClient(
 );
 
 // GPU Cluster API configuration (RunPod Serverless)
-const GPU_CLUSTER_API_URL = Deno.env.get('GPU_CLUSTER_API_URL')!; // https://api.runpod.ai/v2/ei82ickpenoqlp
-const GPU_CLUSTER_API_KEY = Deno.env.get('GPU_CLUSTER_API_KEY')!; // rpa_550JTL8271ULHL73VGU6ED4ZWBU5HB2KNAPMTW38cu8d8v
+// See .secrets/deployment-secrets.md for actual endpoint URL and API key
+const GPU_CLUSTER_API_URL = Deno.env.get('GPU_CLUSTER_API_URL')!;
+const GPU_CLUSTER_API_KEY = Deno.env.get('GPU_CLUSTER_API_KEY')!;
 
 /**
  * Create Model Artifacts Edge Function
@@ -516,8 +526,9 @@ function calculateQualityMetrics(metrics: any[], job: any) {
 supabase functions deploy create-model-artifacts
 
 # Set environment variables in Supabase Dashboard → Edge Functions → Secrets
-# GPU_CLUSTER_API_URL=https://api.runpod.ai/v2/ei82ickpenoqlp
-# GPU_CLUSTER_API_KEY=rpa_550JTL8271ULHL73VGU6ED4ZWBU5HB2KNAPMTW38cu8d8v
+# See .secrets/deployment-secrets.md for actual credentials
+# GPU_CLUSTER_API_URL=<see .secrets/deployment-secrets.md>
+# GPU_CLUSTER_API_KEY=<see .secrets/deployment-secrets.md>
 ```
 
 **Cron Schedule Configuration:**

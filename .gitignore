@@ -16,6 +16,10 @@ dist/
 .env.test.local
 .env.production.local
 
+# Deployment secrets (NEVER commit)
+.secrets/
+*-secrets.md
+
 # Logs
 npm-debug.log*
 yarn-debug.log*
