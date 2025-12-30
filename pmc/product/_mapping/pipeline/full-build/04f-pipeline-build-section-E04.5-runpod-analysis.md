@@ -598,3 +598,87 @@ Your edge function expects the GPU cluster to respond to:
 - [ms-swift Framework](https://github.com/modelscope/ms-swift)
 - [Qwen3 Fine-Tuning Guide](https://www.datacamp.com/tutorial/fine-tuning-qwen3)
 - [HuggingFace optimum-neuron](https://huggingface.co/docs/optimum-neuron/en/training_tutorials/finetune_qwen3)
+
+
+---
+
+# ADDENDUM: Template Creation UI Corrections (December 29, 2025)
+
+## Issues Discovered During Implementation
+
+While creating the RunPod serverless template, discovered discrepancies between documentation and actual UI.
+
+### Issue 1: Template Navigation
+**Documented**: Serverless → Templates → New Template  
+**Actual**: Main Menu → Templates → New Template → Select "Serverless"
+
+### Issue 2: Volume Mount Path in Template
+**Documented**: Set "Volume Mount Path: /workspace" in template creation  
+**Actual**: No "Volume Mount Path" field in template form
+
+**Resolution**: Volume mounting happens at endpoint deployment, NOT template creation.
+
+### Issue 3: Container Disk vs Network Volume
+**Container Disk** (in template): Temporary storage, erased between jobs. Set to 20GB.  
+**Network Volume** (in endpoint): Persistent storage. Attach qwen-model-cache at endpoint creation.
+
+---
+
+## Questions Answered
+
+### Q1: Does creating a template cost money?
+**NO** - Templates are FREE. Only charged when endpoint processes jobs.
+
+### Q2: Where to create templates?
+Main Menu → Templates → New Template → Select "Serverless"
+
+### Q3: Where is "Volume Mount Path"?
+It's in endpoint deployment (Phase 7), NOT template creation (Phase 6).
+
+### Q4: What is "Container Disk"?
+Temporary workspace (20GB) for dataset downloads and adapter output during jobs.
+
+---
+
+## Corrected Template Creation Steps
+
+### Configuration
+
+| Field | Value |
+|-------|-------|
+| Template Name | BrightRun LoRA Trainer |
+| Template Type | Serverless |
+| Container Image | brighthub/brightrun-trainer:v1 |
+| Container Disk | 20 GB |
+
+### Environment Variables (5 required)
+
+| Variable | Value |
+|----------|-------|
+| HF_HOME | /workspace/.cache/huggingface |
+| TRANSFORMERS_CACHE | /workspace/models |
+| MODEL_PATH | /workspace/models/Qwen3-Next-80B-A3B-Instruct |
+| SUPABASE_URL | https://hqhtbxlgzysfbekexwku.supabase.co |
+| SUPABASE_SERVICE_ROLE_KEY | (from .env.local) |
+
+---
+
+## Next Phase: Deploy Endpoint (Where Volume Mounting Happens)
+
+After template is saved:
+1. Serverless → Endpoints → New Endpoint
+2. Select template: BrightRun LoRA Trainer
+3. Choose GPU: A100 80GB
+4. **Attach Network Volume**: qwen-model-cache ← THIS IS WHERE VOLUME MOUNTS
+5. Set timeouts and workers
+
+---
+
+## Summary
+
+✅ Templates are free  
+✅ Navigate: Main Menu → Templates  
+✅ Container Disk = 20GB temporary storage  
+✅ Network Volume = attached at endpoint deployment (next phase)  
+✅ Two-step process: Template (Phase 6) → Endpoint (Phase 7)
+

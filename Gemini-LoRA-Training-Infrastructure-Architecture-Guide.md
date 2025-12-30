@@ -1,4 +1,4 @@
-# **LoRA Training Infrastructure: Architecture & Implementation Guide**
+# **LoRA Training Infrastructure: Architecture & Implementation Guide by Gemini**
 
 ## **1\. Serverless vs. Private Pod: Which do you need?**
 

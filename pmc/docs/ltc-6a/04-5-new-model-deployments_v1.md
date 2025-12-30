@@ -98,6 +98,361 @@ Application
 
 ---
 
+## Initial Setup: First Model Deployment (Qwen)
+
+This section covers the **complete initial setup** for deploying your first model (Qwen3-Next-80B-A3B-Instruct). After completing this once, you can follow the streamlined process in the next section to add additional models.
+
+### Prerequisites Completed
+
+Before starting these phases, ensure you have:
+- ✅ RunPod account created
+- ✅ Docker Hub account created  
+- ✅ Docker Desktop installed locally
+- ✅ Application codebase (Sections E01-E03b) deployed to production
+- ✅ Docker worker files generated locally at `C:\Users\james\Master\BrightHub\BRun\brightrun-trainer\`
+
+---
+
+### Phase 1: Create Network Volume & Download Model
+
+#### Step 1.1: Create Network Volume
+
+1. Log into RunPod Console: https://runpod.io/console/storage
+2. Click **Storage** in sidebar → **+ New Network Volume**
+3. Configure:
+   - **Name**: `qwen-model-cache`
+   - **Size**: `240 GB` (84GB model + overhead + cache)
+   - **Datacenter**: US-CA-2 (or your preferred region - remember this!)
+4. Click **Create**
+5. Note the **Volume ID** for reference
+
+**Cost**: ~$2.40/month for storage
+
+#### Step 1.2: Download Model Weights to Volume
+
+1. Go to **Pods** → **+ Deploy**
+2. Select a cheap pod (CPU is fine for downloads):
+   - **GPU**: CPU Pod (cheapest)
+   - **Template**: RunPod PyTorch
+   - **Network Volume**: Attach `qwen-model-cache`
+3. Deploy and wait for pod to start
+4. Click **Connect** → **Web Terminal**
+5. Run this in the terminal:
+
+```bash
+pip install huggingface_hub
+
+cat << 'EOF' > /tmp/download_qwen.py
+from huggingface_hub import snapshot_download
+
+MODEL_ID = "Qwen/Qwen3-Next-80B-A3B-Instruct"
+LOCAL_DIR = "/workspace/models/Qwen3-Next-80B-A3B-Instruct"
+
+print(f"Starting {MODEL_ID} download...")
+print(f"Destination: {LOCAL_DIR}")
+print("-" * 60)
+
+try:
+    snapshot_download(
+        MODEL_ID,
+        local_dir=LOCAL_DIR,
+        resume_download=True,
+        token='YOUR_HF_TOKEN_HERE'  # Replace with your token
+    )
+    print("\n" + "=" * 60)
+    print("Download complete!")
+    print("=" * 60)
+except Exception as e:
+    print(f"\nError: {e}")
+    print("You can re-run this command to resume.")
+EOF
+
+python3 /tmp/download_qwen.py
+```
+
+6. Wait for download (84GB, takes 30-90 minutes)
+7. Verify: `ls -lh /workspace/models/Qwen3-Next-80B-A3B-Instruct/`
+8. **Terminate the pod** (download complete, model cached in volume)
+
+---
+
+### Phase 2: Build and Push Docker Image
+
+**Note**: This is done on your LOCAL Windows machine, not in RunPod.
+
+#### Step 2.1: Verify Files Locally
+
+Ensure these files exist in `C:\Users\james\Master\BrightHub\BRun\brightrun-trainer\`:
+- `handler.py` (200 lines)
+- `train_lora.py` (600 lines)  
+- `status_manager.py` (200 lines)
+- `Dockerfile` (40 lines)
+- `requirements.txt` (25 lines)
+
+#### Step 2.2: Build Docker Image
+
+Open **PowerShell** or **Git Bash** on your local machine:
+
+```bash
+# Navigate to project directory
+cd C:\Users\james\Master\BrightHub\BRun\brightrun-trainer
+
+# Build for Linux (required for RunPod)
+docker build --platform linux/amd64 -t brighthub/brightrun-trainer:v1 .
+```
+
+**Expected time**: 3-5 minutes  
+**Expected output**: `Successfully built` and `Successfully tagged brighthub/brightrun-trainer:v1`
+
+**Troubleshooting**:
+- If "docker command not found": Ensure Docker Desktop is running
+- If "500 Internal Server Error": Restart Docker Desktop
+- If missing the `.` at the end: The dot is the build context (current directory)
+
+#### Step 2.3: Login to Docker Hub
+
+```bash
+docker login
+```
+
+Enter your Docker Hub username and password when prompted.
+
+#### Step 2.4: Push Image to Docker Hub
+
+```bash
+docker push brighthub/brightrun-trainer:v1
+```
+
+**Expected time**: 10-20 minutes (uploading ~5-10GB image)  
+**Success indicator**: Final line shows `v1: digest: sha256:...`
+
+**Verify upload**: Visit `https://hub.docker.com/r/brighthub/brightrun-trainer` and confirm `v1` tag exists
+
+---
+
+### Phase 3: Create RunPod Serverless Template
+
+Now configure RunPod to use your Docker image.
+
+1. Go to RunPod Console → **Serverless** → **Templates**
+2. Click **+ New Template**
+3. Fill in the form:
+
+| Field | Value |
+|-------|-------|
+| **Template Name** | `BrightRun LoRA Trainer - Qwen` |
+| **Container Image** | `brighthub/brightrun-trainer:v1` |
+| **Docker Command** | (leave empty - uses Dockerfile CMD) |
+| **Container Disk** | `20 GB` |
+| **Volume Mount Path** | `/workspace` ← **Critical: must match model path** |
+
+4. Click **Environment Variables** section and add:
+
+| Key | Value |
+|-----|-------|
+| `HF_HOME` | `/workspace/.cache/huggingface` |
+| `TRANSFORMERS_CACHE` | `/workspace/models` |
+| `MODEL_PATH` | `/workspace/models/Qwen3-Next-80B-A3B-Instruct` |
+| `SUPABASE_URL` | `https://hqhtbxlgzysfbekexwku.supabase.co` |
+| `SUPABASE_SERVICE_ROLE_KEY` | `eyJhb...` (your actual service role key) |
+
+5. Click **Save Template**
+
+**Critical Notes**:
+- Volume mount path `/workspace` matches where the model is stored in the network volume
+- `MODEL_PATH` points to the exact location where you downloaded the model in Phase 1
+- `SUPABASE_SERVICE_ROLE_KEY` is needed for uploading trained adapters to Supabase Storage
+
+---
+
+### Phase 4: Deploy Serverless Endpoint
+
+Create the actual GPU endpoint that will process training jobs.
+
+1. Go to **Serverless** → **Endpoints**
+2. Click **+ New Endpoint**
+3. Configure:
+
+| Field | Value |
+|-------|-------|
+| **Endpoint Name** | `,` |
+| **Select Template** | `BrightRun LoRA Trainer - Qwen` (the one you just created) |
+| **GPU Type** | `NVIDIA A100 80GB PCIe` |
+| **Active Workers** | `0` (auto-scale from zero) |
+| **Max Workers** | `2` (allows 2 concurrent training jobs) |
+| **GPUs Per Worker** | `1` |
+| **Idle Timeout** | `60` seconds (worker shuts down after 60s idle) |
+| **Execution Timeout** | `43200` seconds (12 hours max per job) |
+| **Select Network Volume** | `qwen-model-cache` ← **Must attach the volume!** |
+
+4. Click **Deploy**
+5. Wait for endpoint status to show **Ready** (may take 1-2 minutes)
+
+**Cost Breakdown**:
+- **Idle**: $0/hour (Active Workers = 0, no GPUs running)
+- **Active**: ~$3.50/hour per A100 80GB GPU
+- **Storage**: $0.24/month for network volume (240GB × $0.001/GB/month)
+
+**FAQ**:
+- **Q: Do I pay when idle?** No, with Active Workers = 0, you only pay when training jobs are running.
+- **Q: Does the endpoint URL change?** No, the endpoint URL is permanent and configured once in your application.
+
+#### Step 4.1: Get Endpoint Credentials
+
+Once deployed:
+
+1. Click on your endpoint name in the list
+2. **Copy the Endpoint URL**: Format is `https://api.runpod.ai/v2/{endpoint-id}`
+   - Save this as `GPU_CLUSTER_API_URL` for later
+3. Go to RunPod **Settings** (top right user menu) → **API Keys**
+4. Click **+ Create API Key**
+   - **Name**: `BrightRun Training`
+   - **Scope**: Leave default (full access)
+5. **Copy the API key**: Format is `rp_xxxxxxxxxx`
+   - Save this as `GPU_CLUSTER_API_KEY` for later
+
+**Security Note**: The API key has full access to your RunPod account. Store it securely (use environment variables, never commit to git).
+
+---
+
+### Phase 5: Configure Application
+
+Update your Next.js application to use the RunPod endpoint.
+
+#### Step 5.1: Update Local Environment
+
+Edit `C:\Users\james\Master\BrightHub\BRun\lora-pipeline\.env.local`:
+
+```bash
+# Add these lines (replace with your actual values)
+GPU_CLUSTER_API_URL=https://api.runpod.ai/v2/your-endpoint-id-here
+GPU_CLUSTER_API_KEY=rp_your-api-key-here
+```
+
+**Example**:
+```bash
+GPU_CLUSTER_API_URL=https://api.runpod.ai/v2/abc123xyz
+GPU_CLUSTER_API_KEY=rp_12345678901234567890
+```
+
+#### Step 5.2: Update Supabase Edge Function Secrets
+
+Your Edge Function needs these credentials to submit training jobs.
+
+**Via Supabase Dashboard**:
+1. Go to Supabase Dashboard → **Edge Functions**
+2. Find `process-training-jobs` function
+3. Go to **Secrets** tab
+4. Add two secrets:
+   - Key: `GPU_CLUSTER_API_URL`, Value: `https://api.runpod.ai/v2/your-endpoint-id`
+   - Key: `GPU_CLUSTER_API_KEY`, Value: `rp_your-api-key-here`
+
+**Via Supabase CLI**:
+```bash
+cd C:\Users\james\Master\BrightHub\BRun\lora-pipeline
+
+supabase secrets set GPU_CLUSTER_API_URL=https://api.runpod.ai/v2/your-endpoint-id
+supabase secrets set GPU_CLUSTER_API_KEY=rp_your-api-key-here
+```
+
+#### Step 5.3: Deploy Edge Function (If Not Already Deployed)
+
+```bash
+supabase functions deploy process-training-jobs
+```
+
+---
+
+### Phase 6: End-to-End Testing
+
+Test the complete pipeline from UI to GPU training.
+
+#### Step 6.1: Test Endpoint Directly (Optional)
+
+Verify the RunPod endpoint responds:
+
+```bash
+curl -X POST "https://api.runpod.ai/v2/your-endpoint-id/run" \
+  -H "Authorization: Bearer rp_your-api-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input": {
+      "job_id": "test-123",
+      "dataset_url": "https://example.com/test.jsonl",
+      "hyperparameters": {
+        "base_model": "Qwen/Qwen3-Next-80B-A3B-Instruct",
+        "learning_rate": 0.0002,
+        "batch_size": 4,
+        "num_epochs": 1,
+        "lora_rank": 16
+      },
+      "gpu_config": {
+        "gpu_type": "A100-80GB",
+        "num_gpus": 1
+      }
+    }
+  }'
+```
+
+**Expected response**:
+```json
+{
+  "id": "sync-xxxxx-xxxx",
+  "status": "IN_QUEUE"
+}
+```
+
+#### Step 6.2: Test via Application UI
+
+1. **Create a test dataset**:
+   - Go to `/datasets` in your application
+   - Upload a small JSONL file (5-10 training pairs)
+   - Wait for validation to complete
+
+2. **Create a training job**:
+   - Go to `/training/configure`
+   - Select your test dataset
+   - Choose **Fast** preset
+   - Set epochs to 1 (for quick test)
+   - Click **Create Training Job**
+
+3. **Monitor the job**:
+   - Go to `/training/jobs`
+   - Watch status progress: `queued` → `initializing` → `running` → `completed`
+   - Check that progress updates in real-time
+
+4. **Verify output**:
+   - Check Supabase Storage `lora-models` bucket
+   - Confirm adapter files were uploaded
+   - Download and inspect the adapter
+
+**Expected total time for test**: 10-20 minutes (small dataset, 1 epoch)
+
+---
+
+### Phase 7: Production Readiness Checklist
+
+Before using in production, verify:
+
+- [ ] RunPod endpoint shows status "Ready"
+- [ ] Network volume attached to endpoint correctly
+- [ ] Model loads successfully (check first job logs)
+- [ ] Training completes without errors
+- [ ] Adapter uploads to Supabase Storage
+- [ ] Cost tracking matches expectations
+- [ ] Job cancellation works
+- [ ] Edge Function processes queued jobs automatically
+- [ ] Real-time progress updates work in UI
+- [ ] Notifications sent to users correctly
+
+**Common Issues**:
+- **"Model not found"**: Verify `MODEL_PATH` matches download location (`/workspace/models/...`)
+- **"Out of memory"**: Ensure using A100 80GB, verify QLoRA 4-bit quantization in code
+- **Slow training**: Check GPU utilization (should be >80%), verify batch size isn't too small
+- **Adapter upload fails**: Check `SUPABASE_SERVICE_ROLE_KEY` in template environment variables
+
+---
+
 ## Step-by-Step: Adding a New Model
 
 ### Example: Adding DeepSeek-V3-671B Support
