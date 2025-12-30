@@ -1,4 +1,4 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.80.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
 // Initialize Supabase client with service role key
 const supabase = createClient(
@@ -12,7 +12,6 @@ const GPU_CLUSTER_API_KEY = Deno.env.get('GPU_CLUSTER_API_KEY')!;
 
 /**
  * Process training jobs edge function
- * From Section E04 - Training Execution & Monitoring
  * 
  * This function runs on a cron schedule (every 30 seconds) and:
  * 1. Finds jobs with status='queued'
@@ -325,4 +324,3 @@ async function updateRunningJobs() {
     }
   }
 }
-

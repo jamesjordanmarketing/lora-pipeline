@@ -647,11 +647,12 @@ async function updateRunningJobs() {
 # Deploy edge function
 supabase functions deploy process-training-jobs
 
-# Set environment variables in Supabase Dashboard
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-GPU_CLUSTER_API_URL=https://your-gpu-cluster.com
-GPU_CLUSTER_API_KEY=your-gpu-api-key
+# Set environment variables in Supabase Dashboard → Edge Functions → Secrets
+# See .secrets/deployment-secrets.md for actual values
+SUPABASE_URL=<auto-set by Supabase>
+SUPABASE_SERVICE_ROLE_KEY=<auto-set by Supabase>
+GPU_CLUSTER_API_URL=<see .secrets/deployment-secrets.md>
+GPU_CLUSTER_API_KEY=<see .secrets/deployment-secrets.md>
 ```
 
 **Cron Schedule Configuration:**

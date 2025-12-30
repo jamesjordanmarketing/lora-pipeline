@@ -1,188 +1,258 @@
-# Section E04 - Quick Reference Guide
+# Section E04: Quick Reference Card
 
-**Quick commands and checks for Section E04: Training Execution & Monitoring**
-
----
-
-## 🚀 Quick Deploy
-
-```bash
-# Navigate to project
-cd "c:/Users/james/Master/BrightHub/BRun/lora-pipeline"
-
-# Deploy edge function
-supabase functions deploy process-training-jobs
-
-# Watch logs
-supabase functions logs process-training-jobs --follow
-```
+**Training Execution & Monitoring**  
+**Implementation Status:** ✅ Complete  
+**Generated:** December 29, 2025
 
 ---
 
-## ⚙️ Environment Variables Needed
+## 🚀 Quick Deploy (5 minutes)
 
-### Supabase Dashboard (Edge Functions → Settings → Secrets)
+### 1. Deploy Edge Function
 ```bash
-SUPABASE_URL=https://<project-id>.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
-GPU_CLUSTER_API_URL=https://your-gpu-cluster.com
-GPU_CLUSTER_API_KEY=<gpu-api-key>
+npx supabase functions deploy process-training-jobs
 ```
 
-### Local .env.local
-```bash
-# Add these
-GPU_CLUSTER_API_URL=https://your-gpu-cluster.com
-GPU_CLUSTER_API_KEY=<gpu-api-key>
+### 2. Set Environment Variables
+**Supabase Dashboard → Edge Functions → Settings**
+```
+GPU_CLUSTER_API_URL=<your-gpu-cluster-endpoint>
+GPU_CLUSTER_API_KEY=<your-gpu-cluster-key>
 ```
 
----
+### 3. Configure Cron
+**Supabase Dashboard → Edge Functions → Cron Jobs**
+- Function: `process-training-jobs`
+- Schedule: `*/30 * * * * *` (every 30 seconds)
+- Status: ✅ Enabled
 
-## 🔍 Quick Checks (SAOL)
-
+### 4. Verify
 ```bash
-# Navigate to SAOL
-cd "c:/Users/james/Master/BrightHub/BRun/lora-pipeline/supa-agent-ops"
-
-# Check training jobs
-node -e "require('dotenv').config({path:'../.env.local'});const saol=require('.');(async()=>{const r=await saol.agentQuery({table:'training_jobs',select:'id,status,progress',orderBy:[{column:'created_at',asc:false}],limit:5});console.log('Jobs:');r.data.forEach(j=>console.log(j.id.slice(0,8),j.status,j.progress+'%'));})();"
-
-# Check metrics
-node -e "require('dotenv').config({path:'../.env.local'});const saol=require('.');(async()=>{const r=await saol.agentQuery({table:'metrics_points',select:'job_id,step,training_loss',orderBy:[{column:'timestamp',asc:false}],limit:5});console.log('Metrics:',r.data.length,'points');})();"
-
-# Check notifications
-node -e "require('dotenv').config({path:'../.env.local'});const saol=require('.');(async()=>{const r=await saol.agentQuery({table:'notifications',select:'type,title',orderBy:[{column:'created_at',asc:false}],limit:3});r.data.forEach(n=>console.log(n.type,'-',n.title));})();"
-
-# Check storage buckets
-node -e "require('dotenv').config({path:'../.env.local'});const saol=require('.');(async()=>{const r=await saol.agentQuery({table:'datasets',select:'name,storage_bucket'});console.log('Buckets:');r.data.forEach(d=>console.log('-',d.storage_bucket));})();"
+node scripts/test-e04-database.js
+npx supabase functions logs process-training-jobs --follow
 ```
-
----
-
-## 🧪 Quick Test Flow
-
-1. **Create test job:**
-   - Go to: http://localhost:3000/training/configure
-   - Select dataset → Configure → Start Training
-
-2. **Verify queued:**
-   ```bash
-   cd supa-agent-ops
-   node -e "require('dotenv').config({path:'../.env.local'});const saol=require('.');(async()=>{const r=await saol.agentQuery({table:'training_jobs',where:[{column:'status',operator:'eq',value:'queued'}]});console.log('Queued:',r.data.length);})();"
-   ```
-
-3. **Watch processing:**
-   ```bash
-   supabase functions logs process-training-jobs --follow
-   ```
-
-4. **Monitor UI:**
-   - Go to: http://localhost:3000/training/jobs/[job-id]
-   - Verify auto-refresh (Network tab: calls every 5s)
-
-5. **Test cancel:**
-   - Click "Cancel Job"
-   - Confirm
-   - Verify status → cancelled
 
 ---
 
 ## 📁 Files Created
 
 ```
-supabase/functions/process-training-jobs/index.ts
-src/app/api/jobs/[jobId]/route.ts
-src/app/api/jobs/[jobId]/cancel/route.ts
-src/app/(dashboard)/training/jobs/[jobId]/page.tsx
-src/hooks/useTrainingConfig.ts (modified - added useCancelJob)
+supabase/functions/process-training-jobs/index.ts   - Job processor
+src/app/api/jobs/[jobId]/route.ts                   - Job details API
+src/app/api/jobs/[jobId]/cancel/route.ts            - Cancel API
+src/app/(dashboard)/training/jobs/[jobId]/page.tsx  - Monitor UI
+src/hooks/useTrainingConfig.ts                      - Added useCancelJob
+E04_DEPLOYMENT_AND_TESTING_GUIDE.md                 - Full guide
+E04_IMPLEMENTATION_COMPLETE.md                      - Summary
+scripts/test-e04-database.js                        - Database tests
 ```
 
 ---
 
-## 🎯 Key Features
+## 🔗 Key URLs
 
-- ✅ Dual storage bucket support (training-files + lora-datasets)
-- ✅ Auto-polling every 30 seconds (edge function)
-- ✅ Auto-refresh every 5 seconds (UI)
-- ✅ Real-time metrics tracking
-- ✅ Loss curve visualization (Recharts)
-- ✅ Job cancellation
-- ✅ Cost calculation
-- ✅ Notifications
+| Route | Description |
+|-------|-------------|
+| `/training/jobs` | Jobs list (from E03) |
+| `/training/jobs/[jobId]` | Job monitor (NEW in E04) |
+| `GET /api/jobs/[jobId]` | Job details + metrics |
+| `POST /api/jobs/[jobId]/cancel` | Cancel job |
 
 ---
 
-## 🔧 Cron Schedule
+## 🗄️ Database Tables Used
 
-**In Supabase Dashboard:**
-- Go to: Edge Functions → Cron Jobs
-- Function: `process-training-jobs`
-- Schedule: `*/30 * * * * *` (every 30 seconds)
-- Enable: ✅
+✅ All use correct names (no `lora_` prefix):
+- `training_jobs` - Job records and status
+- `datasets` - Dataset info and storage bucket
+- `metrics_points` - Time-series metrics
+- `cost_records` - Cost tracking
+- `notifications` - Job lifecycle events
 
 ---
 
-## 🐛 Common Issues
+## 🔄 Job Status Flow
 
-### Jobs not processing?
-```bash
-# Check cron is enabled in Supabase Dashboard
-# Manually trigger test:
-curl -X POST https://<project-id>.supabase.co/functions/v1/process-training-jobs \
-  -H "Authorization: Bearer <anon-key>"
+```
+queued → initializing → running → completed
+                              ↘ failed
+                              ↘ cancelled
 ```
 
-### Signed URL errors?
+**Edge Function Actions:**
+- `queued` → Submit to GPU, update to `initializing`
+- `running` → Poll for metrics, update progress
+- `completed` → Record final cost, create notification
+- `failed` → Log error, create notification
+
+---
+
+## 📊 Real-Time Updates
+
+| Component | Update Frequency | Trigger |
+|-----------|-----------------|---------|
+| Edge Function | 30 seconds | Cron schedule |
+| UI Polling | 5 seconds | React Query (active jobs only) |
+| Metrics Insert | Per GPU update | Edge function polling |
+| Cost Calculation | Per polling cycle | Edge function |
+
+**UI Polling Stops When:**
+- Job status is `completed`
+- Job status is `failed`
+- Job status is `cancelled`
+
+---
+
+## 🪣 Storage Buckets (CRITICAL)
+
+**Dual bucket support:**
+```typescript
+// Edge function reads from dataset
+const storageBucket = job.dataset.storage_bucket || 'lora-datasets';
+
+// Supports both:
+'lora-datasets'    // Manual uploads (E02)
+'training-files'   // Imported files (DATA-BRIDGE)
+```
+
+**Verify bucket configuration:**
 ```bash
-# Check storage bucket and path
 cd supa-agent-ops
-node -e "require('dotenv').config({path:'../.env.local'});const saol=require('.');(async()=>{const r=await saol.agentQuery({table:'datasets',select:'storage_bucket,storage_path',limit:3});console.log(JSON.stringify(r.data,null,2));})();"
-```
-
-### UI not refreshing?
-- Check browser Network tab for API calls
-- Verify job status is active (running/queued/initializing)
-- Check browser console for errors
-
----
-
-## 📊 Expected Logs
-
-```
-[JobProcessor] Starting job processing cycle
-[JobProcessor] Processing 1 queued jobs
-[JobProcessor] Generated signed URL for job abc123 from bucket: lora-datasets
-[JobProcessor] Job abc123 submitted to GPU cluster: ext_xyz789
-[JobProcessor] Updating 1 running jobs
-[JobProcessor] Updated job abc123: running - 25.5%
-Job processing cycle complete
+node -e "require('dotenv').config({path:'../.env.local'});const saol=require('.');(async()=>{const r=await saol.agentQuery({table:'datasets',select:'name,storage_bucket',limit:10});r.data.forEach(d=>console.log(d.name,'-',d.storage_bucket||'lora-datasets'))})();"
 ```
 
 ---
 
-## ✅ Verification Checklist
+## 🧪 Quick Tests
 
+### Test 1: Job Processing
+```bash
+# Monitor edge function logs
+npx supabase functions logs process-training-jobs --follow
+
+# Expected output:
+# [JobProcessor] Processing 1 queued jobs
+# [JobProcessor] Job abc123... submitted to GPU cluster
+```
+
+### Test 2: Database Updates
+```bash
+node scripts/test-e04-database.js
+```
+
+### Test 3: UI Monitor
+1. Go to `http://localhost:3000/training/jobs/<job-id>`
+2. Verify status badge, progress bar, metrics cards
+3. Check DevTools Network tab for 5-second polling
+
+### Test 4: Job Cancellation
+1. Click "Cancel Job" on monitor page
+2. Confirm cancellation
+3. Verify status changes to "cancelled"
+
+---
+
+## 🛠️ Troubleshooting (30 seconds)
+
+### Jobs stuck in "queued"?
+```bash
+# Check if edge function is deployed
+npx supabase functions list
+
+# Check if cron is enabled
+# Go to Supabase Dashboard → Edge Functions → Cron Jobs
+```
+
+### UI not updating?
+```bash
+# Check job is active
+cd supa-agent-ops
+node -e "require('dotenv').config({path:'../.env.local'});const saol=require('.');(async()=>{const r=await saol.agentQuery({table:'training_jobs',select:'id,status',limit:1});console.log(r.data)})();"
+
+# Status must be: queued, initializing, or running for polling
+```
+
+### Charts not rendering?
+```bash
+# Verify recharts installed
+npm list recharts
+
+# Should show: recharts@2.x.x
+```
+
+---
+
+## 📦 Dependencies
+
+**Installed:**
+- `recharts` - Chart visualization
+
+**Environment Variables Required:**
+- `GPU_CLUSTER_API_URL` - Your GPU cluster endpoint
+- `GPU_CLUSTER_API_KEY` - Your GPU cluster API key
+
+---
+
+## ✅ Checklist
+
+**Deployment:**
 - [ ] Edge function deployed
-- [ ] Cron job enabled (30s)
 - [ ] Environment variables set
-- [ ] Jobs auto-start within 30s
-- [ ] Metrics update
-- [ ] Costs calculate
-- [ ] Notifications appear
-- [ ] UI auto-refreshes
-- [ ] Charts render
-- [ ] Cancel works
-- [ ] Both buckets work
+- [ ] Cron job configured and enabled
+- [ ] Database migrations run (from E01)
+
+**Testing:**
+- [ ] Job processing works (queued → running)
+- [ ] Metrics being inserted
+- [ ] Monitor UI displays correctly
+- [ ] Job cancellation works
+- [ ] Both storage buckets supported
+
+**Ready for E05:**
+- [ ] Completed jobs available
+- [ ] Metrics history populated
+- [ ] Final costs recorded
 
 ---
 
-## 📚 Full Docs
+## 🔜 Next: Section E05
 
-- **Deployment:** `E04_DEPLOYMENT_GUIDE.md`
-- **Summary:** `E04_IMPLEMENTATION_SUMMARY.md`
-- **Source:** `pmc/product/_mapping/pipeline/full-build/04f-pipeline-build-section-E04-execution-prompts_v2.md`
+**E05 will use:**
+- Completed jobs (`status='completed'`)
+- Job metadata (hyperparameters, config)
+- Metrics from `metrics_points` table
+- Final costs from `training_jobs.final_cost`
 
 ---
 
-**Quick Start:** Deploy → Set env vars → Enable cron → Test!
+## 📞 Quick Commands Reference
 
+```bash
+# Deploy edge function
+npx supabase functions deploy process-training-jobs
+
+# View logs
+npx supabase functions logs process-training-jobs --follow
+
+# Test database
+node scripts/test-e04-database.js
+
+# Install dependencies
+npm install recharts
+
+# Type check
+npm run type-check
+
+# Lint
+npm run lint
+```
+
+---
+
+**E04 Status:** ✅ **COMPLETE - Ready for deployment!**
+
+**Time to deploy:** ~5 minutes  
+**Time to test:** ~10 minutes  
+**Total setup time:** ~15 minutes
+
+🚀 **Let's deploy!**

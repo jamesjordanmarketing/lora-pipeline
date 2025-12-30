@@ -70,9 +70,9 @@ This session focused on **implementing a secrets management solution** to resolv
 **Status**: No hardcoded secrets found - file is already secure
 
 ### Credentials Stored:
-- RunPod API Key: `rpa_550JTL8271ULHL73VGU6ED4ZWBU5HB2KNAPMTW38cu8d8v` (in `.secrets/` only)
-- RunPod Endpoint: `https://api.runpod.ai/v2/ei82ickpenoqlp` (in `.secrets/` only)
-- Supabase Project: `https://hqhtbxlgzysfbekexwku.supabase.co` (in `.secrets/` only)
+- RunPod API Key: See `.secrets/deployment-secrets.md`
+- RunPod Endpoint: See `.secrets/deployment-secrets.md`
+- Supabase Project: See `.secrets/deployment-secrets.md`
 
 ---
 
@@ -108,10 +108,10 @@ Section E05 is the **final functional section** that completes the LoRA training
 - **File Size**: 58,533 bytes
 
 **Version 2.0 Changes Documented** (from file header):
-- ✅ RunPod Endpoint: `https://api.runpod.ai/v2/ei82ickpenoqlp`
-- ✅ RunPod API Key: `rpa_550JTL8271ULHL73VGU6ED4ZWBU5HB2KNAPMTW38cu8d8v` (⚠️ **EXPOSED IN COMMIT**)
+- ✅ RunPod Endpoint: See `.secrets/deployment-secrets.md`
+- ✅ RunPod API Key: See `.secrets/deployment-secrets.md` (⚠️ **Previously exposed, now in secrets file**)
 - ✅ Docker Image: `brighthub/brightrun-trainer:v1` (deployed to Docker Hub)
-- ✅ Supabase Project: `https://hqhtbxlgzysfbekexwku.supabase.co`
+- ✅ Supabase Project: See `.secrets/deployment-secrets.md`
 - ✅ Table names corrected (no `lora_` prefix): `model_artifacts`, `training_jobs`, `metrics_points`, etc.
 - ✅ Edge Function `process-training-jobs` confirmed deployed (Section E04)
 - ✅ Storage bucket: `lora-models` (confirmed exists for model artifacts)
