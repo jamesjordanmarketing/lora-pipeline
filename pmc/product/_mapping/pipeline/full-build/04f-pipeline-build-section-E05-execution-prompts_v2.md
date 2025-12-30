@@ -13,13 +13,7 @@
 ## 🔄 Version 2.0 Changes
 
 **Updated to reflect deployed infrastructure:**
-- ✅ RunPod Endpoint: `https://api.runpod.ai/v2/ei82ickpenoqlp`
-- ✅ RunPod API Key: `rpa_550JTL8271ULHL73VGU6ED4ZWBU5HB2KNAPMTW38cu8d8v`
-- ✅ Docker Image: `brighthub/brightrun-trainer:v1` (deployed to Docker Hub)
-- ✅ Supabase Project: `https://hqhtbxlgzysfbekexwku.supabase.co`
-- ✅ Table names corrected (no `lora_` prefix): `model_artifacts`, `training_jobs`, `metrics_points`, etc.
-- ✅ Edge Function `process-training-jobs` confirmed deployed (Section E04)
-- ✅ Storage bucket: `lora-models` (confirmed exists for model artifacts)
+
 
 ---
 
