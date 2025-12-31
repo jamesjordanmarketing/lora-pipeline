@@ -28,6 +28,7 @@
    ```
 4. Deploy the function:
    ```
+   supabase secrets set GPU_CLUSTER_API_URL=https://api.runpod.ai/v2/your-endpoint-id
    supabase functions deploy create-model-artifacts --project-ref hqhtbxlgzysfbekexwku
    ```
 5. Wait for: `Deployed function create-model-artifacts`
