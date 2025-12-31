@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Plus, Search, Database } from 'lucide-react';
+import { Plus, Search, Database, Download } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { Dataset } from '@/lib/types/lora-training';
 
 /**
@@ -21,7 +22,7 @@ export default function DatasetsPage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
-  const { data, isLoading, error } = useDatasets({ 
+  const { data, isLoading, error } = useDatasets({
     search: search || undefined,
     status: statusFilter === 'all' ? undefined : statusFilter,
   });
@@ -61,12 +62,17 @@ export default function DatasetsPage() {
     );
   }
 
+  const router = useRouter();
   const datasets = data?.data?.datasets || [];
 
-  // Handle dataset selection
+  // Handle dataset selection (view details)
   const handleSelectDataset = (dataset: Dataset) => {
-    // Navigate to dataset details page (will be implemented in later sections)
-    window.location.href = `/datasets/${dataset.id}`;
+    router.push(`/datasets/${dataset.id}`);
+  };
+
+  // Handle start training
+  const handleStartTraining = (dataset: Dataset) => {
+    router.push(`/training/configure?datasetId=${dataset.id}`);
   };
 
   return (
@@ -79,12 +85,20 @@ export default function DatasetsPage() {
             Manage your training datasets
           </p>
         </div>
-        <Link href="/datasets/new">
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Upload Dataset
-          </Button>
-        </Link>
+        <div className="flex gap-2">
+          <Link href="/datasets/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-2" />
+              Upload Dataset
+            </Button>
+          </Link>
+          <Link href="/datasets/import">
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Import from Training File
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Filters */}
@@ -166,6 +180,7 @@ export default function DatasetsPage() {
               key={dataset.id}
               dataset={dataset}
               onSelect={handleSelectDataset}
+              onStartTraining={handleStartTraining}
               onDelete={deleteDataset}
             />
           ))}

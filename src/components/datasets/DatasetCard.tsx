@@ -15,10 +15,11 @@ import type { Dataset } from '@/lib/types/lora-training';
 interface DatasetCardProps {
   dataset: Dataset;
   onSelect?: (dataset: Dataset) => void;
+  onStartTraining?: (dataset: Dataset) => void;
   onDelete?: (id: string) => void;
 }
 
-export function DatasetCard({ dataset, onSelect, onDelete }: DatasetCardProps) {
+export function DatasetCard({ dataset, onSelect, onStartTraining, onDelete }: DatasetCardProps) {
   // Status badge color mapping
   const statusConfig = {
     uploading: {
@@ -120,7 +121,7 @@ export function DatasetCard({ dataset, onSelect, onDelete }: DatasetCardProps) {
 
         {/* Actions */}
         <div className="flex gap-2">
-          <Button 
+          <Button
             onClick={() => onSelect?.(dataset)}
             variant="outline"
             className="flex-1"
@@ -129,8 +130,11 @@ export function DatasetCard({ dataset, onSelect, onDelete }: DatasetCardProps) {
             View Details
           </Button>
           {dataset.status === 'ready' && (
-            <Button 
-              onClick={() => onSelect?.(dataset)}
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                onStartTraining?.(dataset);
+              }}
               className="flex-1"
               size="sm"
             >
@@ -138,7 +142,7 @@ export function DatasetCard({ dataset, onSelect, onDelete }: DatasetCardProps) {
             </Button>
           )}
           {dataset.status === 'error' && onDelete && (
-            <Button 
+            <Button
               onClick={(e) => {
                 e.stopPropagation();
                 if (confirm('Delete this dataset?')) {
