@@ -1,4 +1,4 @@
-# I have been building the LoRA training pipeline. My original requirements are:
+# **LoRA Training Infrastructure: Architecture & Implementation Guide by Perplexity**
 
 1. Setting up a private open weight LLM (probably Qwen 3-Next-80B-A3B) so my client can have a private AI server  
 2. The client wants to train their private LLM using LoRA (which I am building)  
