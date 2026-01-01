@@ -1,13 +1,12 @@
 'use client';
 
-import { use } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { useDataset, useDeleteDataset } from '@/hooks/use-datasets';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Database, ArrowLeft, Trash2, PlayCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import type { ValidationError } from '@/lib/types/lora-training';
 
 /**
@@ -15,8 +14,9 @@ import type { ValidationError } from '@/lib/types/lora-training';
  * From Section E02 - Dataset Management
  * Route: /datasets/[id]
  */
-export default function DatasetDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function DatasetDetailPage() {
+    const params = useParams();
+    const id = params.id as string;
     const router = useRouter();
     const { data, isLoading, error } = useDataset(id);
     const { mutate: deleteDataset, isPending: isDeleting } = useDeleteDataset();

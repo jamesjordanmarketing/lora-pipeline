@@ -85,7 +85,7 @@ async function processQueuedJobs() {
       // IMPORTANT: Use the correct storage bucket from dataset record
       // This handles both 'training-files' (imported) and 'lora-datasets' (uploaded)
       const storageBucket = job.dataset.storage_bucket || 'lora-datasets';
-      
+
       // Get signed URL for dataset
       const { data: signedUrlData } = await supabase.storage
         .from(storageBucket)
@@ -97,25 +97,28 @@ async function processQueuedJobs() {
 
       console.log(`[JobProcessor] Generated signed URL for job ${job.id} from bucket: ${storageBucket}`);
 
-      // Submit job to GPU cluster
-      const gpuJobPayload = {
-        job_id: job.id,
-        dataset_url: signedUrlData.signedUrl,
-        hyperparameters: {
-          ...job.hyperparameters,
-          base_model: 'mistralai/Mistral-7B-v0.1',
+      // Submit job to RunPod serverless endpoint
+      // RunPod expects {input: {...}} format
+      const runpodPayload = {
+        input: {
+          job_id: job.id,
+          dataset_url: signedUrlData.signedUrl,
+          hyperparameters: {
+            ...job.hyperparameters,
+            base_model: 'mistralai/Mistral-7B-v0.1',
+          },
+          gpu_config: job.gpu_config,
+          callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/training-callback`,
         },
-        gpu_config: job.gpu_config,
-        callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/training-callback`,
       };
 
-      const response = await fetch(`${GPU_CLUSTER_API_URL}/training/submit`, {
+      const response = await fetch(`${GPU_CLUSTER_API_URL}/run`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${GPU_CLUSTER_API_KEY}`,
         },
-        body: JSON.stringify(gpuJobPayload),
+        body: JSON.stringify(runpodPayload),
       });
 
       if (!response.ok) {
@@ -123,20 +126,23 @@ async function processQueuedJobs() {
         throw new Error(`GPU cluster submission failed: ${errorData}`);
       }
 
-      const gpuJob = await response.json();
+      const runpodJob = await response.json();
+
+      // RunPod returns {id: "job-id", status: "IN_QUEUE"}
+      const externalJobId = runpodJob.id;
 
       // Update job with external ID and status
       await supabase
         .from('training_jobs')
         .update({
-          external_job_id: gpuJob.external_job_id,
+          external_job_id: externalJobId,
           status: 'running',
-          current_stage: 'training',
+          current_stage: 'queued_on_gpu',
           started_at: new Date().toISOString(),
         })
         .eq('id', job.id);
 
-      console.log(`[JobProcessor] Job ${job.id} submitted to GPU cluster: ${gpuJob.external_job_id}`);
+      console.log(`[JobProcessor] Job ${job.id} submitted to RunPod: ${externalJobId}`);
 
       // Create notification
       await supabase.from('notifications').insert({
@@ -151,7 +157,7 @@ async function processQueuedJobs() {
 
     } catch (error) {
       console.error(`[JobProcessor] Error processing job ${job.id}:`, error);
-      
+
       // Mark job as failed
       await supabase
         .from('training_jobs')
@@ -201,9 +207,9 @@ async function updateRunningJobs() {
 
   for (const job of runningJobs) {
     try {
-      // Poll GPU cluster for job status
+      // Poll RunPod serverless status endpoint
       const response = await fetch(
-        `${GPU_CLUSTER_API_URL}/training/status/${job.external_job_id}`,
+        `${GPU_CLUSTER_API_URL}/status/${job.external_job_id}`,
         {
           headers: {
             'Authorization': `Bearer ${GPU_CLUSTER_API_KEY}`,
@@ -216,7 +222,32 @@ async function updateRunningJobs() {
         continue;
       }
 
-      const gpuJobStatus = await response.json();
+      const runpodStatus = await response.json();
+
+      // RunPod status format: {id, status: "IN_QUEUE"|"IN_PROGRESS"|"COMPLETED"|"FAILED", output: {...}}
+      // Map RunPod status to our internal format
+      let gpuJobStatus: any = {};
+
+      if (runpodStatus.status === 'IN_QUEUE') {
+        gpuJobStatus.stage = 'queued_on_gpu';
+        gpuJobStatus.progress = 0;
+      } else if (runpodStatus.status === 'IN_PROGRESS') {
+        gpuJobStatus.stage = 'training';
+        // Extract progress from output if worker provides it
+        if (runpodStatus.output) {
+          gpuJobStatus.progress = runpodStatus.output.progress || job.progress;
+          gpuJobStatus.current_epoch = runpodStatus.output.current_epoch || job.current_epoch;
+          gpuJobStatus.current_step = runpodStatus.output.current_step || job.current_step;
+          gpuJobStatus.metrics = runpodStatus.output.metrics;
+        }
+      } else if (runpodStatus.status === 'COMPLETED') {
+        gpuJobStatus.status = 'completed';
+        gpuJobStatus.stage = 'completed';
+        gpuJobStatus.progress = 100;
+      } else if (runpodStatus.status === 'FAILED') {
+        gpuJobStatus.status = 'failed';
+        gpuJobStatus.error_message = runpodStatus.error || 'Job failed on GPU cluster';
+      }
 
       // Update job progress and metrics
       const updates: any = {

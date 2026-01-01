@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,22 +65,29 @@ export default function TrainingConfigurePage() {
   const estimateCost = useEstimateCost();
   const createJob = useCreateTrainingJob();
 
+  // Track previous debounced config to avoid re-fetching same config
+  const prevConfigRef = useRef<string>('');
+
   // From existing codebase - debounce configuration changes to avoid excessive API calls
   const debouncedConfig = useDebounce(
-    { 
-      dataset_id: datasetId, 
-      gpu_config: { type: gpuType, count: gpuCount }, 
-      hyperparameters 
+    {
+      dataset_id: datasetId,
+      gpu_config: { type: gpuType, count: gpuCount },
+      hyperparameters
     },
     500
   );
 
-  // Auto-estimate cost when configuration changes
+  // Auto-estimate cost when configuration changes - only when config actually differs
   useEffect(() => {
-    if (datasetId) {
-      estimateCost.mutate(debouncedConfig);
-    }
-  }, [debouncedConfig, datasetId]);
+    if (!datasetId) return;
+
+    const configKey = JSON.stringify(debouncedConfig);
+    if (configKey === prevConfigRef.current) return;
+
+    prevConfigRef.current = configKey;
+    estimateCost.mutate(debouncedConfig);
+  }, [debouncedConfig, datasetId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handlePresetChange = (preset: keyof typeof PRESETS) => {
     setSelectedPreset(preset);
@@ -133,8 +140,8 @@ export default function TrainingConfigurePage() {
     <div className="container mx-auto py-8 space-y-6 max-w-4xl">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           size="icon"
           onClick={() => router.back()}
         >
@@ -164,16 +171,14 @@ export default function TrainingConfigurePage() {
                 <button
                   key={key}
                   onClick={() => handlePresetChange(key as keyof typeof PRESETS)}
-                  className={`p-4 border-2 rounded-lg text-left transition-all ${
-                    selectedPreset === key
+                  className={`p-4 border-2 rounded-lg text-left transition-all ${selectedPreset === key
                       ? 'border-primary bg-primary/5 shadow-md'
                       : 'border-gray-200 hover:border-gray-300 hover:shadow'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <Icon className={`h-5 w-5 ${
-                      selectedPreset === key ? 'text-primary' : 'text-gray-500'
-                    }`} />
+                    <Icon className={`h-5 w-5 ${selectedPreset === key ? 'text-primary' : 'text-gray-500'
+                      }`} />
                     <h3 className="font-semibold">{preset.name}</h3>
                   </div>
                   <p className="text-sm text-gray-600 mb-3">{preset.description}</p>
@@ -247,7 +252,7 @@ export default function TrainingConfigurePage() {
               className="mt-2"
             />
             <p className="text-sm text-gray-600 mt-2">
-              More GPUs = faster training via data parallelism. 
+              More GPUs = faster training via data parallelism.
               {gpuCount > 1 && ` Training will be ${gpuCount}x faster (approximately).`}
             </p>
           </div>
@@ -414,16 +419,16 @@ export default function TrainingConfigurePage() {
 
       {/* Action Buttons */}
       <div className="flex gap-4 sticky bottom-0 bg-white py-4 border-t">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => router.back()}
           disabled={isLoading}
           className="flex-1"
         >
           Cancel
         </Button>
-        <Button 
-          onClick={handleSubmit} 
+        <Button
+          onClick={handleSubmit}
           disabled={isLoading || !datasetId || estimateCost.isPending}
           className="flex-1"
         >
