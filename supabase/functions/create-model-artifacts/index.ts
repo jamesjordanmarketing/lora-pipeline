@@ -69,21 +69,36 @@ Deno.serve(async (req) => {
 async function createArtifactForJob(job: any) {
   console.log(`[ArtifactCreator] Creating artifact for job ${job.id}`);
 
-  // Get model files download URLs from GPU cluster (RunPod worker)
-  // The RunPod Docker worker (brighthub/brightrun-trainer:v1) must implement this endpoint
+  // Get completed job status from RunPod to access output
   const response = await fetch(
-    `${GPU_CLUSTER_API_URL}/training/artifacts/${job.external_job_id}`,
+    `${GPU_CLUSTER_API_URL}/status/${job.external_job_id}`,
     {
       headers: { 'Authorization': `Bearer ${GPU_CLUSTER_API_KEY}` },
     }
   );
 
   if (!response.ok) {
-    throw new Error(`Failed to get artifact URLs from GPU cluster`);
+    throw new Error(`Failed to get job status from RunPod`);
   }
 
-  const artifactData = await response.json();
-  const { download_urls, model_metadata } = artifactData;
+  const jobStatus = await response.json();
+
+  // Check if job actually completed
+  if (jobStatus.status !== 'COMPLETED') {
+    throw new Error(`Job status is ${jobStatus.status}, not COMPLETED`);
+  }
+
+  // Extract model file URLs from worker output
+  // Worker should return: {output: {model_files: {adapter_model.bin: "url", ...}, model_metadata: {...}}}
+  const output = jobStatus.output || {};
+  const download_urls = output.model_files || output.download_urls || {};
+  const model_metadata = output.model_metadata || output.metadata || {};
+
+  if (Object.keys(download_urls).length === 0) {
+    throw new Error('No model files found in job output');
+  }
+
+  console.log(`[ArtifactCreator] Found ${Object.keys(download_urls).length} model files`);
 
   // Download and upload each artifact file
   const artifactId = crypto.randomUUID();
