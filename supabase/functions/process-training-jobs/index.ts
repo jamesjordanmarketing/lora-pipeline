@@ -105,7 +105,8 @@ async function processQueuedJobs() {
           dataset_url: signedUrlData.signedUrl,
           hyperparameters: {
             ...job.hyperparameters,
-            base_model: 'mistralai/Mistral-7B-v0.1',
+            // Use Qwen model cached on network volume, allow override from job hyperparameters
+            base_model: job.hyperparameters.base_model || 'Qwen/Qwen3-Next-80B-A3B-Instruct',
           },
           gpu_config: job.gpu_config,
           callback_url: `${Deno.env.get('SUPABASE_URL')}/functions/v1/training-callback`,
