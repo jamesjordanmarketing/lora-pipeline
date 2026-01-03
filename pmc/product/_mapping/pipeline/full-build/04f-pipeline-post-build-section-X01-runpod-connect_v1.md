@@ -10,11 +10,11 @@
 
 | Component | Location | Status |
 |-----------|----------|--------|
-| Network Storage | **US-IL-1** | 240GB created |
-| Serverless Worker | **US-KS-1** | Auto-assigned, 0 workers |
-| Endpoint | `ei82ickpenoqlp` | Ready but non-functional |
+| Network Storage | **EU-RO-1** | 240GB created (Volume: 4jw1fcocwl, S3 enabled) |
+| Serverless Worker | **EU-RO-1** | Co-located with storage ✓ |
+| Endpoint | `ei82ickpenoqlp` | Ready and functional ✓ |
 
-**Core Issue:** Network volumes are **datacenter-specific**. When a network volume is attached, workers can ONLY run in that datacenter. Your storage is in US-IL-1 but the endpoint was configured for US-KS-1 (where no storage is accessible).
+**Resolution**: Network volume with S3 API access created in EU-RO-1. Workers are co-located with storage for optimal performance.
 
 ---
 
